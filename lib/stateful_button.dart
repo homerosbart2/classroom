@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class StatefulButton extends StatefulWidget{
   final Function onTap;
@@ -107,7 +106,7 @@ class _StatefulButtonState extends State<StatefulButton>{
               text: TextSpan(
                 text: widget.text,
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontFamily: 'Roboto Condensed',
                   fontWeight: _weight,
                   color: widget.color,
