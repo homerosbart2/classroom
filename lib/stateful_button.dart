@@ -106,7 +106,7 @@ class _StatefulButtonState extends State<StatefulButton>{
               text: TextSpan(
                 text: widget.text,
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 15,
                   fontFamily: 'Roboto Condensed',
                   fontWeight: _weight,
                   color: widget.color,

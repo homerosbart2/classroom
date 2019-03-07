@@ -5,6 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/courses_route.dart';
 import 'package:classroom/choice.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:classroom/nav.dart';
+import 'package:classroom/widget_passer.dart';
 
 class Login extends StatefulWidget {
   const Login();
@@ -13,241 +15,29 @@ class Login extends StatefulWidget {
   _LoginState createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
+class _LoginState extends State<Login> with TickerProviderStateMixin{
   FocusNode myFocusNode;
   bool _register;
-  TextEditingController _usernameController;
-  TextEditingController _passwordController;
-  List<Choice> _choices;
+  TextEditingController _usernameController, _passwordController;
+
 
   @override
   void initState() {
     super.initState();
     _register = false;
     myFocusNode = FocusNode();
-    _usernameController = new TextEditingController();
-    _passwordController = new TextEditingController();
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
   }
 
-  
-
   void _navigateToCourses(BuildContext context) {
-    _choices = const <Choice>[
-      const Choice(title: 'Perfil', icon: Icons.directions_car),
-    ];
-
+    
     Navigator.of(context).push(
       CupertinoPageRoute(builder: (BuildContext context) {
-        return Scaffold(
-          drawer: Drawer(
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                DrawerHeader(
-                  child: Column(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            'Classroom',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontFamily: 'Vampiro One',
-                              fontSize: 26,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: AssetImage('lib/assets/images/default.png'),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Container(
-                                    margin: EdgeInsets.only(right: 2),
-                                    child: Text(
-                                      '@',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    'henry.campos',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 2),
-                              child: Text(
-                                'Ver más',
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage('lib/assets/images/bg_dark.jpg'),
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                  ),
-                  child: ListTile(
-                    title: Row(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(right: 15),
-                          child: StatefulButton(
-                            type: 'a',
-                            icon: FontAwesomeIcons.book,
-                            text: '',
-                            color: Theme.of(context).accentColor,
-                            onTap: (){},
-                          ),
-                        ),
-                        Text(
-                          'Clases',
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            //fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      // Update the state of the app
-                      // ...
-                    },
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                  ),
-                  child: ListTile(
-                    title: Row(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(right: 15),
-                          child: StatefulButton(
-                            type: 'a',
-                            icon: FontAwesomeIcons.signOutAlt,
-                            text: '',
-                            color: Theme.of(context).accentColor,
-                            onTap: (){},
-                          ),
-                        ),
-                        Text(
-                          'Salir',
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            //fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      //TODO: Cerrar la sesión del usuario.
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          appBar: AppBar(
-            actions: <Widget>[
-              IconButton(
-                icon: new Icon(
-                  FontAwesomeIcons.search,
-                  size: 20,
-                ), 
-                onPressed: () { 
-                  //Navigator.of(context).pop(); 
-                },
-              ),
- 
-              /* PopupMenuButton<Choice>(
-              onSelected: (choice){},
-              itemBuilder: (BuildContext context) {
-                return _choices.map((Choice choice) {
-                  return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Text(choice.title),
-                  );
-                }).toList();
-              },
-            ), */
-            ],
-            elevation: 1.0,
-            title: Container(
-              padding: EdgeInsets.all(3.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Cursos',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Inicio',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            centerTitle: false,
-            backgroundColor: Theme.of(context).accentColor,
-            iconTheme: IconThemeData(
-              color: Colors.white,
-            ),
-          ),
-          body: CoursesRoute(
-          ),
+        return Nav(
+          user: 'Henry Campos',
+          title: 'CURSOS',
+          body: CoursesRoute(),
         );
       }),
     );
@@ -258,8 +48,9 @@ class _LoginState extends State<Login> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Nombre de usuario.',
           label: 'Usuario',
           type: TextInputType.text,
@@ -271,8 +62,9 @@ class _LoginState extends State<Login> {
         ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,
@@ -284,8 +76,9 @@ class _LoginState extends State<Login> {
           controller: _passwordController,
         ),
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,
@@ -355,8 +148,9 @@ class _LoginState extends State<Login> {
           ),
         ),
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Nombre de usuario.',
           label: 'Usuario',
           type: TextInputType.text,
@@ -368,8 +162,9 @@ class _LoginState extends State<Login> {
         ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,

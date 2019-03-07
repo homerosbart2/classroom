@@ -11,7 +11,13 @@ class Classroom extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Classroom',
-      theme: ThemeData(fontFamily: 'Roboto Condensed', primaryColor: Color.fromARGB(255, 255, 96, 64), accentColor: Color.fromARGB(255, 0, 11, 43)),
+      theme: ThemeData(
+        fontFamily: 'Roboto Condensed', 
+        primaryColor: Color.fromARGB(255, 255, 96, 64), 
+        primaryColorLight: Color.fromARGB(255, 255, 235, 231),
+        accentColor: Color.fromARGB(255, 0, 11, 43),
+        cardColor: Color.fromARGB(255, 233, 238, 255),
+      ),
       home: Login(),
     );
   }
