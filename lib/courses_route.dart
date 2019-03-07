@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:classroom/course.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/widget_passer.dart';
 import 'dart:convert';
 import 'package:classroom/nav.dart';

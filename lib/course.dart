@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
+import 'package:classroom/lessons_route.dart';
 
 class Course extends StatefulWidget{
   final String name, author;
@@ -66,13 +67,15 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
-        print('Esto sirve ggg.');
         Navigator.of(context).push(
           CupertinoPageRoute(builder: (BuildContext context) {
             return Nav(
+              preferredSize: 65,
+              section: 'lessons',
               user: 'Henry Campos',
               title: 'CLASES',
-              body: Container(),
+              subtitle: widget.name,
+              body: LessonsRoute(),
             );
           }),
         );
