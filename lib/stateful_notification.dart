@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:classroom/notification_hub.dart';
+import 'package:vibration/vibration.dart';
 
 class StatefulNotification extends StatefulWidget{
   final String text, type, author;
@@ -158,6 +158,9 @@ class _StatefulNotificationState extends State<StatefulNotification> with Ticker
                         NotificationHub.notifications[i].index
                       }
                       print(NotificationHub.notifications); */
+                      
+                      Vibration.vibrate(duration: 20);
+                      
                       _notificationPositionController.reverse().then((f){
                         _notificationHeightController.reverse();
                       });
@@ -187,7 +190,7 @@ class _StatefulNotificationState extends State<StatefulNotification> with Ticker
                     ),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),

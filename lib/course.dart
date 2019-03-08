@@ -5,7 +5,7 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/lessons_route.dart';
 
 class Course extends StatefulWidget{
-  final String name, author;
+  final String name, author, accessCode;
   final Color color;
   final int lessons, participants;
 
@@ -14,6 +14,7 @@ class Course extends StatefulWidget{
     @required this.author,
     @required this.lessons,
     @required this.participants,
+    @required this.accessCode,
     this.color,
   });
 
@@ -75,7 +76,12 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
               user: 'Henry Campos',
               title: 'CLASES',
               subtitle: widget.name,
-              body: LessonsRoute(),
+              body: LessonsRoute(
+                name: widget.name,
+                accessCode: widget.accessCode,
+                author: widget.author,
+                participants: widget.participants,
+              ),
             );
           }),
         );
@@ -91,8 +97,10 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
             child: Container(
               margin: EdgeInsets.all(6),
               padding: EdgeInsets.all(6),
-              color: _color,
-              
+              decoration: BoxDecoration(
+                color: _color,
+                borderRadius: BorderRadius.circular(3),
+              ),
               child: Stack(
                 children: <Widget>[
                   Column(

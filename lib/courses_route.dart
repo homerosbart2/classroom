@@ -28,6 +28,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
 
     _coursesList.add(
       Course(
+        accessCode: '45H3FS',
         participants: 23,
         lessons: 9,
         name: 'Ciencias de la Computación 7',
@@ -37,6 +38,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
 
     _coursesList.add(
       Course(
+        accessCode: '45H3FS',
         participants: 45,
         lessons: 5,
         name: 'Seminario Profesional 1',
@@ -50,6 +52,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
         setState(() {
           _coursesList.add(
             Course(
+              accessCode: jsonCourse['accessCode'],
               participants: jsonCourse['participants'],
               name: jsonCourse['name'],
               author: jsonCourse['author'],

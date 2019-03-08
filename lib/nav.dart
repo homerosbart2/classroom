@@ -280,7 +280,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
             widget.subtitle,
             style: TextStyle(
               color: Colors.redAccent[100],
-              fontSize: 17,
+              fontSize: 15,
             ),
           ),
         ],
@@ -511,10 +511,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                               if(val.trim() != ''){
                                 if(Nav.addBarMode == 0){
                                   Map text = {
+                                    //TODO: Generar un nuevo código y agregar el curso a la base de datos.
                                     'name' : val,
                                     'author' : widget.user,
                                     'lessons' : 0,
                                     'participants' : 1, 
+                                    'accessCode': '45H3F4',
                                   };
 
                                   String textCourse = json.encode(text);
