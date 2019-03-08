@@ -13,6 +13,7 @@ environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
 
 dependencies:
+  vibration: ^1.0.1
   rxdart: ^0.20.0
   flutter:
     sdk: flutter

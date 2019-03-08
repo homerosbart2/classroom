@@ -3,10 +3,8 @@ import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/stateful_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/courses_route.dart';
-import 'package:classroom/choice.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
-import 'package:classroom/widget_passer.dart';
 
 class Login extends StatefulWidget {
   const Login();
@@ -35,6 +33,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     Navigator.of(context).push(
       CupertinoPageRoute(builder: (BuildContext context) {
         return Nav(
+          section: 'courses',
           user: 'Henry Campos',
           title: 'CURSOS',
           body: CoursesRoute(),
