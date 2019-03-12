@@ -13,6 +13,7 @@ class StatefulTextfield extends StatefulWidget {
   final FontWeight weight;
   final FocusNode focusNode;
   final EdgeInsets margin;
+  final double borderRadius;
 
   const StatefulTextfield({
     @required this.suffix,
@@ -32,6 +33,7 @@ class StatefulTextfield extends StatefulWidget {
     this.onChangedFunction,
     this.isObscure : false,
     this.weight : FontWeight.normal,
+    this.borderRadius : 4.0,
   });
 
   @override
@@ -77,6 +79,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
           //textAlign: TextAlign.center,
           keyboardType: widget.type,
           decoration: InputDecoration(
+            contentPadding: EdgeInsets.all(18),
             fillColor: _fillColor,
             filled: _filled,
             suffixText: suffix,
@@ -85,6 +88,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
             ),
             labelText: widget.label,
             hintStyle: TextStyle(
+
               color: Colors.grey,
             ),
             hintText: widget.hint,
@@ -101,7 +105,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
                 color: widget.borderColor,
                 width: 3.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             hasFloatingPlaceholder: true,
             enabledBorder: OutlineInputBorder(
@@ -109,7 +113,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
                 color: Colors.white,
                 width: 1.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             border: OutlineInputBorder(
               borderSide: BorderSide(
