@@ -132,6 +132,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                         height: 20,
                         decoration: BoxDecoration(
                           color: Theme.of(context).accentColor,
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           '${widget.lessons} clases',
