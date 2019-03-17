@@ -3,7 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vibration/vibration.dart';
 
 class Vote extends StatefulWidget{
-  final bool voted;
+  final bool voted, showVotes, small;
   final int votes, index;
   final Function onVote, onUnvote;
 
@@ -13,6 +13,8 @@ class Vote extends StatefulWidget{
     this.index : 0,
     this.onVote,
     this.onUnvote,
+    this.showVotes: true,
+    this.small: false,
   });
 
   _VoteState createState() => _VoteState();
@@ -25,12 +27,16 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
   AnimationController _scaleController;
   Animation<double> _scaleFloat;
   int _votes;
+  double _iconSize;
 
   @override
   void initState() {
     super.initState();
 
     _votes = widget.votes;
+
+    if(widget.small) _iconSize = 16;
+    else _iconSize = 20;
 
     _voteWidget = Container();
     _voted = widget.voted;
@@ -68,7 +74,7 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
             splashColor: Theme.of(context).cardColor,
             icon: Icon(
               FontAwesomeIcons.star,
-              size: 20,
+              size: _iconSize,
               color: _emptyColor,
             ),
             onPressed: (){
@@ -94,7 +100,7 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
             splashColor: Theme.of(context).cardColor,
             icon: Icon(
               FontAwesomeIcons.solidStar,
-              size: 20,
+              size: _iconSize,
               color: _solidColor,
             ),
             onPressed: (){
@@ -117,6 +123,24 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
     });
   }
 
+  _construcVotesWidget(BuildContext context){
+    if(widget.showVotes){
+      return Container(
+        margin: EdgeInsets.only(bottom: 10, right: 14, left: 14),
+        child: Text(
+          '$_votes',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).accentColor,
+          ),
+        ),
+      );
+    }else{
+      return Container();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -131,17 +155,7 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         _voteWidget,
-        Container(
-          margin: EdgeInsets.only(bottom: 10, right: 14, left: 14),
-          child: Text(
-            '$_votes',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).accentColor,
-            ),
-          ),
-        ),
+        _construcVotesWidget(context),
       ],
     );
   }
