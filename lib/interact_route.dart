@@ -5,83 +5,89 @@ import 'dart:async';
 import 'package:classroom/stateful_textfield.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/lesson.dart';
+import 'package:classroom/question.dart';
 
 class InteractRoute extends StatefulWidget{
   const InteractRoute();
+  static List<Question> questions;
 
   _InteractRouteState createState() => _InteractRouteState();
 }
 
 class _InteractRouteState extends State<InteractRoute>{
-  List<Lesson> _lessons;
   Widget _presentation;
+  StreamController<int> _votesController;
+  Stream<int> _votesStream;
 
   @override
   void initState() {
     super.initState();
 
-    _lessons = List<Lesson>();
+    _votesController = StreamController<int>();
+    _votesStream = _votesController.stream;
 
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    InteractRoute.questions = List<Question>();
+
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué significa que sea una presentación de ejemplo?',
+        author: 'Diego Alay',
+        voted: true,
+        votes: 69,
+        index: 0,
+        votesController: _votesController,
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué día es hoy?',
+        author: 'Henry Campos',
+        mine: true,
+        index: 1,
+        votesController: _votesController,
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué significa que sea una presentación de ejemplo?',
+        author: 'Diego Alay',
+        voted: true,
+        votes: 69,
+        index: 2,
+        votesController: _votesController,
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué día es hoy?',
+        author: 'Henry Campos',
+        mine: true,
+        index: 3,
+        votesController: _votesController,
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué significa que sea una presentación de ejemplo?',
+        author: 'Diego Alay',
+        voted: true,
+        votes: 69,
+        index: 4,
+        votesController: _votesController,
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué día es hoy?',
+        author: 'Henry Campos',
+        mine: true,
+        index: 5,
+        votesController: _votesController,
       )
     );
 
@@ -89,6 +95,14 @@ class _InteractRouteState extends State<InteractRoute>{
       setState(() {
         _presentation = trick;
       });
+    });
+
+    _votesStream.listen((val) {
+      if(val != null){
+        setState(() {
+          
+        });
+      }
     });
   }
 
@@ -132,6 +146,26 @@ class _InteractRouteState extends State<InteractRoute>{
     );
   }
 
+  Widget _getListView(double width, double height){
+    final List<Question> _actualQuestions = List.from(InteractRoute.questions);
+    return ListView.builder(
+      padding: EdgeInsets.only(top: 10, bottom: 10),
+      itemCount: _actualQuestions.length + 1,
+      itemBuilder: (context, index){
+        if(index == 0){
+          return Container(
+            padding: EdgeInsets.all(12),
+            width: width,
+            height: height,
+            child: _presentation,
+          );
+        }else{
+          return _actualQuestions.elementAt(index - 1);
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     double _width = MediaQuery.of(context).size.width;
@@ -145,23 +179,8 @@ class _InteractRouteState extends State<InteractRoute>{
             children: <Widget>[
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.only(bottom: 80),
-                  child: ListView.builder(
-                    padding: EdgeInsets.only(top: 10, bottom: 10),
-                    itemCount: _lessons.length + 1,
-                    itemBuilder: (context, index){
-                      if(index == 0){
-                        return Container(
-                          padding: EdgeInsets.all(12),
-                          width: _width,
-                          height: _height,
-                          child: _presentation,
-                        );
-                      }else{
-                        return _lessons.elementAt(index - 1);
-                      }
-                    },
-                  ),
+                  padding: EdgeInsets.only(bottom: 68),
+                  child: _getListView(_width, _height),
                 ),
               )
             ],
@@ -172,18 +191,46 @@ class _InteractRouteState extends State<InteractRoute>{
             right: 0,
             child: Container(
               color: Theme.of(context).accentColor,
-              padding: EdgeInsets.fromLTRB(12, 3, 12, 3),
+              padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
               child: Stack(
                 children: <Widget>[
-                  StatefulTextfield(
-                    color: Theme.of(context).accentColor,
-                    fillColor: Colors.white,
-                    suffix: '',
-                    hint: 'Escriba una pregunta',
-                    borderRadius: 30,
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: StatefulTextfield(
+                          color: Theme.of(context).accentColor,
+                          fillColor: Colors.white,
+                          suffix: '',
+                          hint: 'Escriba una pregunta',
+                          borderRadius: 30,
+                          padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
+                        ),
+                      ),
+                      Container(
+                        width: 48,
+                        height: 48,
+                        margin: EdgeInsets.only(left: 12),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            IconButton(
+                              icon: Icon(
+                                FontAwesomeIcons.paperclip,
+                                size: 18,
+                              ),
+                              onPressed: (){},
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   Positioned(
-                    right: 0,
+                    right: 60,
                     top: 0,
                     bottom: 0,
                     child: Column(
@@ -192,7 +239,7 @@ class _InteractRouteState extends State<InteractRoute>{
                         IconButton(
                           icon: Icon(
                             FontAwesomeIcons.check,
-                            size: 20,
+                            size: 18,
                             color: Theme.of(context).accentColor,
                           ),
                           onPressed: (){},
@@ -210,74 +257,3 @@ class _InteractRouteState extends State<InteractRoute>{
   }
 }
 
-/*
-
-Container(
-  padding: EdgeInsets.all(12),
-  width: _width,
-  height: _height,
-  child: FutureBuilder(
-    future: _construc(),
-    builder: (BuildContext context, AsyncSnapshot snapshot){
-      if(snapshot.hasData){
-        return snapshot.data;
-      }else{
-        return Container();
-      }
-    },
-  ),
-),
-Column(
-  children: <Widget>[
-    Expanded(
-      child: Container(
-        margin: EdgeInsets.only(top: _height),
-        color: Color.fromARGB(10, 255, 0, 0),
-        child: Stack(
-          children: <Widget>[
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                color: Theme.of(context).accentColor,
-                padding: EdgeInsets.fromLTRB(12, 3, 12, 3),
-                child: Stack(
-                  children: <Widget>[
-                    StatefulTextfield(
-                      color: Theme.of(context).accentColor,
-                      fillColor: Colors.white,
-                      suffix: '',
-                      hint: 'Escriba una pregunta',
-                      borderRadius: 30,
-                    ),
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      bottom: 0,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          IconButton(
-                            icon: Icon(
-                              FontAwesomeIcons.check,
-                              size: 20,
-                              color: Theme.of(context).accentColor,
-                            ),
-                            onPressed: (){},
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  ],
-),
-
-*/
