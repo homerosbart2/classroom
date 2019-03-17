@@ -17,6 +17,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
   FocusNode myFocusNode;
   bool _register;
   TextEditingController _usernameController, _passwordController;
+  AnimationController _slideController;
+  Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
 
 
   @override
@@ -26,6 +28,31 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     myFocusNode = FocusNode();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
+
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _registerOffsetFloat = Tween<Offset>(
+      begin: Offset(2, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: Curves.easeInOut,
+      )
+    );
+
+    _loginOffsetFloat = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(-2, 0),
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: Curves.easeInOut,
+      )
+    );
   }
 
   void _navigateToCourses(BuildContext context) {
@@ -97,9 +124,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 text: 'CANCELAR',
                 color: Theme.of(context).primaryColor,
                 onTap: (){
-                  setState(() {
-                    _register = false;
-                  });
+                  _slideController.reverse();
+                  _register = false;
                 },
                 type: 'a',
                 weight: FontWeight.bold,
@@ -183,9 +209,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 text: 'REGISTRARSE',
                 color: Theme.of(context).primaryColor,
                 onTap: (){
-                  setState(() {
-                    _register = true;
-                  });
+                  _slideController.forward();
+                  _register = true;
                 },
                 type: 'a',
                 weight: FontWeight.bold,
@@ -231,11 +256,17 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Expanded(
-                child: AnimatedCrossFade(
-                  firstChild: _loginForm(),
-                  secondChild: _registerForm(),
-                  duration: Duration(milliseconds: 0),
-                  crossFadeState: _register ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                child: Stack(
+                  children: <Widget>[
+                    SlideTransition(
+                      position: _loginOffsetFloat,
+                      child: _loginForm()
+                    ),
+                    SlideTransition(
+                      position: _registerOffsetFloat,
+                      child: _registerForm()
+                    ),
+                  ],
                 ),
               ),
               RichText(
