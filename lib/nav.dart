@@ -4,6 +4,9 @@ import 'package:classroom/stateful_button.dart';
 import 'package:classroom/notification_hub.dart';
 import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:classroom/auth.dart';
+import 'package:classroom/database_manager.dart';
+import 'dart:math';
 import 'dart:convert';
 
 class Nav extends StatefulWidget{
@@ -38,6 +41,7 @@ class Nav extends StatefulWidget{
 }
 
 class _NavState extends State<Nav> with TickerProviderStateMixin{
+  var random = new Random();
   Animation<Offset> _offsetFloat;
   Animation<double> _widthFloat;
   TextEditingController _addBarTextfieldController;
@@ -116,6 +120,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     //_addButtonController.forward();
   }
 
+  int getRandom(){
+    return random.nextInt(100000);
+  }
+
   Widget _postAlertInAddBar(){
     if(_alertMessage == ''){
       return Container();
@@ -185,19 +193,20 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   hint: Nav.addBarTitle,
                   type: TextInputType.text,
                   onSubmitted: (val){
+                    String author = Auth.uid;
+                    String code = this.getRandom().toString();
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
                         Map text = {
                           //TODO: Generar un nuevo código y agregar el curso a la base de datos.
                           'name' : val,
-                          'author' : widget.user,
+                          'author' : author,
                           'lessons' : 0,
                           'participants' : 1, 
-                          'accessCode': '45H3F4',
+                          'accessCode': code,
                         };
-
+                        DatabaseManager.addCourse(author,val,code);
                         String textCourse = json.encode(text);
-
                         print(textCourse);
                         Nav.coursePasser.sendWidget.add(textCourse);
                         _addButtonController.reverse();
@@ -382,7 +391,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             shape: BoxShape.circle,
                             image: DecorationImage(
                               fit: BoxFit.cover,
-                              image: AssetImage('lib/assets/images/default.png'),
+                              image: AssetImage(Auth.getPhotoUrl()),
                             ),
                           ),
                         ),
@@ -394,7 +403,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                               Container(
                                 margin: EdgeInsets.only(right: 2),
                                 child: Text(
-                                  '@',
+                                  '',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -402,7 +411,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                                 ),
                               ),
                               Text(
-                                'henry.campos',
+                                Auth.getEmail(),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -494,8 +503,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 ),
                 onTap: () {
                   //TODO: Cerrar la sesión del usuario.
-                  Navigator.of(context).pop();
-                  Navigator.of(context).pop();
+                  // Navigator.of(context).pop();
+                  // Navigator.of(context).pop();
+                  // Auth.signOut();
+                  DatabaseManager.getCourses();
                 },
               ),
             ),

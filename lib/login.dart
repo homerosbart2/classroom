@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/courses_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
+import 'package:classroom/auth.dart';
 
 class Login extends StatefulWidget {
   const Login();
@@ -136,6 +137,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
+                  validateAndSubmit(_usernameController.text, _passwordController.text);
                   //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
                 },
               ),
@@ -145,6 +147,28 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
       ],
     );
   }
+
+  void validateAndSubmit(String email, String password) async {
+    email = email.toString().trim();
+    email = email.toString().toLowerCase();
+    password = password.toString().trim();
+    //TODO: validar email valido y password no empty
+    try{ 
+      if(_register == true){
+        String user = await Auth.createUserWithEmailAndPassword(email,password);
+        print("Register user: $user");      
+      }else{
+        String user = await Auth.signInWithEmailAndPassword(email, password);
+        print("Login: $user");
+        Auth.currentUser().then((userId){
+          if(userId == null) print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+          else _navigateToCourses(context);
+        });
+      }
+    }catch(e){
+      print("Error in sign in: $e");
+    }
+  } 
 
   Widget _loginForm(){
     return Column(
@@ -221,8 +245,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
-                  _navigateToCourses(context);
+                  validateAndSubmit(_usernameController.text, _passwordController.text);
                 },
               ),
             ],
