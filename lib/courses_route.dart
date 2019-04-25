@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:classroom/course.dart';
 import 'package:classroom/widget_passer.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
 
@@ -15,14 +16,18 @@ class CoursesRoute extends StatefulWidget{
 
 class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMixin{
   WidgetPasser _coursePasser;
-  List<Course> _coursesList;
+  List<Course> _coursesList = null;
 
 
   @override
   void initState() {
     super.initState();
     _coursePasser = Nav.coursePasser;
-    _coursesList = DatabaseManager.getCourses();
+    if(_coursesList == null){
+       DatabaseManager.getAllCourses().then(
+          (List<Course> l) => setState(() {_coursesList = l;})
+       );
+    }
     
     _coursePasser.recieveWidget.listen((newCourse){
       if(newCourse != null){

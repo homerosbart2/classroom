@@ -503,10 +503,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 ),
                 onTap: () {
                   //TODO: Cerrar la sesión del usuario.
-                  // Navigator.of(context).pop();
-                  // Navigator.of(context).pop();
-                  // Auth.signOut();
-                  DatabaseManager.getCourses();
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                  Auth.signOut();
+                  // DatabaseManager.getCoursesPerUser();
                 },
               ),
             ),
