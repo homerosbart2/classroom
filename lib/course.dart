@@ -6,13 +6,14 @@ import 'package:classroom/lessons_route.dart';
 import 'package:vibration/vibration.dart';
 
 class Course extends StatefulWidget{
-  final String name, author, accessCode;
+  final String name, author, accessCode, authorId;
   final Color color;
   final int lessons, participants;
 
   const Course({
     @required this.name,
     @required this.author,
+    @required this.authorId, 
     @required this.lessons,
     @required this.participants,
     @required this.accessCode,

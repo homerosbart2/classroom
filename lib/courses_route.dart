@@ -16,15 +16,16 @@ class CoursesRoute extends StatefulWidget{
 
 class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMixin{
   WidgetPasser _coursePasser;
-  List<Course> _coursesList = null;
+  List<Course> _coursesList;
 
 
   @override
   void initState() {
     super.initState();
+    _coursesList = List<Course>();
     _coursePasser = Nav.coursePasser;
     if(_coursesList == null){
-       DatabaseManager.getAllCourses().then(
+       DatabaseManager.getCoursesPerUser().then(
           (List<Course> l) => setState(() {_coursesList = l;})
        );
     }
@@ -32,20 +33,22 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     _coursePasser.recieveWidget.listen((newCourse){
       if(newCourse != null){
         Map jsonCourse = json.decode(newCourse);
-        setState(() {
-          _coursesList.add(
-            Course(
-              accessCode: jsonCourse['accessCode'],
-              participants: jsonCourse['participants'],
-              name: jsonCourse['name'],
-              author: jsonCourse['author'],
-              lessons: jsonCourse['lessons'],
-            )
-          );
-        });
+        if(this.mounted){
+            _coursesList.add(
+              Course(
+                accessCode: jsonCourse['accessCode'],
+                participants: jsonCourse['participants'],
+                name: jsonCourse['name'],
+                author: jsonCourse['author'],
+                authorId: jsonCourse['authorId'],
+                lessons: jsonCourse['lessons'],
+              )
+            );
+        }
       }
     });
   }
+  
 
   Widget _getGridView(){
     final List<Course> _actualCoursesList = List.from(_coursesList);

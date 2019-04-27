@@ -17,7 +17,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> with TickerProviderStateMixin{
   FocusNode myFocusNode;
   bool _register;
-  TextEditingController _usernameController, _passwordController;
+  TextEditingController _usernameController, _passwordController, _nameController;
   AnimationController _slideController;
   Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
 
@@ -27,6 +27,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     super.initState();
     _register = false;
     myFocusNode = FocusNode();
+    _nameController = TextEditingController();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
 
@@ -70,10 +71,46 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     );
   }
 
+  void validateAndSubmit(String email, String password, String name) async {
+    email = email.toString().trim();
+    email = email.toString().toLowerCase();
+    password = password.toString().trim();
+    //TODO: validar email valido y password no empty
+    try{ 
+      if(_register == true){
+        String user = await Auth.createUserWithEmailAndPassword(email,password,name);
+        if(user == null) print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
+        else _navigateToCourses(context);    
+      }else{
+        String user = await Auth.signInWithEmailAndPassword(email, password);
+        print("Login: $user");
+        Auth.currentUser().then((userId){
+          if(userId == null) print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+          else _navigateToCourses(context);
+        });
+      }
+    }catch(e){
+      print("Error in sign in: $e");
+    }
+  } 
+
   Widget _registerForm(){
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
+        StatefulTextfield(
+          weight: FontWeight.bold,
+          suffix: '',
+          color: Colors.redAccent[100],
+          helper: 'correo electrónico.',
+          label: 'Email',
+          type: TextInputType.text,
+          onChangedFunction: (String value){
+            this.setState(() {   
+            });
+          },
+          controller: _usernameController,
+        ),
         StatefulTextfield(
           weight: FontWeight.bold,
           suffix: '',
@@ -85,7 +122,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             this.setState(() {   
             });
           },
-          controller: _usernameController,
+          controller: _nameController,
         ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
@@ -137,7 +174,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  validateAndSubmit(_usernameController.text, _passwordController.text);
+                  validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
                   //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
                 },
               ),
@@ -147,28 +184,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
       ],
     );
   }
-
-  void validateAndSubmit(String email, String password) async {
-    email = email.toString().trim();
-    email = email.toString().toLowerCase();
-    password = password.toString().trim();
-    //TODO: validar email valido y password no empty
-    try{ 
-      if(_register == true){
-        String user = await Auth.createUserWithEmailAndPassword(email,password);
-        print("Register user: $user");      
-      }else{
-        String user = await Auth.signInWithEmailAndPassword(email, password);
-        print("Login: $user");
-        Auth.currentUser().then((userId){
-          if(userId == null) print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
-          else _navigateToCourses(context);
-        });
-      }
-    }catch(e){
-      print("Error in sign in: $e");
-    }
-  } 
 
   Widget _loginForm(){
     return Column(
@@ -245,7 +260,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  validateAndSubmit(_usernameController.text, _passwordController.text);
+                  validateAndSubmit(_usernameController.text, _passwordController.text,"");
                 },
               ),
             ],

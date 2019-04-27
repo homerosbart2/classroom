@@ -14,8 +14,14 @@ class Auth{
     return user?.uid;
   }
 
-  static Future<String> createUserWithEmailAndPassword(String email, String password) async{
-    FirebaseUser user = await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+  static Future<String> createUserWithEmailAndPassword(String email, String password, String name) async{
+    FirebaseUser user;
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password).then((user){
+      UserUpdateInfo profileUpdate = new UserUpdateInfo();
+      profileUpdate.displayName = name;
+      user.updateProfile(profileUpdate);
+      user.reload();
+    });
     return user?.uid;
   }  
 
@@ -33,17 +39,6 @@ class Auth{
   static Future<void> signOut() async{    
     return await FirebaseAuth.instance.signOut();
   }
-
-  static Future<String> updateUser() async{
-    FirebaseUser user = await FirebaseAuth.instance.currentUser();
-    if (user != null) {
-      userName = user.displayName;
-      userEmail = user.email;
-      userPhotoUrl = user.photoUrl;
-      uid = user.uid;
-    }
-    return user?.email;
-  } 
 
   static String getName(){
     if(userName != null) return userName;

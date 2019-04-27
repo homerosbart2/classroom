@@ -193,7 +193,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   hint: Nav.addBarTitle,
                   type: TextInputType.text,
                   onSubmitted: (val){
-                    String author = Auth.uid;
+                    String authorId = Auth.uid;
+                    String author = Auth.getName();
                     String code = this.getRandom().toString();
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
@@ -201,11 +202,13 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           //TODO: Generar un nuevo código y agregar el curso a la base de datos.
                           'name' : val,
                           'author' : author,
+                          'authorId' : authorId,
                           'lessons' : 0,
                           'participants' : 1, 
                           'accessCode': code,
                         };
-                        DatabaseManager.addCourse(author,val,code);
+
+                        DatabaseManager.addCourse(authorId,author,val,code);
                         String textCourse = json.encode(text);
                         print(textCourse);
                         Nav.coursePasser.sendWidget.add(textCourse);
@@ -216,6 +219,24 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             _addBarAlertController.reverse();
                           }
                         });
+                      }else{
+                        DatabaseManager.addCourseByAccessCode("-asasdasds",Auth.uid).then((Map text){
+                          if(text != null){  
+                            String textCourse = json.encode(text);
+                            print(textCourse);
+                            Nav.coursePasser.sendWidget.add(textCourse);
+                            _addButtonController.reverse();
+                            _addBarController.reverse().then((val){
+                              _addBarTextfieldController.text = '';
+                              if(_addBarAlertController.status != AnimationStatus.dismissed){
+                                _addBarAlertController.reverse();
+                              }
+                            });            
+                          }else{
+                            print("NO ENCONTRADO");
+                            //TODO: dialogo de curso no encontrado
+                          }              
+                        });                                                                      
                       }
                     }else{
                       FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
@@ -225,10 +246,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                       _addBarAlertController.forward();
                     }
                   },
-                  /* onChangedFunction: (val){
-                    this.setState(() {   
-                    });
-                  }, */
+                  // /* onChangedFunction: (val){
+                  //   this.setState(() {   
+                  //   });
+                  // }, */
                 ),
                 _postAlertInAddBar(),
               ],
@@ -411,7 +432,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                                 ),
                               ),
                               Text(
-                                Auth.getEmail(),
+                                Auth.getName(),
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 16,
@@ -505,8 +526,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   //TODO: Cerrar la sesión del usuario.
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
-                  Auth.signOut();
-                  // DatabaseManager.getCoursesPerUser();
+                  // Auth.signOut();
                 },
               ),
             ),
