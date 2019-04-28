@@ -76,13 +76,13 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       )
     );
 
-   /*  _votesStream.listen((val) {
+    _votesStream.listen((val) {
       if(val != null){
         setState(() {
           
         });
       }
-    }); */
+    });
 
     _questionStream.listen((text) {
       if(text != null){

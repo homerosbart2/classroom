@@ -49,17 +49,19 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     _coursePasser.recieveWidget.listen((newCourse){
       if(newCourse != null){
         Map jsonCourse = json.decode(newCourse);
-        setState(() {
-          _coursesList.add(
-            Course(
-              accessCode: jsonCourse['accessCode'],
-              participants: jsonCourse['participants'],
-              name: jsonCourse['name'],
-              author: jsonCourse['author'],
-              lessons: jsonCourse['lessons'],
-            )
-          );
-        });
+        if(this.mounted){
+          setState(() {
+            _coursesList.add(
+              Course(
+                accessCode: jsonCourse['accessCode'],
+                participants: jsonCourse['participants'],
+                name: jsonCourse['name'],
+                author: jsonCourse['author'],
+                lessons: jsonCourse['lessons'],
+              )
+            );
+          });
+        }
       }
     });
   }
