@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vibration/vibration.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:classroom/nav.dart';
+import 'package:classroom/interact_route.dart';
 
 class Lesson extends StatefulWidget{
   final String name, description;
@@ -119,6 +122,24 @@ class _LessonState extends State<Lesson>{
                     child: GestureDetector(
                       onTap: (){
                         Vibration.vibrate(duration: 20);
+                        print('funciona');
+                        Navigator.of(context).push(
+                          CupertinoPageRoute(builder: (BuildContext context) {
+                            return Nav(
+                              elevation: 0,
+                              color: Colors.transparent,
+                              actionsColor: Theme.of(context).accentColor,
+                              titleColor: Theme.of(context).accentColor,
+                              addBarActive: false,
+                              drawerActive: false,
+                              notificationsActive: false,
+                              section: 'interact',
+                              user: 'Henry Campos',
+                              title: widget.name,
+                              body: InteractRoute(),
+                            ); 
+                          })
+                        );
                       },
                       child: Container(
                         width: 40,

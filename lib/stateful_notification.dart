@@ -152,13 +152,6 @@ class _StatefulNotificationState extends State<StatefulNotification> with Ticker
                   message: 'Eliminar',
                   child: GestureDetector(
                     onTap: (){
-                      /* print(widget.index);
-                      NotificationHub.notifications.removeAt(widget.index);
-                      for(int i = widget.index; i < NotificationHub.notifications.length; i++){
-                        NotificationHub.notifications[i].index
-                      }
-                      print(NotificationHub.notifications); */
-                      
                       Vibration.vibrate(duration: 20);
                       
                       _notificationPositionController.reverse().then((f){

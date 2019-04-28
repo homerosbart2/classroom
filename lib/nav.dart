@@ -13,13 +13,22 @@ class Nav extends StatefulWidget{
   static WidgetPasser coursePasser = WidgetPasser();
   final Widget body;
   final String title, user, section, subtitle;
-  final double preferredSize;
+  final double preferredSize, elevation;
+  final bool drawerActive, addBarActive, notificationsActive;
+  final Color color, titleColor, actionsColor;
 
   const Nav({
     @required this.body,
     @required this.title,
     @required this.user,
     @required this.section,
+    this.elevation: 1.0,
+    this.color,
+    this.titleColor,
+    this.actionsColor: Colors.white,
+    this.addBarActive: true,
+    this.drawerActive: true,
+    this.notificationsActive: true,
     this.subtitle: '',
     this.preferredSize: 60.0,
   });
@@ -37,6 +46,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   Animation<double> _angleFloat;
   AnimationController _addBarController, _addBarAlertController; 
   String _alertMessage;
+  Color _titleColor, _color, _actionsColor;
   //WidgetPasser courseBloc = WidgetPasser();
 
   @override
@@ -79,7 +89,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     
 
     _offsetFloat = Tween<Offset>(
-      begin: Offset(0.0, -1.0), 
+      begin: Offset(0.0, -1.1), 
       end: Offset.zero,
     ).animate(
       CurvedAnimation(
@@ -139,6 +149,86 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           ),
         ),
       );
+    }
+  }
+
+  Widget _construcAddBar(double width){
+    if(widget.addBarActive){
+      return Positioned(
+        left: 0,
+        top: 0,
+        child: SlideTransition(
+          position: _offsetFloat,
+          child: Container(
+            padding: EdgeInsets.fromLTRB(6, 0, 6, 0),
+            width: width,
+            decoration: BoxDecoration(
+              color: Theme.of(context).accentColor,
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: Color.fromARGB(50, 0, 0, 0),
+                  blurRadius: 1,
+                  offset: Offset(0, 1),
+                ),
+              ]
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                StatefulTextfield(
+                  controller: _addBarTextfieldController,
+                  focusNode: Nav.focusAddBarNode,
+                  fillColor: Colors.white,
+                  suffix: '',
+                  color: Theme.of(context).accentColor,
+                  helper: null,
+                  hint: Nav.addBarTitle,
+                  type: TextInputType.text,
+                  onSubmitted: (val){
+                    if(val.trim() != ''){
+                      if(Nav.addBarMode == 0){
+                        Map text = {
+                          //TODO: Generar un nuevo código y agregar el curso a la base de datos.
+                          'name' : val,
+                          'author' : widget.user,
+                          'lessons' : 0,
+                          'participants' : 1, 
+                          'accessCode': '45H3F4',
+                        };
+
+                        String textCourse = json.encode(text);
+
+                        print(textCourse);
+                        Nav.coursePasser.sendWidget.add(textCourse);
+                        _addButtonController.reverse();
+                        _addBarController.reverse().then((val){
+                          _addBarTextfieldController.text = '';
+                          if(_addBarAlertController.status != AnimationStatus.dismissed){
+                            _addBarAlertController.reverse();
+                          }
+                        });
+                      }
+                    }else{
+                      FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
+                      setState(() {
+                        _alertMessage = 'El nombre contiene solo espacios en blanco.'; 
+                      });
+                      _addBarAlertController.forward();
+                    }
+                  },
+                  /* onChangedFunction: (val){
+                    this.setState(() {   
+                    });
+                  }, */
+                ),
+                _postAlertInAddBar(),
+              ],
+            ),
+          ),
+        ),
+      );
+    }else{
+      return Container();
     }
   }
 
@@ -217,47 +307,218 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         )
       );
     }
-    actions.add(
-      Container(
-        padding: EdgeInsets.fromLTRB(0, 4, 5, 0),
-        child: Stack(
-          children: <Widget>[
-            IconButton(
-              icon: Icon(
-                FontAwesomeIcons.solidBell,
-                size: 20,
-              ),
-              tooltip: 'Notificaciones',
-              onPressed: (){
-                print("Sigue funcionando");
-                _notificationHubPositionController.forward();
-              },
-            ),
-            Positioned(
-              top: 10,
-              right: 10,
-              child: Container(
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).primaryColor,
+    if(widget.notificationsActive){
+      actions.add(
+        Container(
+          padding: EdgeInsets.fromLTRB(0, 4, 5, 0),
+          child: Stack(
+            children: <Widget>[
+              IconButton(
+                icon: Icon(
+                  FontAwesomeIcons.solidBell,
+                  size: 20,
                 ),
+                tooltip: 'Notificaciones',
+                onPressed: (){
+                  print("Sigue funcionando");
+                  _notificationHubPositionController.forward();
+                },
+              ),
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )
+      );
+    }
+    return actions;
+  }
+
+  Widget _construcDrawer(){
+    if(widget.drawerActive){
+      return Drawer(
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            DrawerHeader(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Text(
+                        'Classroom',
+                        style: TextStyle(
+                          color: Theme.of(context).primaryColor,
+                          fontFamily: 'Vampiro One',
+                          fontSize: 26,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.white,
+                              width: 3,
+                            ),
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              fit: BoxFit.cover,
+                              image: AssetImage('lib/assets/images/default.png'),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Container(
+                                margin: EdgeInsets.only(right: 2),
+                                child: Text(
+                                  '@',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                'henry.campos',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          margin: EdgeInsets.only(top: 2),
+                          child: Text(
+                            'Ver más',
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: AssetImage('lib/assets/images/bg_dark.jpg'),
+                ),
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey[200]))
+              ),
+              child: ListTile(
+                title: Row(
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(right: 15),
+                      child: StatefulButton(
+                        type: 'a',
+                        icon: FontAwesomeIcons.book,
+                        text: '',
+                        color: Theme.of(context).accentColor,
+                        onTap: (){},
+                      ),
+                    ),
+                    Text(
+                      'Cursos',
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                        //fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  if(widget.section == 'lessons'){
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pop();
+                  }
+                },
+              ),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                border: Border(bottom: BorderSide(color: Colors.grey[200]))
+              ),
+              child: ListTile(
+                title: Row(
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(right: 15),
+                      child: StatefulButton(
+                        type: 'a',
+                        icon: FontAwesomeIcons.signOutAlt,
+                        text: '',
+                        color: Theme.of(context).accentColor,
+                        onTap: (){},
+                      ),
+                    ),
+                    Text(
+                      'Salir',
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                        //fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  //TODO: Cerrar la sesión del usuario.
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pop();
+                },
               ),
             ),
           ],
         ),
-      )
-    );
-    return actions;
+      );
+    }else{
+      return null;
+    }
   }
 
   Widget _construcTitle(){
+    if(widget.titleColor == null){
+      _titleColor = Theme.of(context).primaryColor;
+    }else{
+      _titleColor = widget.titleColor;
+    }
+
     if(widget.subtitle == ''){
       return Text(
         widget.title,
         style: TextStyle(
-          color: Theme.of(context).primaryColor,
+          color: _titleColor,
           fontSize: 26.0,
           fontWeight: FontWeight.bold,
           //fontFamily: 'Vampiro One'
@@ -270,7 +531,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           Text(
             widget.title,
             style: TextStyle(
-              color: Theme.of(context).primaryColor,
+              color: _titleColor,
               fontSize: 26.0,
               fontWeight: FontWeight.bold,
               //fontFamily: 'Vampiro One'
@@ -292,264 +553,37 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   Widget build(BuildContext context) {
     double _width = MediaQuery.of(context).size.width;
 
+    if(widget.color == null){
+      _color = Theme.of(context).accentColor;
+    }else{
+      _color = widget.color;
+    }
+
     return Container(
       color: Theme.of(context).accentColor,
       padding: EdgeInsets.only(top: widget.preferredSize - 60.0),
       child: Scaffold(
-            drawer: Drawer(
-              child: ListView(
-                // Important: Remove any padding from the ListView.
-                padding: EdgeInsets.zero,
-                children: <Widget>[
-                  DrawerHeader(
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-                    child: Column(
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            Text(
-                              'Classroom',
-                              style: TextStyle(
-                                color: Theme.of(context).primaryColor,
-                                fontFamily: 'Vampiro One',
-                                fontSize: 26,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    fit: BoxFit.cover,
-                                    image: AssetImage('lib/assets/images/default.png'),
-                                  ),
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.only(top: 10),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: <Widget>[
-                                    Container(
-                                      margin: EdgeInsets.only(right: 2),
-                                      child: Text(
-                                        '@',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      'henry.campos',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                margin: EdgeInsets.only(top: 2),
-                                child: Text(
-                                  'Ver más',
-                                  style: TextStyle(
-                                    color: Theme.of(context).primaryColor,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: AssetImage('lib/assets/images/bg_dark.jpg'),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                    ),
-                    child: ListTile(
-                      title: Row(
-                        children: <Widget>[
-                          Container(
-                            margin: EdgeInsets.only(right: 15),
-                            child: StatefulButton(
-                              type: 'a',
-                              icon: FontAwesomeIcons.book,
-                              text: '',
-                              color: Theme.of(context).accentColor,
-                              onTap: (){},
-                            ),
-                          ),
-                          Text(
-                            'Cursos',
-                            style: TextStyle(
-                              color: Theme.of(context).accentColor,
-                              //fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        // Update the state of the app
-                        // ...
-                      },
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                    ),
-                    child: ListTile(
-                      title: Row(
-                        children: <Widget>[
-                          Container(
-                            margin: EdgeInsets.only(right: 15),
-                            child: StatefulButton(
-                              type: 'a',
-                              icon: FontAwesomeIcons.signOutAlt,
-                              text: '',
-                              color: Theme.of(context).accentColor,
-                              onTap: (){},
-                            ),
-                          ),
-                          Text(
-                            'Salir',
-                            style: TextStyle(
-                              color: Theme.of(context).accentColor,
-                              //fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        //TODO: Cerrar la sesión del usuario.
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            drawer: _construcDrawer(),
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(widget.preferredSize),
               child: AppBar(
                 actions: _construcActions(),
-                elevation: 1.0,
+                elevation: widget.elevation,
                 title: Container(
                   margin: EdgeInsets.only(top: (widget.preferredSize - 60.0)/2.0 + 2),
                   child: _construcTitle(),
-                ),
-                      /* Text(
-                        'Inicio',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.normal,
-                        ),
-                      ), */
-                    
+                ), 
                 centerTitle: false,
-                backgroundColor: Theme.of(context).accentColor,
+                backgroundColor: _color,
                 iconTheme: IconThemeData(
-                  color: Colors.white,
+                  color: widget.actionsColor,
                 ),
               ),
             ),
             body: Stack(
               children: <Widget>[
                 widget.body,
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  child: SlideTransition(
-                    position: _offsetFloat,
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(6, 0, 6, 0),
-                      width: _width,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).accentColor,
-                        boxShadow: <BoxShadow>[
-                          BoxShadow(
-                            color: Color.fromARGB(50, 0, 0, 0),
-                            blurRadius: 1,
-                            offset: Offset(0, 1),
-                          ),
-                        ]
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          StatefulTextfield(
-                            controller: _addBarTextfieldController,
-                            focusNode: Nav.focusAddBarNode,
-                            fillColor: Colors.white,
-                            suffix: '',
-                            color: Theme.of(context).accentColor,
-                            helper: null,
-                            hint: Nav.addBarTitle,
-                            type: TextInputType.text,
-                            onSubmitted: (val){
-                              if(val.trim() != ''){
-                                if(Nav.addBarMode == 0){
-                                  Map text = {
-                                    //TODO: Generar un nuevo código y agregar el curso a la base de datos.
-                                    'name' : val,
-                                    'author' : widget.user,
-                                    'lessons' : 0,
-                                    'participants' : 1, 
-                                    'accessCode': '45H3F4',
-                                  };
-
-                                  String textCourse = json.encode(text);
-
-                                  print(textCourse);
-                                  Nav.coursePasser.sendWidget.add(textCourse);
-                                  _addButtonController.reverse();
-                                  _addBarController.reverse().then((val){
-                                    _addBarTextfieldController.text = '';
-                                    if(_addBarAlertController.status != AnimationStatus.dismissed){
-                                      _addBarAlertController.reverse();
-                                    }
-                                  });
-                                }
-                              }else{
-                                FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
-                                setState(() {
-                                  _alertMessage = 'El nombre contiene solo espacios en blanco.'; 
-                                });
-                                _addBarAlertController.forward();
-                              }
-                            },
-                            /* onChangedFunction: (val){
-                              this.setState(() {   
-                              });
-                            }, */
-                          ),
-                          _postAlertInAddBar(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _construcAddBar(_width),
                 NotificationHub(
                   notificationHubPositionController: _notificationHubPositionController,
                 ),

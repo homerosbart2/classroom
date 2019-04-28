@@ -12,12 +12,14 @@ class StatefulTextfield extends StatefulWidget {
   final TextEditingController controller;
   final FontWeight weight;
   final FocusNode focusNode;
-  final EdgeInsets margin;
+  final EdgeInsets margin, padding;
+  final double borderRadius;
 
   const StatefulTextfield({
     @required this.suffix,
     this.color : Colors.black,
     this.margin : const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 10.0),
+    this.padding : const EdgeInsets.all(18),
     this.onSubmitted,
     this.focusNode,
     this.borderColor : Colors.white,
@@ -32,6 +34,7 @@ class StatefulTextfield extends StatefulWidget {
     this.onChangedFunction,
     this.isObscure : false,
     this.weight : FontWeight.normal,
+    this.borderRadius : 4.0,
   });
 
   @override
@@ -77,6 +80,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
           //textAlign: TextAlign.center,
           keyboardType: widget.type,
           decoration: InputDecoration(
+            contentPadding: widget.padding,
             fillColor: _fillColor,
             filled: _filled,
             suffixText: suffix,
@@ -85,6 +89,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
             ),
             labelText: widget.label,
             hintStyle: TextStyle(
+
               color: Colors.grey,
             ),
             hintText: widget.hint,
@@ -101,7 +106,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
                 color: widget.borderColor,
                 width: 3.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             hasFloatingPlaceholder: true,
             enabledBorder: OutlineInputBorder(
@@ -109,7 +114,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
                 color: Colors.white,
                 width: 1.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             border: OutlineInputBorder(
               borderSide: BorderSide(

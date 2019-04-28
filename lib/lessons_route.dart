@@ -179,6 +179,9 @@ class _LessonsRouteState extends State<LessonsRoute>{
           Expanded(
             child: Container(
               child: ListView.builder(
+                // physics: ScrollPhysics(
+                //   parent: BouncingScrollPhysics(),
+                // ),
                 padding: EdgeInsets.only(top: 10, bottom: 10),
                 itemCount: _lessons.length,
                 itemBuilder: (context, index){

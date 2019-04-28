@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/lessons_route.dart';
+import 'package:vibration/vibration.dart';
 
 class Course extends StatefulWidget{
   final String name, author, accessCode;
@@ -68,6 +69,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
   Widget build(BuildContext context) {
     return InkWell(
       onTap: (){
+        Vibration.vibrate(duration: 20);
         Navigator.of(context).push(
           CupertinoPageRoute(builder: (BuildContext context) {
             return Nav(
@@ -130,6 +132,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                         height: 20,
                         decoration: BoxDecoration(
                           color: Theme.of(context).accentColor,
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           '${widget.lessons} clases',
