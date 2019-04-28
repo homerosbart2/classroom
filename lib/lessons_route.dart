@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/lesson.dart';
+import 'package:classroom/widget_passer.dart';
+import 'package:classroom/nav.dart';
+import 'dart:convert';
 
 class LessonsRoute extends StatefulWidget{
   final String author, name, accessCode;
@@ -17,11 +20,15 @@ class LessonsRoute extends StatefulWidget{
 }
 
 class _LessonsRouteState extends State<LessonsRoute>{
+  WidgetPasser _lessonPasser;
+
   List<Lesson> _lessons;
 
   @override
   void initState() {
     super.initState();
+
+    _lessonPasser = Nav.lessonPasser;
 
     _lessons = List<Lesson>();
 
@@ -39,54 +46,24 @@ class _LessonsRouteState extends State<LessonsRoute>{
       )
     );
 
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Mutex',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
-    );
+    _lessonPasser.recieveWidget.listen((newLesson){
+      if(newLesson != null){
+        Map jsonCourse = json.decode(newLesson);
+        if(this.mounted){
+          setState(() {
+            _lessons.add(
+              Lesson(
+                name: jsonCourse['name'],
+                day: jsonCourse['day'],
+                month: jsonCourse['month'],
+                year: jsonCourse['year'],
+                comments: jsonCourse['comments'],
+              )
+            );
+          });
+        }
+      }
+    });
     
   }
 
