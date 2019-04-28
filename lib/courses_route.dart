@@ -34,16 +34,17 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
       if(newCourse != null){
         Map jsonCourse = json.decode(newCourse);
         if(this.mounted){
+          setState(() {
             _coursesList.add(
               Course(
                 accessCode: jsonCourse['accessCode'],
                 participants: jsonCourse['participants'],
                 name: jsonCourse['name'],
                 author: jsonCourse['author'],
-                authorId: jsonCourse['authorId'],
                 lessons: jsonCourse['lessons'],
               )
             );
+          });
         }
       }
     });
