@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:classroom/course.dart';
 import 'package:classroom/widget_passer.dart';
 import 'dart:convert';
-import 'dart:async';
 import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
 
@@ -24,16 +23,25 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     super.initState();
     _coursesList = List<Course>();
     _coursePasser = Nav.coursePasser;
-    if(_coursesList == null){
+    if(_coursesList.isEmpty){
        DatabaseManager.getCoursesPerUser().then(
-          (List<Course> l) => setState(() {_coursesList = l;})
+          (List<String> ls) => setState(() {
+            List<String> _coursesListString = List<String>();
+            _coursesListString = ls;
+            DatabaseManager.getCoursesPerUserByList(_coursesListString).then(
+              (List<Course> lc) => setState(() {
+                _coursesList = lc;
+              })
+            );         
+          })
        );
     }
-    
+
     _coursePasser.recieveWidget.listen((newCourse){
       if(newCourse != null){
         Map jsonCourse = json.decode(newCourse);
-        if(this.mounted){
+        if (this.mounted){
+          setState(() {
             _coursesList.add(
               Course(
                 accessCode: jsonCourse['accessCode'],
@@ -44,6 +52,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
                 lessons: jsonCourse['lessons'],
               )
             );
+          });
         }
       }
     });

@@ -162,14 +162,27 @@ class _LessonsRouteState extends State<LessonsRoute>{
                   ],
                 ),
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(
-                      widget.accessCode,
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: <Widget>[
+                        Icon(
+                          FontAwesomeIcons.plusCircle,
+                          size: 16,
+                          color: Theme.of(context).accentColor,
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: <Widget>[
+                        Text(
+                          widget.accessCode,
+                          style: TextStyle(
+                            color: Theme.of(context).accentColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

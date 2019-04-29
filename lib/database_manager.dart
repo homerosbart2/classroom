@@ -12,32 +12,47 @@ class DatabaseManager{
     }).then((_) { });
   }
 
-  static void addCoursesPerUser(String uid, String course, String name, String code, String authorId, String author){
+  static void addCoursesPerUser(String uid, String course){
     mDatabase.child("coursesPerUser").child(uid).push().set({
       'course': course,
-      'name': name,
-      'author': author,
-      'authorId': authorId,
-      'participants': 1,
-      'lessons' : 0,
-      'accessCode' : code
     }).then((_) { });
   }
 
-  static void addCourse(String authorId, String author, String name, String code) async{
+  static Future<String> addCourse(String authorId, String author, String name) async{
     DatabaseReference course;
-    course =  mDatabase.child("courses").push();
-    course.set({
+    course = mDatabase.child("courses").push();
+    await course.set({
       'name': name,
       'author': author,
       'authorId': authorId,
       'participants': 1,
       'lessons' : 0,
-      'accessCode' : code
+      'accessCode' : course.key
     }).then((_) {
       addUsersPerCourse(authorId,course.key);
-      addCoursesPerUser(authorId,course.key,name,code,authorId,author);
+      addCoursesPerUser(authorId,course.key);
+      updateCourse(course.key,course.key,"accessCode");
     });
+    return course.key;
+  }
+
+  static Future<void> updateCourse(String code, String param, String column) async{
+    DatabaseReference course;
+    switch(column){
+      case "participant": {
+        int participants = int.parse(param);
+        course = await mDatabase.child("courses").child(code).update({
+          'participants': participants,
+        }).then((_){/*nothing*/});        
+        break;
+      }
+      case "accessCode": {
+         course = await mDatabase.child("courses").child(code).update({
+          'accessCode': param,
+        }).then((_){/*nothing*/});       
+        break;
+      }
+    }    
   }
 
   static Future<Map> addCourseByAccessCode(String code, String uid) async{
@@ -45,11 +60,13 @@ class DatabaseManager{
     await mDatabase.child("courses").child(code).once().then((DataSnapshot snapshot){
       Map<dynamic,dynamic> course = snapshot.value;
       if(course != null){
+        int participants = course['participants'] + 1;
         addUsersPerCourse(uid,code);
-        addCoursesPerUser(uid,code,course['name'],course['accessCode'],course['authorId'],course['author']);
+        addCoursesPerUser(uid,code);
+        updateCourse(code,(participants).toString(),"participants");
         _course = {
           'accessCode': course['accessCode'],
-          'participants': course['participants'],
+          'participants': participants,
           'lessons': course['lessons'],
           'name': course['name'],
           'author': course['author'],
@@ -57,18 +74,17 @@ class DatabaseManager{
         };
       }
     });
-    print(_course);
     return _course;
   }
 
-  static Future<List<Course>> getCoursesPerUser() async{
+  static Future<List<Course>> getCoursesPerUserByList(List<String> listString) async{
     List<Course> _coursesList = List<Course>();
     try{
-      await mDatabase.child("coursesPerUser").child(Auth.uid).once().then((DataSnapshot snapshot) {
-        Map<dynamic,dynamic> map = snapshot.value;
-        if(map != null){
-          map.forEach((key, course) {
-            if(map != null){
+      for (var eachCourse in listString) {
+        await mDatabase.child("courses").child(eachCourse).once().then((DataSnapshot snapshot) {
+          Map<dynamic,dynamic> course = snapshot.value;
+          if(course != null){
+            if(course != null){
               _coursesList.add(
                 Course(
                   accessCode: course['accessCode'],
@@ -80,15 +96,34 @@ class DatabaseManager{
                 )
               );  
             }      
+          }
+        }); 
+      }
+    }catch(e){
+      print("error getCoursesPerUserByList: $e");
+    } 
+    return _coursesList;
+  } 
+
+  static Future<List<String>> getCoursesPerUser() async{
+    List<String> _coursesList = List<String>();
+    try{
+      await mDatabase.child("coursesPerUser").child(Auth.uid).once().then((DataSnapshot snapshot) {
+        Map<dynamic,dynamic> map = snapshot.value;
+        if(map != null){
+          map.forEach((key, course) {
+            if(map != null){
+              _coursesList.add(course['course']);  
+            }      
           });
         }
       }); 
     }catch(e){
       print("error getCoursesPerUser: $e");
-    }   
+    } 
     return _coursesList;
   } 
-
+  
   static Future<List<Course>> getAllCourses() async{
     List<Course> _coursesList = List<Course>();
     try{
@@ -96,7 +131,6 @@ class DatabaseManager{
         Map<dynamic,dynamic> map = snapshot.value;
         if(map != null){
           map.forEach((key, course) {  
-              print(course);
               _coursesList.add(
                 Course(
                   accessCode: course['accessCode'],

@@ -195,32 +195,39 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   onSubmitted: (val){
                     String authorId = Auth.uid;
                     String author = Auth.getName();
-                    String code = this.getRandom().toString();
+                    // String code = this.getRandom().toString();
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
-                        Map text = {
-                          //TODO: Generar un nuevo código y agregar el curso a la base de datos.
-                          'name' : val,
-                          'author' : author,
-                          'authorId' : authorId,
-                          'lessons' : 0,
-                          'participants' : 1, 
-                          'accessCode': code,
-                        };
-
-                        DatabaseManager.addCourse(authorId,author,val,code);
-                        String textCourse = json.encode(text);
-                        print(textCourse);
-                        Nav.coursePasser.sendWidget.add(textCourse);
-                        _addButtonController.reverse();
-                        _addBarController.reverse().then((val){
-                          _addBarTextfieldController.text = '';
-                          if(_addBarAlertController.status != AnimationStatus.dismissed){
-                            _addBarAlertController.reverse();
-                          }
-                        });
+                        String code;
+                        if(this.mounted){
+                          DatabaseManager.addCourse(authorId,author,val).then(
+                            (String c) => setState(() {
+                              code = c;
+                              if(code != null){
+                                Map text = {
+                                  //TODO: Generar un nuevo código y agregar el curso a la base de datos.
+                                  'name' : val,
+                                  'author' : author,
+                                  'authorId' : authorId,
+                                  'lessons' : 0,
+                                  'participants' : 1, 
+                                  'accessCode': code,
+                                };                        
+                                String textCourse = json.encode(text);
+                                Nav.coursePasser.sendWidget.add(textCourse);
+                                _addButtonController.reverse();
+                                _addBarController.reverse().then((val){
+                                  _addBarTextfieldController.text = '';
+                                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                                    _addBarAlertController.reverse();
+                                  }
+                                });
+                              }
+                            })
+                          );  
+                        }
                       }else{
-                        DatabaseManager.addCourseByAccessCode("-asasdasds",Auth.uid).then((Map text){
+                        DatabaseManager.addCourseByAccessCode("-LdViRuAFo7uDfjlcy2A",Auth.uid).then((Map text){
                           if(text != null){  
                             String textCourse = json.encode(text);
                             print(textCourse);
@@ -526,7 +533,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   //TODO: Cerrar la sesión del usuario.
                   Navigator.of(context).pop();
                   Navigator.of(context).pop();
-                  // Auth.signOut();
+                  Auth.signOut();
                 },
               ),
             ),
