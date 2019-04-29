@@ -10,14 +10,14 @@ import 'dart:math';
 import 'dart:convert';
 
 class Nav extends StatefulWidget{
-  static FocusNode focusAddBarNode;
   static String addBarTitle;
   static int addBarMode;
   static WidgetPasser coursePasser = WidgetPasser();
+  static WidgetPasser lessonPasser = WidgetPasser();
   final Widget body;
   final String title, user, section, subtitle;
   final double preferredSize, elevation;
-  final bool drawerActive, addBarActive, notificationsActive;
+  final bool drawerActive, addBarActive, notificationsActive, proprietary;
   final Color color, titleColor, actionsColor;
 
   const Nav({
@@ -32,6 +32,7 @@ class Nav extends StatefulWidget{
     this.addBarActive: true,
     this.drawerActive: true,
     this.notificationsActive: true,
+    this.proprietary = false,
     this.subtitle: '',
     this.preferredSize: 60.0,
   });
@@ -51,6 +52,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   AnimationController _addBarController, _addBarAlertController; 
   String _alertMessage;
   Color _titleColor, _color, _actionsColor;
+  FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
   //WidgetPasser courseBloc = WidgetPasser();
 
   @override
@@ -84,7 +86,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
       ),
     );
 
-    Nav.focusAddBarNode = FocusNode();
+    _focusAddBarNodeCourses = FocusNode();
+    _focusAddBarNodeLessons = FocusNode();
     
     _addBarController = AnimationController(
       vsync: this,
@@ -160,6 +163,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }
   }
 
+  FocusNode _getFocusNode(){
+    if(widget.section == 'courses') return _focusAddBarNodeCourses;
+    else if(widget.section == 'lessons') return _focusAddBarNodeLessons;
+    else return _focusAddBarNodeCourses;
+  }
+
   Widget _construcAddBar(double width){
     if(widget.addBarActive){
       return Positioned(
@@ -185,7 +194,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               children: <Widget>[
                 StatefulTextfield(
                   controller: _addBarTextfieldController,
-                  focusNode: Nav.focusAddBarNode,
+                  focusNode: _getFocusNode(),
                   fillColor: Colors.white,
                   suffix: '',
                   color: Theme.of(context).accentColor,
@@ -198,6 +207,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                     // String code = this.getRandom().toString();
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
+<<<<<<< HEAD
                         String code;
                         if(this.mounted){
                           DatabaseManager.addCourse(authorId,author,val).then(
@@ -226,6 +236,45 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             })
                           );  
                         }
+=======
+                        if(widget.section == 'courses'){
+                          Map text = {
+                            //TODO: Generar un nuevo código y agregar el curso a la base de datos.
+                            'name' : val,
+                            'author' : widget.user,
+                            'lessons' : 0,
+                            'participants' : 1, 
+                            'accessCode': code,
+                          };
+
+                          DatabaseManager.addCourse(authorId,author,val,code);
+                          String textCourse = json.encode(text);
+                          print(textCourse);
+                          Nav.coursePasser.sendWidget.add(textCourse);
+                        }else if(widget.section == 'lessons'){
+                          var nowDate = DateTime.now();
+                          Map text = {
+                            //TODO: obtener los comentarios de la lección.
+                            'name' : val,
+                            'day' : nowDate.day,
+                            'month' : nowDate.month, 
+                            'year': nowDate.year,
+                            'comments': 69,
+                          };
+
+                          String textLesson = json.encode(text);
+
+                          print(textLesson);
+                          Nav.lessonPasser.sendWidget.add(textLesson);
+                        }
+                         _addButtonController.reverse();
+                        _addBarController.reverse().then((val){
+                          _addBarTextfieldController.text = '';
+                          if(_addBarAlertController.status != AnimationStatus.dismissed){
+                            _addBarAlertController.reverse();
+                          }
+                        });
+>>>>>>> f9b50c3204fbea95d332c811357458de2b9cc30c
                       }else{
                         DatabaseManager.addCourseByAccessCode("-LdViRuAFo7uDfjlcy2A",Auth.uid).then((Map text){
                           if(text != null){  
@@ -246,7 +295,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         });                                                                      
                       }
                     }else{
-                      FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
+                      FocusScope.of(context).requestFocus(_getFocusNode());
                       setState(() {
                         _alertMessage = 'El nombre contiene solo espacios en blanco.'; 
                       });
@@ -271,41 +320,43 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
 
   List<Widget> _construcActions(){
     List<Widget> actions = List<Widget>();
-    if(widget.section == 'courses'){
-      actions.add(
-        IconButton(
-          icon: Icon(
-            FontAwesomeIcons.book,
-            size: 20,
-          ),
-          tooltip: 'Unirse a curso',
-          onPressed: (){
-            final status = _addBarController.status;
+    if(widget.section == 'courses' || widget.section == 'lessons'){
+      if(widget.section == 'courses'){
+        actions.add(
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.book,
+              size: 20,
+            ),
+            tooltip: 'Unirse a curso',
+            onPressed: (){
+              final status = _addBarController.status;
 
-            if(status == AnimationStatus.completed){
-              _addBarController.reverse(
-                from: 1
-              ).then((val){
-                if(_addBarAlertController.status != AnimationStatus.dismissed){
-                  _addBarAlertController.reverse();
-                }
-              });
-              _addButtonController.reverse();
-              FocusScope.of(context).requestFocus(new FocusNode());
-            }else if(status == AnimationStatus.dismissed){
-              Nav.addBarTitle = "Ingrese el código del curso";
-              Nav.addBarMode = 1;
+              if(status == AnimationStatus.completed){
+                _addBarController.reverse(
+                  from: 1
+                ).then((val){
+                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                    _addBarAlertController.reverse();
+                  }
+                });
+                _addButtonController.reverse();
+                FocusScope.of(context).requestFocus(new FocusNode());
+              }else if(status == AnimationStatus.dismissed){
+                Nav.addBarTitle = "Ingrese el código del curso";
+                Nav.addBarMode = 1;
 
-              _addBarController.forward(
-                from: 0
-              );
-              _addButtonController.forward();
-              FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
-              _notificationHubPositionController.reverse();
-            }
-          },
-        )
-      );
+                _addBarController.forward(
+                  from: 0
+                );
+                _addButtonController.forward();
+                FocusScope.of(context).requestFocus(_getFocusNode());
+                _notificationHubPositionController.reverse();
+              }
+            },
+          )
+        );
+      }
       actions.add(
         RotationTransition(
           turns: _angleFloat,
@@ -329,14 +380,16 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 _addButtonController.reverse();
                 FocusScope.of(context).requestFocus(new FocusNode());
               }else if(status == AnimationStatus.dismissed){
-                Nav.addBarTitle = "Ingrese el nombre del curso";
-                Nav.addBarMode = 0;
-
+                setState(() {
+                  if(widget.section == 'courses') Nav.addBarTitle = "Ingrese el nombre del curso";
+                  else if(widget.section == 'lessons') Nav.addBarTitle = "Ingrese el nombre de la lección";
+                  Nav.addBarMode = 0;
+                });
                 _addBarController.forward(
                   from: 0
                 );
                 _addButtonController.forward();
-                FocusScope.of(context).requestFocus(Nav.focusAddBarNode);
+                FocusScope.of(context).requestFocus(_getFocusNode());
                 _notificationHubPositionController.reverse();
               }
             },
