@@ -7,7 +7,7 @@ import 'dart:async';
 
 class Question extends StatefulWidget{
   final String text, author;
-  final bool voted, mine;
+  final bool voted, mine, answered;
   final int votes, index;
   final StreamController<int> votesController;
 
@@ -17,6 +17,7 @@ class Question extends StatefulWidget{
     @required this.votesController,
     this.mine : false,
     this.voted : false,
+    this.answered : false,  
     this.votes : 0,
     this.index : 0,
   });
@@ -110,6 +111,26 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
     }
   }
 
+  Widget _getAnsweredTag(){
+    if(widget.answered){
+      return Container(
+        padding: EdgeInsets.symmetric(vertical: 3, horizontal: 9),
+        decoration: BoxDecoration(
+          color: Theme.of(context).primaryColor,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Text(
+          'Respondida',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
+      );
+    }else{
+      return Container();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     _construcQuestions(context);
@@ -144,19 +165,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Container(
-                            padding: EdgeInsets.symmetric(vertical: 3, horizontal: 9),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColor,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              'Respondida',
-                              style: TextStyle(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
+                          _getAnsweredTag(),
                           Text(
                             '17/03/2019  -  20:51',
                             style: TextStyle(
@@ -281,8 +290,8 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                                   child: Container(
                                     padding: EdgeInsets.only(bottom: 12),
                                     child: Vote(
-                                      voted: false,
-                                      votes: 0,
+                                      voted: true,
+                                      votes: 1,
                                       showVotes: false,
                                       small: true,
                                     ),
