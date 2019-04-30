@@ -68,6 +68,12 @@ class _LessonsRouteState extends State<LessonsRoute>{
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    _lessonPasser.sendWidget.add(null);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.only(top: 12),

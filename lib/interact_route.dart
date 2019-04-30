@@ -3,11 +3,14 @@ import 'dart:async';
 import 'package:classroom/question.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/chatbar.dart';
+import 'package:classroom/widget_passer.dart';
+import 'dart:convert';
 
 class InteractRoute extends StatefulWidget{
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
+  static int index = 0;
 
   const InteractRoute();
 
@@ -21,12 +24,15 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
   Widget _presentation;
+  WidgetPasser _questionPasser;
 
   @override
   void initState() {
     super.initState();
 
     _questionToAnswer = '';
+
+    _questionPasser = ChatBar.questionPasser;
 
     _presentation = Presentation(
       file: 'lib/assets/pdf/sample2.pdf',
@@ -61,8 +67,9 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         author: 'Diego Alay',
         voted: true,
         votes: 69,
-        index: 0,
+        index: InteractRoute.index++,
         votesController: _votesController,
+        answered: true,
       )
     );
 
@@ -71,7 +78,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         text: '¿Qué día es hoy?',
         author: 'Henry Campos',
         mine: true,
-        index: 1,
+        index: InteractRoute.index++,
         votesController: _votesController,
       )
     );
@@ -91,9 +98,33 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         });
       }
     });
+
+    _questionPasser.recieveWidget.listen((newQuestion){
+      print('SE AGREGO ALGO NUEVO');
+      if(newQuestion != null){
+        Map jsonCourse = json.decode(newQuestion);
+        if(this.mounted){
+          setState(() {
+            InteractRoute.questions.add(
+              Question(
+                text: jsonCourse['text'],
+                author: jsonCourse['author'],
+                mine: true,
+                index: InteractRoute.index++,
+                votesController: _votesController,
+              )
+            );
+          });
+        }
+      }
+    });
   }
 
-  
+  @override
+  void dispose() {
+    super.dispose();
+    _questionPasser.sendWidget.add(null);
+  }
 
   Widget _getListView(double width, double height){
     final List<Question> _actualQuestions = List.from(InteractRoute.questions);

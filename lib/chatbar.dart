@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:classroom/stateful_textfield.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:classroom/widget_passer.dart';
+import 'dart:convert';
 
 class ChatBar extends StatefulWidget{
+  static WidgetPasser questionPasser = WidgetPasser();
+  static WidgetPasser answerPasser = WidgetPasser();
   const ChatBar();
 
   _ChatBarState createState() => _ChatBarState();
 }
 
 class _ChatBarState extends State<ChatBar>{
+  TextEditingController _chatBarTextfieldController;
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+
+    _chatBarTextfieldController = TextEditingController();
   }
 
   @override
@@ -30,14 +37,24 @@ class _ChatBarState extends State<ChatBar>{
               children: <Widget>[
                 Expanded(
                   child: StatefulTextfield(
+                    controller: _chatBarTextfieldController,
                     color: Theme.of(context).accentColor,
                     fillColor: Colors.white,
                     suffix: '',
                     hint: 'Escriba una pregunta',
                     borderRadius: 30,
                     padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
-                    onSubmitted: (text){
-                      print(text);
+                    onSubmitted: (val){
+                      if(val.trim() != ''){
+                        print(val);
+                        Map text = {
+                          'text': val,
+                          'author': 'Henry Campos', 
+                        };
+                        String textQuestion = json.encode(text);
+                        ChatBar.questionPasser.sendWidget.add(textQuestion);
+                        _chatBarTextfieldController.text = '';
+                      }
                     },
                   ),
                 ),
