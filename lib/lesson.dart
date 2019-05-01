@@ -6,10 +6,11 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/interact_route.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description;
+  final String name, description, lessonId;
   final int month, day, year, comments;
 
   const Lesson({
+    this.lessonId,
     @required this.name,
     this.description: '',
     this.month: 1,
@@ -171,7 +172,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin{
                                   section: 'interact',
                                   user: 'Henry Campos',
                                   title: widget.name,
-                                  body: InteractRoute(),
+                                  body: InteractRoute(lessonId: widget.lessonId),
                                 ); 
                               })
                             );

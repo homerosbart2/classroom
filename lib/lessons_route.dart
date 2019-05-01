@@ -1,170 +1,235 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:classroom/lesson.dart';
+import 'dart:async';
+import 'package:classroom/question.dart';
+import 'package:classroom/presentation.dart';
+import 'package:classroom/chatbar.dart';
 import 'package:classroom/widget_passer.dart';
-import 'package:classroom/nav.dart';
-import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 import 'dart:convert';
+import 'package:classroom/database_manager.dart';
 
-class LessonsRoute extends StatefulWidget{
-  final String author, name, accessCode;
-  final int participants;
+class InteractRoute extends StatefulWidget{
+  final String lessonId;
+  static AnimationController questionPositionController;
+  static List<Question> questions;
+  static StreamController<String> questionController;
+  static int index = 0;
 
-  const LessonsRoute({
-    @required this.author,
-    @required this.name,
-    @required this.accessCode,
-    this.participants: 1,
+  const InteractRoute({
+    @required this.lessonId,
   });
 
-  _LessonsRouteState createState() => _LessonsRouteState();
+  _InteractRouteState createState() => _InteractRouteState();
 }
 
-class _LessonsRouteState extends State<LessonsRoute>{
-  WidgetPasser _lessonPasser;
-
-  List<Lesson> _lessons;
+class _InteractRouteState extends State<InteractRoute> with SingleTickerProviderStateMixin{
+  StreamController<int> _votesController;
+  Stream<int> _votesStream;
+  Stream<String> _questionStream;
+  Animation<Offset> _offsetFloat;
+  String _questionToAnswer;
+  Widget _presentation;
+  WidgetPasser _questionPasser;
 
   @override
   void initState() {
     super.initState();
 
-    _lessonPasser = Nav.lessonPasser;
+    _questionToAnswer = '';
 
-    _lessons = List<Lesson>();
-    DatabaseManager.getLessonsPerCourse(widget.accessCode).then(
-      (List<String> ls) => setState(() {
-        List<String> _lessonsListString = List<String>();
-        _lessonsListString = ls;
-        DatabaseManager.getLessonsPerCourseByList(_lessonsListString).then(
-          (List<Lesson> lc) => setState(() {
-            _lessons = lc;
-          })
-        );         
-      })
+    _questionPasser = ChatBar.questionPasser;
+
+    _presentation = Presentation(
+      file: 'lib/assets/pdf/sample2.pdf',
     );
 
-    _lessonPasser.recieveWidget.listen((newLesson){
-      if(newLesson != null){
-        Map jsonCourse = json.decode(newLesson);
+    _votesController = StreamController<int>();
+    _votesStream = _votesController.stream;
+
+    InteractRoute.questionController = StreamController<String>();
+    _questionStream = InteractRoute.questionController.stream;
+
+    InteractRoute.questions = List<Question>();
+
+    InteractRoute.questionPositionController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _offsetFloat = Tween<Offset>(
+      begin: Offset(0, 1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: InteractRoute.questionPositionController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
+        (List<String> ls) => setState(() {
+          List<String> __questionsListString = List<String>();
+          __questionsListString = ls;
+          DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+            (List<Question> lc) => setState(() {
+              for(var question in lc){
+                if(question.authorId == Auth.uid) question.mine = true;
+                question.votesController = _votesController;
+                question.voted = true;
+                question.answered = true;
+                question.index = InteractRoute.index++;
+                InteractRoute.questions.add(question);
+              }
+            })
+          );         
+        })
+    );
+
+    
+    InteractRoute.questions.add(
+      Question(
+        text: '¿Qué significa que sea una presentación de ejemplo?',
+        author: 'Diego Alay',
+        authorId: "123123",
+        questionId: "12313123",
+        voted: true,
+        votes: 69,
+        index: InteractRoute.index++,
+        votesController: _votesController,
+        answered: true,
+      )
+    );
+
+    InteractRoute.questions.add(
+      Question(
+        authorId: "123123",
+        questionId: "12313123",
+        text: '¿Qué día es hoy?',
+        author: 'Henry Campos',
+        mine: true,
+        index: InteractRoute.index++,
+        votesController: _votesController,
+      )
+    );
+
+    _votesStream.listen((val) {
+      if(val != null){
+        setState(() {
+          
+        });
+      }
+    });
+
+    _questionStream.listen((text) {
+      if(text != null){
+        setState(() {
+          _questionToAnswer = text;
+        });
+      }
+    });
+
+    _questionPasser.recieveWidget.listen((newQuestion){
+      if(newQuestion != null){
+        Map jsonCourse = json.decode(newQuestion);
         if(this.mounted){
           setState(() {
-            _lessons.add(
-              Lesson(
-                name: jsonCourse['name'],
-                day: jsonCourse['day'],
-                month: jsonCourse['month'],
-                year: jsonCourse['year'],
-                comments: jsonCourse['comments'],
-              )
-            );
+            String questionText = jsonCourse['text'];
+            DatabaseManager.addQuestions(Auth.getName(), Auth.uid, widget.lessonId, questionText).then((id){
+              print("id: $id");
+              if(id != null){
+                InteractRoute.questions.add(
+                  Question(
+                    questionId: id,
+                    authorId: Auth.uid,
+                    text: questionText,
+                    author: Auth.getName(),
+                    mine: true,
+                    index: InteractRoute.index++,
+                    votesController: _votesController,
+                  )
+                );
+              }
+            });
           });
         }
       }
     });
-    
+  }
+
+
+  @override
+  void dispose() {
+    super.dispose();
+    _questionPasser.sendWidget.add(null);
+  }
+
+  Widget _getListView(double width, double height){
+    final List<Question> _actualQuestions = List.from(InteractRoute.questions);
+    return ListView.builder(
+      // physics: ScrollPhysics(
+      //   parent: BouncingScrollPhysics(),
+      // ),
+      padding: EdgeInsets.only(top: 10, bottom: 10),
+      itemCount: _actualQuestions.length + 1,
+      itemBuilder: (context, index){
+        if(index == 0){
+          return Container(
+            padding: EdgeInsets.all(12),
+            width: width,
+            height: height,
+            child: _presentation,
+          );
+        }else{
+          return _actualQuestions.elementAt(index - 1);
+        }
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: EdgeInsets.only(top: 12),
-      child: Column(
+    double _width = MediaQuery.of(context).size.width;
+    double _height = (_width/4)*3;
+    return FractionallySizedBox(
+      widthFactor: 1,
+      heightFactor: 1,
+      child: Stack(
         children: <Widget>[
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color:Color.fromARGB(10, 0, 0, 0),
-                  width: 3,
+          Column(
+            children: <Widget>[
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.only(bottom: 68),
+                  child: _getListView(_width, _height),
+                ),
+              )
+            ],
+          ),
+          Positioned(
+            bottom: 68,
+            left: 0,
+            right: 0,
+            child: SlideTransition(
+              position: _offsetFloat,
+              child: Container(
+                color: Theme.of(context).accentColor,
+                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                child: FractionallySizedBox(
+                  widthFactor: 1,
+                    child: Text(
+                    _questionToAnswer,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ),
-            padding: EdgeInsets.fromLTRB(12, 0, 12, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          widget.name,
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          widget.author,
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 6, right: 3),
-                          child: Icon(
-                            FontAwesomeIcons.solidCircle,
-                            size: 5,
-                            color: Theme.of(context).accentColor,
-                          ),
-                        ),
-                        Icon(
-                          FontAwesomeIcons.male,
-                          size: 16,
-                          color: Theme.of(context).accentColor,
-                        ),
-                        Container(
-                          padding: EdgeInsets.only(top: 2),
-                          child: Text(
-                            '${widget.participants}',
-                            style: TextStyle(
-                              color: Theme.of(context).accentColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                Column(
-                  children: <Widget>[
-                    Text(
-                      widget.accessCode,
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
-          Expanded(
-            child: Container(
-              child: ListView.builder(
-                // physics: ScrollPhysics(
-                //   parent: BouncingScrollPhysics(),
-                // ),
-                padding: EdgeInsets.only(top: 10, bottom: 10),
-                itemCount: _lessons.length,
-                itemBuilder: (context, index){
-                  return _lessons.elementAt(index);
-                },
-              ),
-            ),
-          ),
+          ChatBar(
+
+          ),   
         ],
       ),
     );

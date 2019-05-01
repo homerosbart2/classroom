@@ -1,7 +1,9 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:classroom/course.dart';
 import 'package:classroom/lesson.dart';
+import 'package:classroom/question.dart';
 import 'package:classroom/auth.dart';
+
 import 'dart:async';
 
 class DatabaseManager{
@@ -24,6 +26,63 @@ class DatabaseManager{
       'lesson': lesson,
     }).then((_) { });
   }  
+
+  static void addQuestionsPerLesson(String question, String lesson){
+    mDatabase.child("questionsPerLesson").child(lesson).push().set({
+      'question': question,
+    }).then((_) { });
+  }  
+
+  static void addQuestionsPerUser(String uid, String question){
+    mDatabase.child("questionsPerUser").child(uid).push().set({
+      'question': question,
+    }).then((_) { });
+  }
+
+  static void addAnswersPerQuestion(String answer, String question){
+    mDatabase.child("answersPerQuestion").child(question).push().set({
+      'answer': answer
+    }).then((_) { });
+  }
+
+  static void addAnswersPerUser(String uid, String answer){
+    mDatabase.child("answersPerUser").child(uid).push().set({
+      'answer': answer,
+    }).then((_) { });
+  }
+
+  static Future<String> addAnswers(String author, String authorId, String question, String text) async{
+    DatabaseReference answer;
+    answer = mDatabase.child("answers").push();
+    await answer.set({
+      'text': text,
+      'author': author,
+      'authorId': authorId,
+      'votes': 0,
+    }).then((_) {
+      addAnswersPerQuestion(answer.key, question);
+      addAnswersPerUser(authorId, answer.key);
+      updateQuestion(question, "", "comments");
+    });
+    return answer.key;
+  }
+
+  static Future<String> addQuestions(String author, String authorId, String lesson, String text) async{
+    DatabaseReference question;
+    print("lesson: $lesson");
+    question = mDatabase.child("questions").push();
+    await question.set({
+      'text': text,
+      'author': author,
+      'authorId': authorId,
+      'votes': 0,
+    }).then((_) {
+      updateLesson(lesson,"","comments");
+      addQuestionsPerLesson(question.key, lesson);
+      addQuestionsPerUser(authorId, question.key);
+    });
+    return question.key;
+  }
 
   static Future<String> addLesson(String uid, String name, String description, int day, int month, int year, String course) async{
     DatabaseReference lesson;
@@ -58,6 +117,53 @@ class DatabaseManager{
       updateCourse(course.key,course.key,"accessCode");
     });
     return course.key;
+  }
+
+  static Future<void> updateAnswer(String code, String param, String column) async{
+    DatabaseReference question;
+    switch(column){
+      case "votes": {
+        await mDatabase.child("answers").child(code).once().then((DataSnapshot snapshot){
+          Map<dynamic,dynamic> currentAnswer = snapshot.value;
+          mDatabase.child("answers").child(code).update({
+          'votes': currentAnswer['votes'] + 1,
+          }).then((_){/*nothing*/});
+        });         
+        break;        
+      }
+    }    
+  }
+
+  static Future<void> updateQuestion(String code, String param, String column) async{
+    DatabaseReference question;
+    switch(column){
+      case "votes": {
+        await mDatabase.child("questions").child(code).once().then((DataSnapshot snapshot){
+          Map<dynamic,dynamic> currentQuestion = snapshot.value;
+          mDatabase.child("questions").child(code).update({
+          'votes': currentQuestion['votes'] + 1,
+          }).then((_){/*nothing*/});
+        });       
+        break;        
+      }
+    }    
+  }
+
+  static Future<void> updateLesson(String code, String param, String column) async{
+    DatabaseReference lesson;
+    print("code $code");
+    print("column $column");
+    switch(column){
+      case "comments": {
+        await mDatabase.child("lessons").child(code).once().then((DataSnapshot snapshot){
+          Map<dynamic,dynamic> currentLesson = snapshot.value;
+          mDatabase.child("lessons").child(code).update({
+          'comments': currentLesson['comments'] + 1,
+          }).then((_){/*nothing*/});
+        });       
+        break;        
+      }
+    }    
   }
 
   static Future<void> updateCourse(String code, String param, String column) async{
@@ -110,26 +216,49 @@ class DatabaseManager{
     return _course;
   }
 
+  static Future<List<Question>> getQuestionsPerLessonByList(List<String> listString) async{
+    List<Question> _questionsList = List<Question>();
+    try{
+      for (var eachQuestion in listString) {
+        await mDatabase.child("questions").child(eachQuestion).once().then((DataSnapshot snapshot) {
+          Map<dynamic,dynamic> question = snapshot.value;
+          if(question != null){
+            _questionsList.add(
+              Question(
+                questionId: question['questionId'],
+                text: question['text'],
+                author: question['author'],
+                authorId: question['authorId'],
+                votes: question['votes'],
+              )
+            );  
+          }    
+        }); 
+      }
+    }catch(e){
+      print("error getQuestionsPerUserByList: $e");
+    } 
+    return _questionsList;
+  } 
+
   static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString) async{
-    print("listString: $listString");
     List<Lesson> _lessonsList = List<Lesson>();
     try{
       for (var eachLesson in listString) {
         await mDatabase.child("lessons").child(eachLesson).once().then((DataSnapshot snapshot) {
           Map<dynamic,dynamic> lesson = snapshot.value;
           if(lesson != null){
-            if(lesson != null){
-              _lessonsList.add(
-                Lesson(
-                  comments: lesson['comments'],
-                  day: lesson['day'],
-                  month: lesson['month'],
-                  year: lesson['year'],
-                  description: lesson['description'],
-                  name: lesson['name']
-                )
-              );  
-            }      
+            _lessonsList.add(
+              Lesson(
+                lessonId: eachLesson,
+                comments: lesson['comments'],
+                day: lesson['day'],
+                month: lesson['month'],
+                year: lesson['year'],
+                description: lesson['description'],
+                name: lesson['name']
+              )
+            );       
           }
         }); 
       }
@@ -167,15 +296,16 @@ class DatabaseManager{
     return _coursesList;
   } 
 
-  static Future<List<String>> getQuestionsPerCourse(String course) async{
-    List<String> _lessonsList = List<String>();
+  static Future<List<String>> getQuestionsPerLesson(String lesson) async{
+    print("lesson: $lesson");
+    List<String> _questionsList = List<String>();
     try{
-      await mDatabase.child("questionsPerCourse").child(course).once().then((DataSnapshot snapshot) {
+      await mDatabase.child("questionsPerLesson").child(lesson).once().then((DataSnapshot snapshot) {
         Map<dynamic,dynamic> map = snapshot.value;
         if(map != null){
-          map.forEach((key, lesson) {
+          map.forEach((key, question) {
             if(map != null){
-              _lessonsList.add(lesson['question']);  
+              _questionsList.add(question['question']);  
             }      
           });
         }
@@ -183,7 +313,7 @@ class DatabaseManager{
     }catch(e){
       print("error getQuestionsPerUser: $e");
     } 
-    return _lessonsList;
+    return _questionsList;
   } 
 
   static Future<List<String>> getLessonsPerCourse(String course) async{

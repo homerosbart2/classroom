@@ -3,13 +3,21 @@ import 'dart:async';
 import 'package:classroom/question.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/chatbar.dart';
+import 'package:classroom/widget_passer.dart';
+import 'dart:convert';
+import 'package:classroom/auth.dart';
+import 'package:classroom/database_manager.dart';
 
 class InteractRoute extends StatefulWidget{
+  final lessonId; 
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
+  static int index = 0;
 
-  const InteractRoute();
+  const InteractRoute({
+    @required this.lessonId,
+  });
 
   _InteractRouteState createState() => _InteractRouteState();
 }
@@ -21,12 +29,15 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
   Widget _presentation;
+  WidgetPasser _questionPasser;
 
   @override
   void initState() {
     super.initState();
 
     _questionToAnswer = '';
+
+    _questionPasser = ChatBar.questionPasser;
 
     _presentation = Presentation(
       file: 'lib/assets/pdf/sample2.pdf',
@@ -55,15 +66,34 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       ),
     );
 
+    DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
+      (List<String> ls) => setState(() {
+        List<String> __questionsListString = List<String>();
+        __questionsListString = ls;
+        DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+          (List<Question> lc) => setState(() {
+            for(var question in lc){
+              if(question.authorId == Auth.uid) question.mine = true;
+              question.votesController = _votesController;
+              question.voted = true;
+              question.answered = true;
+              question.index = InteractRoute.index++;
+              InteractRoute.questions.add(question);
+            }
+          })
+        );         
+      })
+    );
+
     InteractRoute.questions.add(
       Question(
         text: '¿Qué significa que sea una presentación de ejemplo?',
         author: 'Diego Alay',
-        authorId: '',
         voted: true,
         votes: 69,
-        index: 0,
+        index: InteractRoute.index++,
         votesController: _votesController,
+        answered: true,
       )
     );
 
@@ -71,9 +101,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       Question(
         text: '¿Qué día es hoy?',
         author: 'Henry Campos',
-        authorId: '',
         mine: true,
-        index: 1,
+        index: InteractRoute.index++,
         votesController: _votesController,
       )
     );
@@ -93,9 +122,33 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         });
       }
     });
+
+    _questionPasser.recieveWidget.listen((newQuestion){
+      print('SE AGREGO ALGO NUEVO');
+      if(newQuestion != null){
+        Map jsonCourse = json.decode(newQuestion);
+        if(this.mounted){
+          setState(() {
+            InteractRoute.questions.add(
+              Question(
+                text: jsonCourse['text'],
+                author: jsonCourse['author'],
+                mine: true,
+                index: InteractRoute.index++,
+                votesController: _votesController,
+              )
+            );
+          });
+        }
+      }
+    });
   }
 
-  
+  @override
+  void dispose() {
+    super.dispose();
+    _questionPasser.sendWidget.add(null);
+  }
 
   Widget _getListView(double width, double height){
     final List<Question> _actualQuestions = List.from(InteractRoute.questions);
@@ -169,4 +222,3 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     );
   }
 }
-
