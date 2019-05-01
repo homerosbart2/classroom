@@ -7,9 +7,12 @@ import 'package:classroom/widget_passer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'stateful_button.dart';
 import 'package:vibration/vibration.dart';
+import 'package:classroom/auth.dart';
 import 'dart:convert';
+import 'package:classroom/database_manager.dart';
 
 class InteractRoute extends StatefulWidget{
+  final String lessonId;
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
@@ -18,6 +21,7 @@ class InteractRoute extends StatefulWidget{
   final bool owner;
 
   const InteractRoute({
+    @required this.lessonId,
     this.presentationPath: '',
     this.owner: false,
   });
@@ -89,10 +93,32 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       ),
     );
 
+    // DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
+    //     (List<String> ls) => setState(() {
+    //       List<String> __questionsListString = List<String>();
+    //       __questionsListString = ls;
+    //       DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+    //         (List<Question> lc) => setState(() {
+    //           for(var question in lc){
+    //             if(question.authorId == Auth.uid) question.mine = true;
+    //             question.votesController = _votesController;
+    //             question.voted = true;
+    //             question.answered = true;
+    //             question.index = InteractRoute.index++;
+    //             InteractRoute.questions.add(question);
+    //           }
+    //         })
+    //       );         
+    //     })
+    // );
+
+    
     InteractRoute.questions.add(
       Question(
         text: '¿Qué significa que sea una presentación de ejemplo?',
         author: 'Diego Alay',
+        authorId: "123123",
+        questionId: "12313123",
         voted: true,
         votes: 69,
         index: InteractRoute.index++,
@@ -103,6 +129,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
 
     InteractRoute.questions.add(
       Question(
+        authorId: "123123",
+        questionId: "12313123",
         text: '¿Qué día es hoy?',
         author: 'Henry Campos',
         mine: true,
@@ -128,26 +156,34 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     });
 
     _questionPasser.recieveWidget.listen((newQuestion){
-      print('SE AGREGO ALGO NUEVO');
       if(newQuestion != null){
         Map jsonCourse = json.decode(newQuestion);
         if(this.mounted){
           setState(() {
-            InteractRoute.questions.add(
-              Question(
-                text: jsonCourse['text'],
-                author: jsonCourse['author'],
-                mine: true,
-                index: InteractRoute.index++,
-                votesController: _votesController,
-              )
-            );
+            String questionText = jsonCourse['text'];
+            DatabaseManager.addQuestions(Auth.getName(), Auth.uid, widget.lessonId, questionText).then((id){
+              print("id: $id");
+              if(id != null){
+                InteractRoute.questions.add(
+                  Question(
+                    questionId: id,
+                    authorId: Auth.uid,
+                    text: questionText,
+                    author: Auth.getName(),
+                    mine: true,
+                    index: InteractRoute.index++,
+                    votesController: _votesController,
+                  )
+                );
+              }
+            });
           });
         }
       }
     });
 
   }
+
 
   @override
   void dispose() {
@@ -256,4 +292,3 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     );
   }
 }
-

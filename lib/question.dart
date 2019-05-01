@@ -7,20 +7,23 @@ import 'dart:async';
 import 'package:classroom/answer.dart';
 
 class Question extends StatefulWidget{
-  final String text, author;
-  final bool voted, mine, answered;
-  final int votes, index;
-  final StreamController<int> votesController;
+  final String text, author, authorId, questionId;
+  bool voted, mine, answered;
+  final int votes; 
+  int index;
+  StreamController<int> votesController;
 
-  const Question({
+  Question({
     @required this.text,
     @required this.author,
-    @required this.votesController,
+    @required this.authorId,
+    this.votesController,
     this.mine : false,
     this.voted : false,
     this.answered : false,  
     this.votes : 0,
     this.index : 0,
+    @required this.questionId,
   });
 
   _QuestionState createState() => _QuestionState();
