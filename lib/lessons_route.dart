@@ -9,12 +9,14 @@ import 'dart:convert';
 class LessonsRoute extends StatefulWidget{
   final String author, name, accessCode;
   final int participants;
+  final bool owner;
 
   const LessonsRoute({
     @required this.author,
     @required this.name,
     @required this.accessCode,
     this.participants: 1,
+    this.owner: false,
   });
 
   _LessonsRouteState createState() => _LessonsRouteState();

@@ -4,6 +4,9 @@ import 'package:classroom/question.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/chatbar.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'stateful_button.dart';
+import 'package:vibration/vibration.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
@@ -14,9 +17,13 @@ class InteractRoute extends StatefulWidget{
   static List<Question> questions;
   static StreamController<String> questionController;
   static int index = 0;
+  final String presentationPath;
+  final bool owner;
 
   const InteractRoute({
     @required this.lessonId,
+    this.presentationPath: '',
+    this.owner: false,
   });
 
   _InteractRouteState createState() => _InteractRouteState();
@@ -28,7 +35,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Stream<String> _questionStream;
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
-  Widget _presentation;
+  Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser;
 
   @override
@@ -40,8 +47,28 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _questionPasser = ChatBar.questionPasser;
 
     _presentation = Presentation(
-      file: 'lib/assets/pdf/sample2.pdf',
+      file: widget.presentationPath,
     );
+
+    if(widget.owner){
+      _uploadPresentation = StatefulButton(
+        text: 'CARGAR PRESENTACIÓN',
+        color: Colors.grey,
+        borderColor: Colors.transparent,
+        icon: FontAwesomeIcons.arrowAltCircleUp,
+        onTap: (){
+          Vibration.vibrate(duration: 20);
+          //TODO: Hay que subir el archivo a FireBase y guardarlo en nuestra organizacion de archivos locales.
+        },
+      );
+    }else{
+      _uploadPresentation = Text(
+        'No hay presentación cargada.',
+        style: TextStyle(
+          color: Colors.grey,
+        ),
+      ); 
+    }
 
     _votesController = StreamController<int>();
     _votesStream = _votesController.stream;
@@ -154,6 +181,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         }
       }
     });
+
   }
 
 
@@ -161,6 +189,35 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   void dispose() {
     super.dispose();
     _questionPasser.sendWidget.add(null);
+    InteractRoute.index = 0;
+  }
+
+  Widget _getPresentation(){
+    if(widget.presentationPath == ''){
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(
+            color: Colors.grey,
+            width: 1,
+          )
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                _uploadPresentation,
+              ],
+            ),
+          ],
+        ),
+      );
+    }else{
+      return _presentation;
+    }
   }
 
   Widget _getListView(double width, double height){
@@ -177,7 +234,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             padding: EdgeInsets.all(12),
             width: width,
             height: height,
-            child: _presentation,
+            child: _getPresentation(),
           );
         }else{
           return _actualQuestions.elementAt(index - 1);
