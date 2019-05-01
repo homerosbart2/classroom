@@ -4,6 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vibration/vibration.dart';
 import 'package:classroom/interact_route.dart';
 import 'dart:async';
+import 'package:classroom/answer.dart';
 
 class Question extends StatefulWidget{
   final String text, author;
@@ -30,6 +31,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   Widget _header;
   AnimationController _expandAnswersController;
   Animation<double> _expandHeightFloat, _angleFloat;
+  List<Answer> _answers;
 
   @override
   bool get wantKeepAlive => true;
@@ -37,6 +39,8 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+
+    _answers = List<Answer>();
     
     _questionColor = _answerColor = Colors.transparent;
     _header = Container();
@@ -64,6 +68,23 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
         parent: _expandAnswersController,
         curve: Curves.easeInOut,
       ),
+    );
+
+    _answers.add(
+      Answer(
+        author: 'Creador',
+        text: 'Significa que únicamente se está utilizando como ejemplo para demostrar su utilización en la aplicación.',
+        voted: true,
+        owner: true,
+      )
+    );
+    _answers.add(
+      Answer(
+        author: 'José Pérez',
+        text: 'Ha de ser porque es de ejemplo.',
+        voted: false,
+        owner: false,
+      )
     );
   }
 
@@ -280,112 +301,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                         padding: EdgeInsets.only(bottom: 6),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Stack(
-                              children: <Widget>[
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    padding: EdgeInsets.only(bottom: 12),
-                                    child: Vote(
-                                      voted: true,
-                                      votes: 1,
-                                      showVotes: false,
-                                      small: true,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.fromLTRB(48, 6, 12, 6),
-                                  padding: EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context).accentColor,
-                                    borderRadius: BorderRadius.circular(3),
-                                    border: Border.all(
-                                      width: 1,
-                                      color: Theme.of(context).accentColor,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        margin: EdgeInsets.only(bottom: 3),
-                                        child: Text(
-                                          'Creador',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.white,
-                                          )
-                                        ),
-                                      ),
-                                      Text(
-                                        'Significa que únicamente se está utilizando como ejemplo para demostrar su utilización en la aplicación.',
-                                        textAlign: TextAlign.justify,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Stack(
-                              children: <Widget>[
-                                Positioned(
-                                  left: 0,
-                                  top: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    //padding: EdgeInsets.only(bottom: 12),
-                                    child: Vote(
-                                      voted: false,
-                                      votes: 0,
-                                      showVotes: false,
-                                      small: true,
-                                    ),
-                                  ),
-                                ),
-                                Container(
-                                  margin: EdgeInsets.fromLTRB(48, 6, 12, 6),
-                                  padding: EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    //color: Theme.of(context).accentColor,
-                                    borderRadius: BorderRadius.circular(3),
-                                    border: Border.all(
-                                      width: 1,
-                                      color: Colors.transparent,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Container(
-                                        margin: EdgeInsets.only(bottom: 3),
-                                        child: Text(
-                                          'José Pérez',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            //color: Colors.white,
-                                          )
-                                        ),
-                                      ),
-                                      Text(
-                                        'Ha de ser porque es de ejemplo.',
-                                        textAlign: TextAlign.justify,
-                                        style: TextStyle(
-                                          //color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                          children: _answers,
                         ),
                       ),
                     ),
@@ -414,6 +330,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
               //widget.votesController.add(1);
             },
             onUnvote: (){
+              print(widget.index);
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                 author: widget.author,
                 text: widget.text,

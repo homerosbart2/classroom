@@ -9,6 +9,7 @@ class Course extends StatefulWidget{
   final String name, author, accessCode;
   final Color color;
   final int lessons, participants;
+  final bool owner;
 
   const Course({
     @required this.name,
@@ -17,6 +18,7 @@ class Course extends StatefulWidget{
     @required this.participants,
     @required this.accessCode,
     this.color,
+    this.owner: false,
   });
 
   @override
@@ -65,6 +67,54 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
     _boxResizeOpacityController.forward();
   }
 
+  Decoration _getCourseDecoration(BuildContext context){
+    if(widget.owner){
+      return BoxDecoration(
+        border: Border.all(
+          color: _color,
+          width: 1,
+        ),
+        color: _color,
+        borderRadius: BorderRadius.circular(3),
+      );
+    }else{
+      return BoxDecoration(
+        border: Border.all(
+          color: Theme.of(context).primaryColorLight,
+          width: 1,
+        ),
+        color: Theme.of(context).primaryColorLight,
+        borderRadius: BorderRadius.circular(3),
+      );
+    }
+  }
+
+  Widget _getCourseAuthor(){
+    if(widget.owner){
+      return Container();
+    }else{
+      return Text(
+        widget.author,
+        style: TextStyle(
+          color: Theme.of(context).accentColor,
+        ),
+      );
+    }
+  }
+
+  Widget _getProprietaryLabel(){
+    if(false){
+      return Text(
+        'P',
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+        ),
+      );
+    }else{
+      return Container();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -83,6 +133,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                 accessCode: widget.accessCode,
                 author: widget.author,
                 participants: widget.participants,
+                owner: widget.owner,
               ),
             );
           }),
@@ -99,10 +150,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
             child: Container(
               margin: EdgeInsets.all(6),
               padding: EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: _color,
-                borderRadius: BorderRadius.circular(3),
-              ),
+              decoration: _getCourseDecoration(context),
               child: Stack(
                 children: <Widget>[
                   Column(
@@ -120,12 +168,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                           ),
                         ),
                       ),
-                      Text(
-                        widget.author,
-                        style: TextStyle(
-                          color: Theme.of(context).accentColor,
-                        ),
-                      ),
+                      _getCourseAuthor(),
                       Container(
                         margin: EdgeInsets.only(top: 5),
                         alignment: Alignment(0, 0),
@@ -146,6 +189,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                   Positioned(
                     right: 0,
                     top: 0,
+                    left: 0,
                     child: Container(
                       padding: EdgeInsets.fromLTRB(8, 4, 8, 4),
                       decoration: BoxDecoration(
@@ -160,21 +204,28 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          Icon(
-                            FontAwesomeIcons.male,
-                            size: 16,
-                            color: Theme.of(context).accentColor,
-                          ),
-                          Container(
-                            padding: EdgeInsets.only(top: 2),
-                            child: Text(
-                              '${widget.participants}',
-                              style: TextStyle(
+                          _getProprietaryLabel(),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: <Widget>[
+                              Icon(
+                                FontAwesomeIcons.male,
+                                size: 16,
                                 color: Theme.of(context).accentColor,
-                                fontWeight: FontWeight.bold,
                               ),
-                            ),
+                              Container(
+                                padding: EdgeInsets.only(top: 2),
+                                child: Text(
+                                  '${widget.participants}',
+                                  style: TextStyle(
+                                    color: Theme.of(context).accentColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ],
                       ),
