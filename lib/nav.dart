@@ -19,6 +19,7 @@ class Nav extends StatefulWidget{
   final double preferredSize, elevation;
   final bool drawerActive, addBarActive, notificationsActive, proprietary;
   final Color color, titleColor, actionsColor;
+  final String acessCode;
 
   const Nav({
     @required this.body,
@@ -35,6 +36,7 @@ class Nav extends StatefulWidget{
     this.proprietary = false,
     this.subtitle: '',
     this.preferredSize: 60.0,
+    this.acessCode,
   });
 
   @override
@@ -204,39 +206,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   onSubmitted: (val){
                     String authorId = Auth.uid;
                     String author = Auth.getName();
-                    // String code = this.getRandom().toString();
+                    String code = this.getRandom().toString();
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
-<<<<<<< HEAD
-                        String code;
-                        if(this.mounted){
-                          DatabaseManager.addCourse(authorId,author,val).then(
-                            (String c) => setState(() {
-                              code = c;
-                              if(code != null){
-                                Map text = {
-                                  //TODO: Generar un nuevo código y agregar el curso a la base de datos.
-                                  'name' : val,
-                                  'author' : author,
-                                  'authorId' : authorId,
-                                  'lessons' : 0,
-                                  'participants' : 1, 
-                                  'accessCode': code,
-                                };                        
-                                String textCourse = json.encode(text);
-                                Nav.coursePasser.sendWidget.add(textCourse);
-                                _addButtonController.reverse();
-                                _addBarController.reverse().then((val){
-                                  _addBarTextfieldController.text = '';
-                                  if(_addBarAlertController.status != AnimationStatus.dismissed){
-                                    _addBarAlertController.reverse();
-                                  }
-                                });
-                              }
-                            })
-                          );  
-                        }
-=======
                         if(widget.section == 'courses'){
                           Map text = {
                             //TODO: Generar un nuevo código y agregar el curso a la base de datos.
@@ -247,24 +219,25 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             'accessCode': code,
                           };
 
-                          DatabaseManager.addCourse(authorId,author,val,code);
+                          DatabaseManager.addCourse(authorId,author,val);
                           String textCourse = json.encode(text);
                           print(textCourse);
                           Nav.coursePasser.sendWidget.add(textCourse);
                         }else if(widget.section == 'lessons'){
                           var nowDate = DateTime.now();
+                          int day = nowDate.day;
+                          int month = nowDate.month;
+                          int year = nowDate.year;
+                          DatabaseManager.addLesson(Auth.uid, val, "description", day, month, year, widget.acessCode);
                           Map text = {
                             //TODO: obtener los comentarios de la lección.
                             'name' : val,
                             'day' : nowDate.day,
                             'month' : nowDate.month, 
                             'year': nowDate.year,
-                            'comments': 69,
+                            'comments': 0,
                           };
-
                           String textLesson = json.encode(text);
-
-                          print(textLesson);
                           Nav.lessonPasser.sendWidget.add(textLesson);
                         }
                          _addButtonController.reverse();
@@ -274,9 +247,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             _addBarAlertController.reverse();
                           }
                         });
->>>>>>> f9b50c3204fbea95d332c811357458de2b9cc30c
                       }else{
-                        DatabaseManager.addCourseByAccessCode("-LdViRuAFo7uDfjlcy2A",Auth.uid).then((Map text){
+                        DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((Map text){
                           if(text != null){  
                             String textCourse = json.encode(text);
                             print(textCourse);

@@ -85,6 +85,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                 author: widget.author,
                 participants: widget.participants,
               ),
+              acessCode: widget.accessCode,
             );
           }),
         );

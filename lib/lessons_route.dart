@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/lesson.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:classroom/nav.dart';
+import 'package:classroom/database_manager.dart';
 import 'dart:convert';
 
 class LessonsRoute extends StatefulWidget{
@@ -31,19 +32,16 @@ class _LessonsRouteState extends State<LessonsRoute>{
     _lessonPasser = Nav.lessonPasser;
 
     _lessons = List<Lesson>();
-
-    _lessons.add(
-      Lesson(
-        name: 'Pipes',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-      )
-    );
-
-    _lessons.add(
-      Lesson(
-        name: 'Thread',
-        description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
-      )
+    DatabaseManager.getLessonsPerCourse(widget.accessCode).then(
+      (List<String> ls) => setState(() {
+        List<String> _lessonsListString = List<String>();
+        _lessonsListString = ls;
+        DatabaseManager.getLessonsPerCourseByList(_lessonsListString).then(
+          (List<Lesson> lc) => setState(() {
+            _lessons = lc;
+          })
+        );         
+      })
     );
 
     _lessonPasser.recieveWidget.listen((newLesson){
@@ -139,27 +137,14 @@ class _LessonsRouteState extends State<LessonsRoute>{
                   ],
                 ),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Row(
-                      children: <Widget>[
-                        Icon(
-                          FontAwesomeIcons.plusCircle,
-                          size: 16,
-                          color: Theme.of(context).accentColor,
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: <Widget>[
-                        Text(
-                          widget.accessCode,
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ],
+                    Text(
+                      widget.accessCode,
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),

@@ -59,6 +59,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       Question(
         text: '¿Qué significa que sea una presentación de ejemplo?',
         author: 'Diego Alay',
+        authorId: '',
         voted: true,
         votes: 69,
         index: 0,
@@ -70,6 +71,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       Question(
         text: '¿Qué día es hoy?',
         author: 'Henry Campos',
+        authorId: '',
         mine: true,
         index: 1,
         votesController: _votesController,

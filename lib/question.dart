@@ -6,7 +6,7 @@ import 'package:classroom/interact_route.dart';
 import 'dart:async';
 
 class Question extends StatefulWidget{
-  final String text, author;
+  final String text, author, authorId;
   final bool voted, mine;
   final int votes, index;
   final StreamController<int> votesController;
@@ -14,6 +14,7 @@ class Question extends StatefulWidget{
   const Question({
     @required this.text,
     @required this.author,
+    @required this.authorId,
     @required this.votesController,
     this.mine : false,
     this.voted : false,

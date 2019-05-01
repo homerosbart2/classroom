@@ -24,7 +24,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     _coursesList = List<Course>();
     _coursePasser = Nav.coursePasser;
     if(_coursesList.isEmpty){
-       DatabaseManager.getCoursesPerUser().then(
+      DatabaseManager.getCoursesPerUser().then(
           (List<String> ls) => setState(() {
             List<String> _coursesListString = List<String>();
             _coursesListString = ls;
@@ -34,7 +34,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
               })
             );         
           })
-       );
+      );
     }
 
     _coursePasser.recieveWidget.listen((newCourse){
