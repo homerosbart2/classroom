@@ -33,6 +33,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
         lessons: 9,
         name: 'Ciencias de la Computación 7',
         author: 'Áxel Benavídez',
+        owner: true,
       )
     );
 

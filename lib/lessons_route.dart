@@ -8,12 +8,14 @@ import 'dart:convert';
 class LessonsRoute extends StatefulWidget{
   final String author, name, accessCode;
   final int participants;
+  final bool owner;
 
   const LessonsRoute({
     @required this.author,
     @required this.name,
     @required this.accessCode,
     this.participants: 1,
+    this.owner: false,
   });
 
   _LessonsRouteState createState() => _LessonsRouteState();
@@ -36,6 +38,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
       Lesson(
         name: 'Pipes',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+        owner: widget.owner,
       )
     );
 
@@ -43,6 +46,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
       Lesson(
         name: 'Thread',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a augue at eros dignissim fermentum eget non velit. Praesent et rutrum mi. Curabitur malesuada mattis tellus, ac accumsan quam fringilla sit amet.',
+        owner: widget.owner,
       )
     );
 
