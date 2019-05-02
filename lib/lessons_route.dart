@@ -4,6 +4,7 @@ import 'package:classroom/lesson.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 import 'dart:convert';
 
 class LessonsRoute extends StatefulWidget{
@@ -38,7 +39,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
       (List<String> ls) => setState(() {
         List<String> _lessonsListString = List<String>();
         _lessonsListString = ls;
-        DatabaseManager.getLessonsPerCourseByList(_lessonsListString).then(
+        DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid).then(
           (List<Lesson> lc) => setState(() {
             _lessons = lc;
           })

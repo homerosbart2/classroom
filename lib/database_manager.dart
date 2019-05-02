@@ -51,6 +51,10 @@ class DatabaseManager{
     }).then((_) { });
   }
 
+  static void addVoteToQuestion(String authorId, String question){
+    updateQuestion(question, "", "votes");
+  }
+
   static Future<String> addAnswers(String author, String authorId, String question, String text) async{
     DatabaseReference answer;
     answer = mDatabase.child("answers").push();
@@ -130,7 +134,7 @@ class DatabaseManager{
           }).then((_){/*nothing*/});
         });         
         break;        
-      }
+      }      
     }    
   }
 
@@ -236,18 +240,21 @@ class DatabaseManager{
         }); 
       }
     }catch(e){
-      print("error getQuestionsPerUserByList: $e");
+      print("error getQuestionsPerLessonByList: $e");
     } 
     return _questionsList;
   } 
 
-  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString) async{
+  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString, String uid) async{
     List<Lesson> _lessonsList = List<Lesson>();
+    bool userOwner;
     try{
       for (var eachLesson in listString) {
         await mDatabase.child("lessons").child(eachLesson).once().then((DataSnapshot snapshot) {
           Map<dynamic,dynamic> lesson = snapshot.value;
           if(lesson != null){
+            if(lesson['authorId'] == uid) userOwner = true;
+            else userOwner = false;
             _lessonsList.add(
               Lesson(
                 lessonId: eachLesson,
@@ -256,37 +263,40 @@ class DatabaseManager{
                 month: lesson['month'],
                 year: lesson['year'],
                 description: lesson['description'],
-                name: lesson['name']
+                name: lesson['name'],
+                owner: userOwner,
               )
             );       
           }
         }); 
       }
     }catch(e){
-      print("error getLessonsPerUserByList: $e");
+      print("error getLessonsPerCourseByList: $e");
     } 
     return _lessonsList;
   } 
 
-  static Future<List<Course>> getCoursesPerUserByList(List<String> listString) async{
+  static Future<List<Course>> getCoursesPerUserByList(List<String> listString, String uid) async{
     List<Course> _coursesList = List<Course>();
+    bool userOwner;
     try{
       for (var eachCourse in listString) {
         await mDatabase.child("courses").child(eachCourse).once().then((DataSnapshot snapshot) {
           Map<dynamic,dynamic> course = snapshot.value;
           if(course != null){
-            if(course != null){
-              _coursesList.add(
-                Course(
-                  accessCode: course['accessCode'],
-                  participants: course['participants'],
-                  lessons: course['lessons'],
-                  name: course['name'],
-                  author: course['author'],
-                  authorId: course['authorId']
-                )
-              );  
-            }      
+            if(course['authorId'] == uid) userOwner = true;
+            else userOwner = false;
+            _coursesList.add(
+              Course(
+                accessCode: course['accessCode'],
+                participants: course['participants'],
+                lessons: course['lessons'],
+                name: course['name'],
+                author: course['author'],
+                authorId: course['authorId'],
+                owner: userOwner,
+              )
+            );    
           }
         }); 
       }

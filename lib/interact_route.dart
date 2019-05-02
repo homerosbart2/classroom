@@ -93,24 +93,24 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       ),
     );
 
-    // DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
-    //     (List<String> ls) => setState(() {
-    //       List<String> __questionsListString = List<String>();
-    //       __questionsListString = ls;
-    //       DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
-    //         (List<Question> lc) => setState(() {
-    //           for(var question in lc){
-    //             if(question.authorId == Auth.uid) question.mine = true;
-    //             question.votesController = _votesController;
-    //             question.voted = true;
-    //             question.answered = true;
-    //             question.index = InteractRoute.index++;
-    //             InteractRoute.questions.add(question);
-    //           }
-    //         })
-    //       );         
-    //     })
-    // );
+    DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
+        (List<String> ls) => setState(() {
+          List<String> __questionsListString = List<String>();
+          __questionsListString = ls;
+          DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+            (List<Question> lc) => setState(() {
+              for(var question in lc){
+                if(question.authorId == Auth.uid) question.mine = true;
+                question.votesController = _votesController;
+                question.voted = true;
+                question.answered = true;
+                question.index = InteractRoute.index++;
+                InteractRoute.questions.add(question);
+              }
+            })
+          );         
+        })
+    );
 
     
     InteractRoute.questions.add(
