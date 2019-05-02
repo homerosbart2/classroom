@@ -7,28 +7,45 @@ import 'package:classroom/interact_route.dart';
 import 'dart:convert';
 
 class ChatBar extends StatefulWidget{
-  static WidgetPasser questionPasser = WidgetPasser();
-  static WidgetPasser answerPasser = WidgetPasser();
+  static WidgetPasser questionPasser = WidgetPasser(), answerPasser = WidgetPasser(), labelPasser = WidgetPasser();
+  final bool owner;
+  
+  static FocusNode chatBarFocusNode = FocusNode();
   static int mode;
-  const ChatBar();
+  const ChatBar({
+    this.owner: false,
+  });
 
   _ChatBarState createState() => _ChatBarState();
 }
 
 class _ChatBarState extends State<ChatBar>{
   TextEditingController _chatBarTextfieldController;
+  String _chatBarLabel;
 
   @override
   void initState() {
     super.initState();
     ChatBar.mode = 0;
 
+    _chatBarLabel = 'Escribe una pregunta';
+
     _chatBarTextfieldController = TextEditingController();
+
+    ChatBar.labelPasser.recieveWidget.listen((label){
+      if(label != null && this.mounted){
+        setState(() {
+          _chatBarLabel = label;
+        });
+      }
+    });
   }
 
   @override
   void dispose() {
     super.dispose();
+
+    ChatBar.labelPasser.sendWidget.add(null);
 
     ChatBar.mode = 0;
   }
@@ -36,9 +53,16 @@ class _ChatBarState extends State<ChatBar>{
   void _onSubmittedFunction(String val){
     if(val.trim() != ''){
       //print(val);
+      var nowDate = DateTime.now();
       Map text = {
         'text': val,
-        'author': 'Henry Campos', 
+        'author': 'Henry Campos',
+        'owner': widget.owner,
+        'day': nowDate.day,
+        'month': nowDate.month,
+        'year': nowDate.year,
+        'hours': nowDate.hour,
+        'minutes': nowDate.minute,
       };
       if(ChatBar.mode == 0){
         String textQuestion = json.encode(text);
@@ -47,12 +71,14 @@ class _ChatBarState extends State<ChatBar>{
         //TODO: Agregar la respuesta a la base de datos.
         String textAnswer = json.encode(text);
         Question.answerPasser.sendWidget.add(textAnswer);
+        if(widget.owner) Question.answeredPasser.sendWidget.add('1');
         InteractRoute.questionPositionController.reverse();
+        ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
         ChatBar.mode = 0;
       }
       _chatBarTextfieldController.text = '';
     }
-    FocusScope.of(context).requestFocus(FocusNode());
+    ChatBar.chatBarFocusNode.unfocus();
   }
 
   @override
@@ -70,11 +96,12 @@ class _ChatBarState extends State<ChatBar>{
               children: <Widget>[
                 Expanded(
                   child: StatefulTextfield(
+                    focusNode: ChatBar.chatBarFocusNode,
                     controller: _chatBarTextfieldController,
                     color: Theme.of(context).accentColor,
                     fillColor: Colors.white,
                     suffix: '',
-                    hint: 'Escriba una pregunta',
+                    hint: _chatBarLabel,
                     borderRadius: 30,
                     padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
                     onSubmitted: (val){

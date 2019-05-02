@@ -24,9 +24,12 @@ class Lesson extends StatefulWidget{
   _LessonState createState() => _LessonState();
 }
 
-class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin{
+class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   AnimationController _boxResizeOpacityController;
   Animation<double> _sizeFloat, _opacityFloat;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
