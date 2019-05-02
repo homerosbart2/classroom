@@ -48,16 +48,16 @@ class _LessonsRouteState extends State<LessonsRoute>{
 
     _lessonPasser.recieveWidget.listen((newLesson){
       if(newLesson != null){
-        Map jsonCourse = json.decode(newLesson);
+        Map jsonLesson = json.decode(newLesson);
         if(this.mounted){
           setState(() {
             _lessons.add(
               Lesson(
-                name: jsonCourse['name'],
-                day: jsonCourse['day'],
-                month: jsonCourse['month'],
-                year: jsonCourse['year'],
-                comments: jsonCourse['comments'],
+                name: jsonLesson['name'],
+                day: jsonLesson['day'],
+                month: jsonLesson['month'],
+                year: jsonLesson['year'],
+                comments: jsonLesson['comments'],
               )
             );
           });
