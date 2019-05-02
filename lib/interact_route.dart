@@ -53,6 +53,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     if(widget.owner){
       _uploadPresentation = StatefulButton(
         text: 'CARGAR PRESENTACIÓN',
+        fontSize: 13,
         color: Colors.grey,
         borderColor: Colors.transparent,
         icon: FontAwesomeIcons.arrowAltCircleUp,
@@ -137,6 +138,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         mine: true,
         index: InteractRoute.index++,
         votesController: _votesController,
+        owner: widget.owner,
       )
     );
 
@@ -158,9 +160,10 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
 
     _questionPasser.recieveWidget.listen((newQuestion){
       if(newQuestion != null){
-        Map jsonCourse = json.decode(newQuestion);
+        Map jsonQuestion = json.decode(newQuestion);
         if(this.mounted){
           setState(() {
+<<<<<<< HEAD
             String questionText = jsonCourse['text'];
             DatabaseManager.addQuestions(Auth.getName(), Auth.uid, widget.lessonId, questionText).then((id){
               print("id: $id");
@@ -178,6 +181,23 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                 );
               }
             });
+=======
+            InteractRoute.questions.add(
+              Question(
+                text: jsonQuestion['text'],
+                author: jsonQuestion['author'],
+                day: jsonQuestion['day'],
+                month: jsonQuestion['month'],
+                year: jsonQuestion['year'],
+                hours: jsonQuestion['hours'],
+                minutes: jsonQuestion['minutes'],
+                owner: jsonQuestion['owner'],
+                mine: true,
+                index: InteractRoute.index++,
+                votesController: _votesController,
+              )
+            );
+>>>>>>> develop
           });
         }
       }
@@ -286,7 +306,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             ),
           ),
           ChatBar(
-
+            owner: widget.owner,
           ),   
         ],
       ),

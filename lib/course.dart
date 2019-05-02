@@ -124,6 +124,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
         Navigator.of(context).push(
           CupertinoPageRoute(builder: (BuildContext context) {
             return Nav(
+              owner: widget.owner,
               preferredSize: 65,
               section: 'lessons',
               user: 'Henry Campos',

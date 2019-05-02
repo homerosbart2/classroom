@@ -120,7 +120,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
                           margin: EdgeInsets.only(left: 6, right: 3),
                           child: Icon(
                             FontAwesomeIcons.solidCircle,
-                            size: 5,
+                            size: 3,
                             color: Theme.of(context).accentColor,
                           ),
                         ),
@@ -144,18 +144,6 @@ class _LessonsRouteState extends State<LessonsRoute>{
                     ),
                   ],
                 ),
-                Column(
-                  children: <Widget>[
-                    Text(
-                      widget.accessCode,
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),     
-                  ],
-                ),
               ],
             ),
           ),
@@ -171,6 +159,42 @@ class _LessonsRouteState extends State<LessonsRoute>{
                   return _lessons.elementAt(index);
                 },
               ),
+            ),
+          ),
+          Container(
+            height: 65,
+            decoration: BoxDecoration(
+              //color: Colors.white,
+              border: Border(
+                top: BorderSide(
+                  color:Color.fromARGB(10, 0, 0, 0),
+                  width: 3,
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Text(
+                      'Agrega nuevos miembros:',
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                      ),
+                    ),
+                    Text(
+                      widget.accessCode,
+                      style: TextStyle(
+                        color: Theme.of(context).accentColor,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ],

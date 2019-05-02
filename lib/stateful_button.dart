@@ -7,6 +7,7 @@ class StatefulButton extends StatefulWidget{
   final FontWeight weight;
   final IconData icon;
   final EdgeInsetsGeometry iconMargin;
+  final double fontSize;
 
   const StatefulButton({
     @required this.onTap,
@@ -18,6 +19,7 @@ class StatefulButton extends StatefulWidget{
     this.weight,
     this.icon,
     this.iconMargin,
+    this.fontSize: 15,
   });
 
   @override
@@ -106,7 +108,7 @@ class _StatefulButtonState extends State<StatefulButton>{
               text: TextSpan(
                 text: widget.text,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: widget.fontSize,
                   fontFamily: 'Roboto Condensed',
                   fontWeight: _weight,
                   color: widget.color,
