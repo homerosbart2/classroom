@@ -197,11 +197,11 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(3),
-          border: Border.all(
-            color: Colors.grey,
-            width: 1,
-          )
+          // borderRadius: BorderRadius.circular(3),
+          // border: Border.all(
+          //   color: Colors.grey,
+          //   width: 1,
+          // ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

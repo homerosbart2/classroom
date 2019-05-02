@@ -51,8 +51,8 @@ class DatabaseManager{
     }).then((_) { });
   }
 
-  static void addVoteToQuestion(String authorId, String question){
-    updateQuestion(question, "", "votes");
+  static void addVoteToQuestion(String authorId, String question, String val){
+    updateQuestion(question, val, "votes");
   }
 
   static Future<String> addAnswers(String author, String authorId, String question, String text) async{
@@ -145,7 +145,7 @@ class DatabaseManager{
         await mDatabase.child("questions").child(code).once().then((DataSnapshot snapshot){
           Map<dynamic,dynamic> currentQuestion = snapshot.value;
           mDatabase.child("questions").child(code).update({
-          'votes': currentQuestion['votes'] + 1,
+          'votes': currentQuestion['votes'] + int.parse(param),
           }).then((_){/*nothing*/});
         });       
         break;        

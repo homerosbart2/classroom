@@ -5,14 +5,17 @@ import 'package:vibration/vibration.dart';
 import 'package:classroom/interact_route.dart';
 import 'dart:async';
 import 'package:classroom/answer.dart';
+import 'widget_passer.dart';
+import 'package:classroom/chatbar.dart';
+import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 
 class Question extends StatefulWidget{
+  static WidgetPasser answerPasser;
   final String text, author, authorId, questionId;
-  bool voted, mine, answered;
-  final int votes; 
-  int index;
+  bool voted, mine, answered, owner;
+  int votes, index;
   StreamController<int> votesController;
 
   Question({
@@ -23,6 +26,7 @@ class Question extends StatefulWidget{
     this.mine : false,
     this.voted : false,
     this.answered : false,  
+    this.owner : false, 
     this.votes : 0,
     this.index : 0,
     @required this.questionId,
@@ -34,6 +38,7 @@ class Question extends StatefulWidget{
 class _QuestionState extends State<Question> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Color _questionColor, _answerColor;
   Widget _header;
+  WidgetPasser _answerPasser;
   AnimationController _expandAnswersController;
   Animation<double> _expandHeightFloat, _angleFloat;
   List<Answer> _answers;
@@ -44,6 +49,8 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+
+    _answerPasser = WidgetPasser();
 
     _answers = List<Answer>();
     
@@ -91,6 +98,32 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
         owner: false,
       )
     );
+
+    _answerPasser.recieveWidget.listen((newAnswer){
+      if(newAnswer!= null){
+        Map jsonAnswer = json.decode(newAnswer);
+        if(this.mounted){
+          setState(() {
+            _answers.add(
+              Answer(
+                author: jsonAnswer['author'],
+                text: jsonAnswer['text'],
+                voted: false,
+                votes: 0,
+                owner: widget.owner,
+              )
+            );
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    
+    _answerPasser.sendWidget.add(null);
   }
 
   void _construcQuestions(BuildContext context){
@@ -260,8 +293,11 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                                 if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
                                   InteractRoute.questionController.add(widget.text);
                                   InteractRoute.questionPositionController.forward();
+                                  Question.answerPasser = _answerPasser;
+                                  ChatBar.mode = 1;
                                 }else{
                                   InteractRoute.questionPositionController.reverse();
+                                  ChatBar.mode = 0;
                                 }
                               },
                               child: Container(
@@ -323,7 +359,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
             voted: widget.voted,
             votes: widget.votes,
             onVote: (){
-              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, 1);
+              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                 author: widget.author,
                 text: widget.text,
@@ -336,7 +372,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
               //widget.votesController.add(1);
             },
             onUnvote: (){
-              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, -1);
+              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "-1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                 author: widget.author,
                 text: widget.text,
