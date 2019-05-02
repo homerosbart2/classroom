@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:classroom/stateful_textfield.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:classroom/question.dart';
+import 'package:classroom/interact_route.dart';
 import 'dart:convert';
 
 class ChatBar extends StatefulWidget{
   static WidgetPasser questionPasser = WidgetPasser();
   static WidgetPasser answerPasser = WidgetPasser();
+  static int mode;
   const ChatBar();
 
   _ChatBarState createState() => _ChatBarState();
@@ -18,8 +21,37 @@ class _ChatBarState extends State<ChatBar>{
   @override
   void initState() {
     super.initState();
+    ChatBar.mode = 0;
 
     _chatBarTextfieldController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+
+    ChatBar.mode = 0;
+  }
+
+  void _onSubmittedFunction(String val){
+    if(val.trim() != ''){
+      //print(val);
+      Map text = {
+        'text': val,
+        'author': 'Henry Campos', 
+      };
+      if(ChatBar.mode == 0){
+        String textQuestion = json.encode(text);
+        ChatBar.questionPasser.sendWidget.add(textQuestion);
+      }else{
+        //TODO: Agregar la respuesta a la base de datos.
+        String textAnswer = json.encode(text);
+        Question.answerPasser.sendWidget.add(textAnswer);InteractRoute.questionPositionController.reverse();
+        ChatBar.mode = 0;
+      }
+      _chatBarTextfieldController.text = '';
+    }
+    FocusScope.of(context).requestFocus(FocusNode());
   }
 
   @override
@@ -45,16 +77,7 @@ class _ChatBarState extends State<ChatBar>{
                     borderRadius: 30,
                     padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
                     onSubmitted: (val){
-                      if(val.trim() != ''){
-                        print(val);
-                        Map text = {
-                          'text': val,
-                          'author': 'Henry Campos', 
-                        };
-                        String textQuestion = json.encode(text);
-                        ChatBar.questionPasser.sendWidget.add(textQuestion);
-                        _chatBarTextfieldController.text = '';
-                      }
+                      _onSubmittedFunction(val);
                     },
                   ),
                 ),
@@ -94,7 +117,9 @@ class _ChatBarState extends State<ChatBar>{
                       size: 18,
                       color: Theme.of(context).accentColor,
                     ),
-                    onPressed: (){},
+                    onPressed: (){
+                      _onSubmittedFunction(_chatBarTextfieldController.text);
+                    },
                   ),
                 ],
               ),

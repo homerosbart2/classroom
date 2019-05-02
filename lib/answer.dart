@@ -52,35 +52,40 @@ class _AnswerState extends State<Answer>{
             ),
           ),
         ),
-        Container(
-          margin: EdgeInsets.fromLTRB(48, 6, 12, 6),
-          padding: EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: _getColor(context),
-            borderRadius: BorderRadius.circular(3),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.only(bottom: 3),
-                child: Text(
-                  widget.author,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: _getTextColor(context),
-                  )
-                ),
+        Row(
+          children: <Widget>[
+            Container(
+              width: MediaQuery.of(context).size.width - 125,
+              margin: EdgeInsets.fromLTRB(48, 6, 12, 6),
+              padding: EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _getColor(context),
+                borderRadius: BorderRadius.circular(3),
               ),
-              Text(
-                widget.text,
-                textAlign: TextAlign.justify,
-                style: TextStyle(
-                  color: _getTextColor(context),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    margin: EdgeInsets.only(bottom: 3),
+                    child: Text(
+                      widget.author,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _getTextColor(context),
+                      )
+                    ),
+                  ),
+                  Text(
+                    widget.text,
+                    textAlign: TextAlign.justify,
+                    style: TextStyle(
+                      color: _getTextColor(context),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );

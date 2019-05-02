@@ -5,13 +5,16 @@ import 'package:vibration/vibration.dart';
 import 'package:classroom/interact_route.dart';
 import 'dart:async';
 import 'package:classroom/answer.dart';
+import 'widget_passer.dart';
+import 'package:classroom/chatbar.dart';
+import 'dart:convert';
 
 class Question extends StatefulWidget{
+  static WidgetPasser answerPasser;
   final String text, author, authorId, questionId;
-  bool voted, mine, answered;
-  final int votes; 
-  int index;
-  StreamController<int> votesController;
+  final bool voted, mine, answered, owner;
+  final int votes, index;
+  final StreamController<int> votesController;
 
   Question({
     @required this.text,
@@ -21,6 +24,7 @@ class Question extends StatefulWidget{
     this.mine : false,
     this.voted : false,
     this.answered : false,  
+    this.owner : false, 
     this.votes : 0,
     this.index : 0,
     @required this.questionId,
@@ -32,6 +36,7 @@ class Question extends StatefulWidget{
 class _QuestionState extends State<Question> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Color _questionColor, _answerColor;
   Widget _header;
+  WidgetPasser _answerPasser;
   AnimationController _expandAnswersController;
   Animation<double> _expandHeightFloat, _angleFloat;
   List<Answer> _answers;
@@ -42,6 +47,8 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   @override
   void initState() {
     super.initState();
+
+    _answerPasser = WidgetPasser();
 
     _answers = List<Answer>();
     
@@ -89,6 +96,32 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
         owner: false,
       )
     );
+
+    _answerPasser.recieveWidget.listen((newAnswer){
+      if(newAnswer!= null){
+        Map jsonAnswer = json.decode(newAnswer);
+        if(this.mounted){
+          setState(() {
+            _answers.add(
+              Answer(
+                author: jsonAnswer['author'],
+                text: jsonAnswer['text'],
+                voted: false,
+                votes: 0,
+                owner: widget.owner,
+              )
+            );
+          });
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    
+    _answerPasser.sendWidget.add(null);
   }
 
   void _construcQuestions(BuildContext context){
@@ -258,8 +291,11 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                                 if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
                                   InteractRoute.questionController.add(widget.text);
                                   InteractRoute.questionPositionController.forward();
+                                  Question.answerPasser = _answerPasser;
+                                  ChatBar.mode = 1;
                                 }else{
                                   InteractRoute.questionPositionController.reverse();
+                                  ChatBar.mode = 0;
                                 }
                               },
                               child: Container(
