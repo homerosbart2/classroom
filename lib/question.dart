@@ -8,6 +8,8 @@ import 'package:classroom/answer.dart';
 import 'widget_passer.dart';
 import 'package:classroom/chatbar.dart';
 import 'dart:convert';
+import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 
 class Question extends StatefulWidget{
   static WidgetPasser answerPasser, answeredPasser;
@@ -416,6 +418,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
             voted: widget.voted,
             votes: widget.votes,
             onVote: (){
+              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                 author: widget.author,
                 text: widget.text,
@@ -428,7 +431,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
               //widget.votesController.add(1);
             },
             onUnvote: (){
-              print(widget.index);
+              DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "-1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                 author: widget.author,
                 text: widget.text,

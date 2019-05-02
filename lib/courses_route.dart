@@ -4,6 +4,7 @@ import 'package:classroom/widget_passer.dart';
 import 'dart:convert';
 import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 
 class CoursesRoute extends StatefulWidget{
 
@@ -28,7 +29,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
           (List<String> ls) => setState(() {
             List<String> _coursesListString = List<String>();
             _coursesListString = ls;
-            DatabaseManager.getCoursesPerUserByList(_coursesListString).then(
+            DatabaseManager.getCoursesPerUserByList(_coursesListString, Auth.uid).then(
               (List<Course> lc) => setState(() {
                 _coursesList = lc;
               })
