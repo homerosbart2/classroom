@@ -10,10 +10,10 @@ import 'package:classroom/chatbar.dart';
 import 'dart:convert';
 
 class Question extends StatefulWidget{
-  static WidgetPasser answerPasser;
+  static WidgetPasser answerPasser, answeredPasser;
   final String text, author;
   final bool voted, mine, answered, owner;
-  final int votes, index;
+  final int votes, index, day, month, year, hours, minutes;
   final StreamController<int> votesController;
 
   const Question({
@@ -26,18 +26,26 @@ class Question extends StatefulWidget{
     this.owner : false, 
     this.votes : 0,
     this.index : 0,
+    this.day : 27,
+    this.month : 3,
+    this.year : 1998,
+    this.hours : 11,
+    this.minutes : 55,
   });
 
   _QuestionState createState() => _QuestionState();
 }
 
-class _QuestionState extends State<Question> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
+class _QuestionState extends State<Question> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Color _questionColor, _answerColor;
   Widget _header;
-  WidgetPasser _answerPasser;
+  WidgetPasser _answerPasser, _answeredPasser;
   AnimationController _expandAnswersController;
   Animation<double> _expandHeightFloat, _angleFloat;
   List<Answer> _answers;
+  String _timeDate;
+  AnimationController _boxResizeOpacityController;
+  Animation<double> _sizeFloat, _opacityFloat;
 
   @override
   bool get wantKeepAlive => true;
@@ -46,7 +54,16 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   void initState() {
     super.initState();
 
+    String day = (widget.day < 10)? '0${widget.day}' : '${widget.day}';
+    String month = (widget.month < 10)? '0${widget.month}' : '${widget.month}';
+    String year = '${widget.year}';
+    String hours = (widget.hours < 10)? '0${widget.hours}' : '${widget.hours}';
+    String minutes = (widget.minutes < 10)? '0${widget.minutes}' : '${widget.minutes}';
+
+    _timeDate = '$day/$month/$year - $hours:$minutes';
+
     _answerPasser = WidgetPasser();
+    _answeredPasser = WidgetPasser();
 
     _answers = List<Answer>();
     
@@ -78,6 +95,33 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
       ),
     );
 
+    _boxResizeOpacityController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+
+    _sizeFloat = Tween<double>(
+      begin: 0.75, 
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _boxResizeOpacityController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _opacityFloat = Tween<double>(
+      begin: 0, 
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _boxResizeOpacityController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    if(widget.answered) _boxResizeOpacityController.forward();
+
     _answers.add(
       Answer(
         author: 'Creador',
@@ -104,12 +148,20 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
               Answer(
                 author: jsonAnswer['author'],
                 text: jsonAnswer['text'],
+                owner: jsonAnswer['owner'],
                 voted: false,
                 votes: 0,
-                owner: widget.owner,
               )
             );
           });
+        }
+      }
+    });
+
+    _answeredPasser.recieveWidget.listen((newAction){
+      if(newAction!= null){
+        if(this.mounted){
+          _boxResizeOpacityController.forward();
         }
       }
     });
@@ -167,23 +219,25 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
   }
 
   Widget _getAnsweredTag(){
-    if(widget.answered){
-      return Container(
-        padding: EdgeInsets.symmetric(vertical: 3, horizontal: 9),
-        decoration: BoxDecoration(
-          color: Theme.of(context).primaryColor,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          'Respondida',
-          style: TextStyle(
-            color: Colors.white,
+    return FadeTransition(
+      opacity: _opacityFloat,
+      child: ScaleTransition(
+        scale: _sizeFloat,
+        child: Container(
+          padding: EdgeInsets.symmetric(vertical: 3, horizontal: 9),
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Text(
+            'Respondida',
+            style: TextStyle(
+              color: Colors.white,
+            ),
           ),
         ),
-      );
-    }else{
-      return Container();
-    }
+      ),
+    );
   }
 
   @override
@@ -222,7 +276,7 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                         children: <Widget>[
                           _getAnsweredTag(),
                           Text(
-                            '17/03/2019  -  20:51',
+                            _timeDate,
                             style: TextStyle(
                               color: Colors.grey,
                             ),
@@ -289,11 +343,16 @@ class _QuestionState extends State<Question> with SingleTickerProviderStateMixin
                                 if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
                                   InteractRoute.questionController.add(widget.text);
                                   InteractRoute.questionPositionController.forward();
+                                  _expandAnswersController.forward();
                                   Question.answerPasser = _answerPasser;
+                                  Question.answeredPasser = _answeredPasser;
                                   ChatBar.mode = 1;
+                                  FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
+                                  ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
                                 }else{
                                   InteractRoute.questionPositionController.reverse();
                                   ChatBar.mode = 0;
+                                  ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                                 }
                               },
                               child: Container(

@@ -14,7 +14,7 @@ class Nav extends StatefulWidget{
   final Widget body;
   final String title, user, section, subtitle;
   final double preferredSize, elevation;
-  final bool drawerActive, addBarActive, notificationsActive, proprietary;
+  final bool drawerActive, addBarActive, notificationsActive, owner;
   final Color color, titleColor, actionsColor;
 
   const Nav({
@@ -29,7 +29,7 @@ class Nav extends StatefulWidget{
     this.addBarActive: true,
     this.drawerActive: true,
     this.notificationsActive: true,
-    this.proprietary = false,
+    this.owner = false,
     this.subtitle: '',
     this.preferredSize: 60.0,
   });
@@ -218,7 +218,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             'day' : nowDate.day,
                             'month' : nowDate.month, 
                             'year': nowDate.year,
-                            'comments': 69,
+                            'comments': 0,
                           };
 
                           String textLesson = json.encode(text);
@@ -297,45 +297,47 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           )
         );
       }
-      actions.add(
-        RotationTransition(
-          turns: _angleFloat,
-          child: IconButton(
-            icon: Icon(
-              FontAwesomeIcons.plus,
-              size: 20,
-            ), 
-            tooltip: 'Agregar curso',
-            onPressed: () {
-              final status = _addBarController.status;
+      if((widget.section == 'lessons' && widget.owner) || widget.section == 'courses'){
+        actions.add(
+          RotationTransition(
+            turns: _angleFloat,
+            child: IconButton(
+              icon: Icon(
+                FontAwesomeIcons.plus,
+                size: 20,
+              ), 
+              tooltip: 'Agregar curso',
+              onPressed: () {
+                final status = _addBarController.status;
 
-              if(status == AnimationStatus.completed){
-                _addBarController.reverse(
-                  from: 1
-                ).then((val){
-                  if(_addBarAlertController.status != AnimationStatus.dismissed){
-                    _addBarAlertController.reverse();
-                  }
-                });
-                _addButtonController.reverse();
-                FocusScope.of(context).requestFocus(new FocusNode());
-              }else if(status == AnimationStatus.dismissed){
-                setState(() {
-                  if(widget.section == 'courses') Nav.addBarTitle = "Ingrese el nombre del curso";
-                  else if(widget.section == 'lessons') Nav.addBarTitle = "Ingrese el nombre de la lección";
-                  Nav.addBarMode = 0;
-                });
-                _addBarController.forward(
-                  from: 0
-                );
-                _addButtonController.forward();
-                FocusScope.of(context).requestFocus(_getFocusNode());
-                _notificationHubPositionController.reverse();
-              }
-            },
-          ),
-        )
-      );
+                if(status == AnimationStatus.completed){
+                  _addBarController.reverse(
+                    from: 1
+                  ).then((val){
+                    if(_addBarAlertController.status != AnimationStatus.dismissed){
+                      _addBarAlertController.reverse();
+                    }
+                  });
+                  _addButtonController.reverse();
+                  FocusScope.of(context).requestFocus(new FocusNode());
+                }else if(status == AnimationStatus.dismissed){
+                  setState(() {
+                    if(widget.section == 'courses') Nav.addBarTitle = "Ingrese el nombre del curso";
+                    else if(widget.section == 'lessons') Nav.addBarTitle = "Ingrese el nombre de la lección";
+                    Nav.addBarMode = 0;
+                  });
+                  _addBarController.forward(
+                    from: 0
+                  );
+                  _addButtonController.forward();
+                  FocusScope.of(context).requestFocus(_getFocusNode());
+                  _notificationHubPositionController.reverse();
+                }
+              },
+            ),
+          )
+        );
+      }
     }
     if(widget.notificationsActive){
       actions.add(
