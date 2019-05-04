@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:classroom/vote.dart';
+import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 
 class Answer extends StatefulWidget{
-  final String author, text;
-  final bool voted, mine, owner;
+  final String author, text, questionId, answerId, authorId;
+  bool voted, mine, owner;
   final int votes;
 
-  const Answer({
+  Answer({
+    @required this.questionId,
+    @required this.answerId,
     @required this.author,
+    @required this.authorId,
     @required this.text,
     this.voted: false,
     this.mine: false,
@@ -49,6 +54,12 @@ class _AnswerState extends State<Answer>{
               votes: widget.votes,
               showVotes: false,
               small: true,
+              onVote: (){
+                DatabaseManager.addVoteToAnswer(Auth.uid, widget.answerId, "1");
+              },
+              onUnvote: (){
+                DatabaseManager.addVoteToAnswer(Auth.uid, widget.answerId, "-1");
+              },              
             ),
           ),
         ),

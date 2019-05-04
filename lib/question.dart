@@ -13,10 +13,11 @@ import 'package:classroom/auth.dart';
 
 class Question extends StatefulWidget{
   static WidgetPasser answerPasser, answeredPasser;
+  static String globalQuestionId;
   final String text, author, authorId, questionId;
-  final bool voted, mine, answered, owner;
-  final int votes, index, day, month, year, hours, minutes;
-  final StreamController<int> votesController;
+  bool voted, mine, answered, owner;
+  int votes, index, day, month, year, hours, minutes;
+  StreamController<int> votesController;
 
   Question({
     @required this.text,
@@ -39,6 +40,7 @@ class Question extends StatefulWidget{
 
   _QuestionState createState() => _QuestionState();
 }
+
 
 class _QuestionState extends State<Question> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Color _questionColor, _answerColor;
@@ -125,6 +127,29 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
     );
 
     if(widget.answered) _boxResizeOpacityController.forward();
+
+
+    if(_answers.isEmpty){
+      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then(
+          (List<String> ls) => setState(() {
+            List<String> _answersListString = List<String>();
+            _answersListString = ls;
+            DatabaseManager.getAnswersPerQuestionByList(_answersListString).then(
+              (List<Answer> la) => setState(() {
+                for(var answer in la){
+                  DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted){
+                    if(answer.authorId == Auth.uid) answer.owner = true;
+                    if(voted) answer.voted = true;
+                    setState(() {
+                      _answers.add(answer);
+                    });
+                  });
+                }
+              })
+            );         
+          })
+      );
+    }
 
     _answers.add(
       Answer(
@@ -350,6 +375,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
                                   _expandAnswersController.forward();
                                   Question.answerPasser = _answerPasser;
                                   Question.answeredPasser = _answeredPasser;
+                                  Question.globalQuestionId = widget.questionId;
                                   ChatBar.mode = 1;
                                   FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
                                   ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
@@ -420,6 +446,8 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
             onVote: (){
               DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
+                questionId: widget.questionId,
+                authorId: widget.authorId,
                 author: widget.author,
                 text: widget.text,
                 voted: true,
@@ -433,6 +461,8 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
             onUnvote: (){
               DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "-1");
               InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
+                authorId: widget.authorId,
+                questionId: widget.questionId,
                 author: widget.author,
                 text: widget.text,
                 voted: false,

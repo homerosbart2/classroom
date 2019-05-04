@@ -101,12 +101,16 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
           DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
             (List<Question> lc) => setState(() {
               for(var question in lc){
-                if(question.authorId == Auth.uid) question.mine = true;
-                question.votesController = _votesController;
-                question.voted = true;
-                question.answered = true;
-                question.index = InteractRoute.index++;
-                InteractRoute.questions.add(question);
+                DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
+                  if(question.authorId == Auth.uid) question.mine = true;
+                  question.votesController = _votesController;
+                  if(voted) question.voted = true;
+                  question.answered = true;
+                  question.index = InteractRoute.index++;
+                  setState(() {
+                    InteractRoute.questions.add(question);
+                  });              
+                });
               }
             })
           );         
@@ -162,27 +166,10 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         Map jsonQuestion = json.decode(newQuestion);
         if(this.mounted){
           setState(() {
-<<<<<<< HEAD
-            String questionText = jsonCourse['text'];
-            DatabaseManager.addQuestions(Auth.getName(), Auth.uid, widget.lessonId, questionText).then((id){
-              print("id: $id");
-              if(id != null){
-                InteractRoute.questions.add(
-                  Question(
-                    questionId: id,
-                    authorId: Auth.uid,
-                    text: questionText,
-                    author: Auth.getName(),
-                    mine: true,
-                    index: InteractRoute.index++,
-                    votesController: _votesController,
-                  )
-                );
-              }
-            });
-=======
             InteractRoute.questions.add(
               Question(
+                authorId: jsonQuestion['authorId'],
+                questionId: jsonQuestion['questionId'],
                 text: jsonQuestion['text'],
                 author: jsonQuestion['author'],
                 day: jsonQuestion['day'],
@@ -196,7 +183,6 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                 votesController: _votesController,
               )
             );
->>>>>>> develop
           });
         }
       }
@@ -305,6 +291,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             ),
           ),
           ChatBar(
+            lessonId: widget.lessonId,
             owner: widget.owner,
           ),   
         ],
