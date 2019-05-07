@@ -23,6 +23,7 @@ class LessonsRoute extends StatefulWidget{
 
 class _LessonsRouteState extends State<LessonsRoute>{
   WidgetPasser _lessonPasser;
+  ScrollController _scrollController;
 
   List<Lesson> _lessons;
 
@@ -31,6 +32,8 @@ class _LessonsRouteState extends State<LessonsRoute>{
     super.initState();
 
     _lessonPasser = Nav.lessonPasser;
+
+    _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
 
@@ -62,9 +65,17 @@ class _LessonsRouteState extends State<LessonsRoute>{
                 month: jsonLesson['month'],
                 year: jsonLesson['year'],
                 comments: jsonLesson['comments'],
+                owner: widget.owner,
               )
             );
           });
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: Duration(
+              milliseconds: 500,
+            ),  
+            curve: Curves.ease,
+          );
         }
       }
     });
@@ -75,6 +86,29 @@ class _LessonsRouteState extends State<LessonsRoute>{
   void dispose() {
     super.dispose();
     _lessonPasser.sendWidget.add(null);
+  }
+
+  Widget _getCourseAuthor(BuildContext context){
+    if(widget.owner) return Container();
+    else return Row(
+      children: <Widget>[
+        Text(
+          widget.author,
+          style: TextStyle(
+            color: Theme.of(context).accentColor,
+            fontSize: 16,
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.only(left: 6, right: 3),
+          child: Icon(
+            FontAwesomeIcons.solidCircle,
+            size: 3,
+            color: Theme.of(context).accentColor,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -113,21 +147,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
                     ),
                     Row(
                       children: <Widget>[
-                        Text(
-                          widget.author,
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.only(left: 6, right: 3),
-                          child: Icon(
-                            FontAwesomeIcons.solidCircle,
-                            size: 3,
-                            color: Theme.of(context).accentColor,
-                          ),
-                        ),
+                        _getCourseAuthor(context),
                         Icon(
                           FontAwesomeIcons.male,
                           size: 16,
@@ -154,6 +174,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
           Expanded(
             child: Container(
               child: ListView.builder(
+                controller: _scrollController,
                 // physics: ScrollPhysics(
                 //   parent: BouncingScrollPhysics(),
                 // ),

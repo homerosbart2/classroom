@@ -33,12 +33,15 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser;
+  ScrollController _scrollController;
 
   @override
   void initState() {
     super.initState();
 
     _questionToAnswer = '';
+
+    _scrollController = ScrollController();
 
     _questionPasser = ChatBar.questionPasser;
 
@@ -152,6 +155,13 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
               )
             );
           });
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: Duration(
+              milliseconds: 500,
+            ),  
+            curve: Curves.ease,
+          );
         }
       }
     });
@@ -196,6 +206,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Widget _getListView(double width, double height){
     final List<Question> _actualQuestions = List.from(InteractRoute.questions);
     return ListView.builder(
+      reverse: false,
+      controller: _scrollController,
       // physics: ScrollPhysics(
       //   parent: BouncingScrollPhysics(),
       // ),
