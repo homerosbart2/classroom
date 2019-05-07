@@ -105,7 +105,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                   if(question.authorId == Auth.uid) question.mine = true;
                   question.votesController = _votesController;
                   if(voted) question.voted = true;
-                  question.answered = true;
+                  if(question.votes > 0) question.answered = true;
                   question.index = InteractRoute.index++;
                   setState(() {
                     InteractRoute.questions.add(question);
@@ -118,32 +118,32 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     );
 
     
-    InteractRoute.questions.add(
-      Question(
-        text: '¿Qué significa que sea una presentación de ejemplo?',
-        author: 'Diego Alay',
-        authorId: "123123",
-        questionId: "12313123",
-        voted: true,
-        votes: 69,
-        index: InteractRoute.index++,
-        votesController: _votesController,
-        answered: true,
-      )
-    );
+    // InteractRoute.questions.add(
+    //   Question(
+    //     text: '¿Qué significa que sea una presentación de ejemplo?',
+    //     author: 'Diego Alay',
+    //     authorId: "123123",
+    //     questionId: "12313123",
+    //     voted: true,
+    //     votes: 69,
+    //     index: InteractRoute.index++,
+    //     votesController: _votesController,
+    //     answered: true,
+    //   )
+    // );
 
-    InteractRoute.questions.add(
-      Question(
-        authorId: "123123",
-        questionId: "12313123",
-        text: '¿Qué día es hoy?',
-        author: 'Henry Campos',
-        mine: true,
-        index: InteractRoute.index++,
-        votesController: _votesController,
-        owner: widget.owner,
-      )
-    );
+    // InteractRoute.questions.add(
+    //   Question(
+    //     authorId: "123123",
+    //     questionId: "12313123",
+    //     text: '¿Qué día es hoy?',
+    //     author: 'Henry Campos',
+    //     mine: true,
+    //     index: InteractRoute.index++,
+    //     votesController: _votesController,
+    //     owner: widget.owner,
+    //   )
+    // );
 
     _votesStream.listen((val) {
       if(val != null){
