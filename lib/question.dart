@@ -330,8 +330,7 @@ class _QuestionState extends State<Question>
                           ),
                         ),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(vertical: 6, horizontal: 9),
+                          padding:EdgeInsets.symmetric(vertical: 6, horizontal: 9),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
@@ -353,10 +352,7 @@ class _QuestionState extends State<Question>
                                 child: GestureDetector(
                                   onTap: () {
                                     Vibration.vibrate(duration: 20);
-                                    if (_expandAnswersController.status ==
-                                            AnimationStatus.dismissed ||
-                                        _expandAnswersController.reverse ==
-                                            AnimationStatus.dismissed) {
+                                    if (_expandAnswersController.status == AnimationStatus.dismissed || _expandAnswersController.reverse == AnimationStatus.dismissed) {
                                       _expandAnswersController.forward();
                                     } else {
                                       _expandAnswersController.reverse();
@@ -382,16 +378,14 @@ class _QuestionState extends State<Question>
                                                   child: Icon(
                                                     FontAwesomeIcons.angleDown,
                                                     size: 12,
-                                                    color: Theme.of(context)
-                                                        .accentColor,
+                                                    color: Theme.of(context).accentColor,
                                                   ),
                                                 ),
                                               ),
                                               Text(
                                                 'RESPUESTAS',
                                                 style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .accentColor,
+                                                  color: Theme.of(context).accentColor,
                                                 ),
                                               ),
                                             ],
@@ -409,62 +403,44 @@ class _QuestionState extends State<Question>
                                 child: GestureDetector(
                                   onTap: () {
                                     Vibration.vibrate(duration: 20);
-                                    if (InteractRoute.questionPositionController
-                                                .status ==
-                                            AnimationStatus.dismissed ||
-                                        InteractRoute.questionPositionController
-                                                .status ==
-                                            AnimationStatus.reverse) {
-                                      InteractRoute.questionController
-                                          .add(widget.text);
-                                      InteractRoute.questionPositionController
-                                          .forward();
+                                    if (InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse) {
+                                      InteractRoute.questionController.add(widget.text);
+                                      InteractRoute.questionPositionController.forward();
                                       _expandAnswersController.forward();
                                       Question.answerPasser = _answerPasser;
                                       Question.answeredPasser = _answeredPasser;
-                                      Question.globalQuestionId =
-                                          widget.questionId;
+                                      Question.globalQuestionId = widget.questionId;
                                       ChatBar.mode = 1;
-                                      FocusScope.of(context).requestFocus(
-                                          ChatBar.chatBarFocusNode);
-                                      ChatBar.labelPasser.sendWidget
-                                          .add('Escriba una respuesta');
+                                      FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
+                                      ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
                                     } else {
-                                      InteractRoute.questionPositionController
-                                          .reverse();
+                                      InteractRoute.questionPositionController.reverse();
                                       ChatBar.mode = 0;
-                                      ChatBar.labelPasser.sendWidget
-                                          .add('Escriba una pregunta');
+                                      ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                                     }
                                   },
                                   child: Container(
                                     margin: EdgeInsets.only(bottom: 3),
                                     color: _questionColor,
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
+                                      mainAxisAlignment:MainAxisAlignment.center,
                                       children: <Widget>[
                                         Container(
-                                          padding:
-                                              EdgeInsets.fromLTRB(0, 6, 0, 12),
+                                          padding:EdgeInsets.fromLTRB(0, 6, 0, 12),
                                           child: Row(
                                             children: <Widget>[
                                               Container(
-                                                margin:
-                                                    EdgeInsets.only(right: 6),
+                                                margin:EdgeInsets.only(right: 6),
                                                 child: Icon(
-                                                  FontAwesomeIcons
-                                                      .solidCommentAlt,
+                                                  FontAwesomeIcons.solidCommentAlt,
                                                   size: 12,
-                                                  color: Theme.of(context)
-                                                      .accentColor,
+                                                  color: Theme.of(context).accentColor,
                                                 ),
                                               ),
                                               Text(
                                                 'RESPONDER',
                                                 style: TextStyle(
-                                                  color: Theme.of(context)
-                                                      .accentColor,
+                                                  color: Theme.of(context).accentColor,
                                                 ),
                                               ),
                                             ],
@@ -501,10 +477,8 @@ class _QuestionState extends State<Question>
                 voted: widget.voted,
                 votes: widget.votes,
                 onVote: () {
-                  DatabaseManager.addVoteToQuestion(
-                      Auth.uid, widget.questionId, "1");
-                  InteractRoute.questions
-                      .replaceRange(widget.index, widget.index + 1, [
+                  DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "1");
+                  InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [
                     Question(
                       questionId: widget.questionId,
                       authorId: widget.authorId,
@@ -520,10 +494,8 @@ class _QuestionState extends State<Question>
                   //widget.votesController.add(1);
                 },
                 onUnvote: () {
-                  DatabaseManager.addVoteToQuestion(
-                      Auth.uid, widget.questionId, "-1");
-                  InteractRoute.questions
-                      .replaceRange(widget.index, widget.index + 1, [
+                  DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "-1");
+                  InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [
                     Question(
                       authorId: widget.authorId,
                       questionId: widget.questionId,
