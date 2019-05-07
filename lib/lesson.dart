@@ -27,12 +27,19 @@ class Lesson extends StatefulWidget{
 class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   AnimationController _boxResizeOpacityController;
   Animation<double> _sizeFloat, _opacityFloat;
+  String _date;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
   void initState() {
+    String day = (widget.day < 10)? '0${widget.day}' : '${widget.day}';
+    String month = (widget.month < 10)? '0${widget.month}' : '${widget.month}';
+    String year = '${widget.year}';
+
+    _date = '$day/$month/$year';
+
     _boxResizeOpacityController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 200),
@@ -139,7 +146,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
                               Container(
                                 margin: EdgeInsets.only(top: 3, bottom: 9),
                                 child: Text(
-                                  '${widget.day}/${widget.month}/${widget.year}',
+                                  _date,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 17,
