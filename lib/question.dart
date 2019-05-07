@@ -151,22 +151,22 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
       );
     }
 
-    _answers.add(
-      Answer(
-        author: 'Creador',
-        text: 'Significa que únicamente se está utilizando como ejemplo para demostrar su utilización en la aplicación.',
-        voted: true,
-        owner: true,
-      )
-    );
-    _answers.add(
-      Answer(
-        author: 'José Pérez',
-        text: 'Ha de ser porque es de ejemplo.',
-        voted: false,
-        owner: false,
-      )
-    );
+    // _answers.add(
+    //   Answer(
+    //     author: 'Creador',
+    //     text: 'Significa que únicamente se está utilizando como ejemplo para demostrar su utilización en la aplicación.',
+    //     voted: true,
+    //     owner: true,
+    //   )
+    // );
+    // _answers.add(
+    //   Answer(
+    //     author: 'José Pérez',
+    //     text: 'Ha de ser porque es de ejemplo.',
+    //     voted: false,
+    //     owner: false,
+    //   )
+    // );
 
     _answerPasser.recieveWidget.listen((newAnswer){
       if(newAnswer!= null){

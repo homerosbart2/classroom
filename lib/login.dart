@@ -72,8 +72,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
   }
 
   void validateAndSubmit(String email, String password, String name) async {
-    email = email.toString().trim();
-    email = email.toString().toLowerCase();
+    email = email.toString().trim().toLowerCase();
     password = password.toString().trim();
     //TODO: validar email valido y password no empty
     try{ 
