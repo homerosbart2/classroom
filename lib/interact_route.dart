@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:classroom/question.dart';
-import 'package:classroom/presentation.dart';
+// import 'package:classroom/presentation.dart';
 import 'package:classroom/chatbar.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -49,9 +49,9 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
 
     _questionPasser = ChatBar.questionPasser;
 
-    _presentation = Presentation(
-      file: widget.presentationPath,
-    );
+    // _presentation = Presentation(
+    //   file: widget.presentationPath,
+    // );
 
     if(widget.owner){
       _uploadPresentation = StatefulButton(
