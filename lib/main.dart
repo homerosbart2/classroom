@@ -18,7 +18,9 @@ class Classroom extends StatelessWidget {
         accentColor: Color.fromARGB(255, 0, 11, 43),
         cardColor: Color.fromARGB(255, 233, 238, 255),
       ),
-      home: Login(),
+      home: Scaffold(
+        body: Login()
+      ),
     );
   }
 }
