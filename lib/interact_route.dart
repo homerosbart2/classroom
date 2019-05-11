@@ -16,6 +16,7 @@ class InteractRoute extends StatefulWidget{
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
+  static WidgetPasser updateQuestions = WidgetPasser();
   static int index = 0;
   final bool owner;
 
@@ -36,7 +37,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser;
+  WidgetPasser _questionPasser, _updateQuestions;
   ScrollController _scrollController;
 
   @override
@@ -48,6 +49,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _scrollController = ScrollController();
 
     _questionPasser = ChatBar.questionPasser;
+    _updateQuestions = InteractRoute.updateQuestions;
+
 
     _presentation = Presentation(
       file: widget.presentationPath,
@@ -165,6 +168,16 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       }
     });
 
+    InteractRoute.updateQuestions.recieveWidget.listen((code){
+      if(code != null){
+        if(this.mounted){
+          setState(() {
+            
+          });
+        }
+      }
+    });
+
     _questionPasser.recieveWidget.listen((newQuestion){
       if(newQuestion != null){
         Map jsonQuestion = json.decode(newQuestion);
@@ -206,6 +219,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   void dispose() {
     super.dispose();
     _questionPasser.sendWidget.add(null);
+    InteractRoute.updateQuestions.sendWidget.add(null);
     InteractRoute.index = 0;
   }
 
