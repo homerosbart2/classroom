@@ -3,10 +3,10 @@ import 'dart:async';
 
 class Auth{
   // final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
-  static String userName = "Diego Alay";
-  static String userEmail = "diegoyop@hotmail.com";
+  static String userName = "";
+  static String userEmail = "";
   static String userPhotoUrl;
-  static String uid = "SKu82GMbinZX600vKicaLDVMncb2";
+  static String uid = "";
   // static boolean emailVerified;
 
   static Future<String> signInWithEmailAndPassword(String email, String password) async{

@@ -8,11 +8,12 @@ import 'package:classroom/auth.dart';
 import 'dart:convert';
 
 class LessonsRoute extends StatefulWidget{
-  final String author, name, accessCode;
+  final String author, name, accessCode, authorId;
   final int participants;
   final bool owner;
 
   const LessonsRoute({
+    @required this.authorId,
     @required this.author,
     @required this.name,
     @required this.accessCode,
@@ -44,7 +45,10 @@ class _LessonsRouteState extends State<LessonsRoute>{
         _lessonsListString = ls;
         DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid).then(
           (List<Lesson> lc) => setState(() {
-            _lessons = lc;
+            for(var lesson in lc){
+              lesson.authorId = widget.authorId;
+              _lessons.add(lesson);
+            }
           })
         );         
       })
@@ -57,12 +61,14 @@ class _LessonsRouteState extends State<LessonsRoute>{
           setState(() {
             _lessons.add(
               Lesson(
+                lessonId: jsonLesson['lessonId'],
                 name: jsonLesson['name'],
                 day: jsonLesson['day'],
                 month: jsonLesson['month'],
                 year: jsonLesson['year'],
                 comments: jsonLesson['comments'],
                 owner: widget.owner,
+                authorId: widget.authorId,
               )
             );
           });
