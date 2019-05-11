@@ -5,14 +5,18 @@ import 'package:classroom/widget_passer.dart';
 import 'package:classroom/question.dart';
 import 'package:classroom/interact_route.dart';
 import 'dart:convert';
+import 'package:classroom/database_manager.dart';
+import 'package:classroom/auth.dart';
 
 class ChatBar extends StatefulWidget{
   static WidgetPasser questionPasser = WidgetPasser(), answerPasser = WidgetPasser(), labelPasser = WidgetPasser();
   final bool owner;
+  final String lessonId;
   
   static FocusNode chatBarFocusNode = FocusNode();
   static int mode;
   const ChatBar({
+    @required this.lessonId,
     this.owner: false,
   });
 
@@ -54,29 +58,55 @@ class _ChatBarState extends State<ChatBar>{
     if(val.trim() != ''){
       //print(val);
       var nowDate = DateTime.now();
-      Map text = {
-        'text': val,
-        'author': 'Henry Campos',
-        'owner': widget.owner,
-        'day': nowDate.day,
-        'month': nowDate.month,
-        'year': nowDate.year,
-        'hours': nowDate.hour,
-        'minutes': nowDate.minute,
-      };
+      int day = nowDate.day;
+      int month = nowDate.month;
+      int year = nowDate.year;
+      int hours = nowDate.hour;
+      int minutes = nowDate.minute;
+      String authorId = Auth.uid;
+      String author = Auth.getName();
       if(ChatBar.mode == 0){
-        String textQuestion = json.encode(text);
-        ChatBar.questionPasser.sendWidget.add(textQuestion);
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
+          Map text = {
+            'text': val,
+            'author': author,
+            'authorId': authorId,
+            'owner': widget.owner,
+            'day': day,
+            'month': month,
+            'year': year,
+            'hours': hours,
+            'minutes': minutes,
+            'questionId': id,
+          };
+          String textQuestion = json.encode(text);
+          ChatBar.questionPasser.sendWidget.add(textQuestion);          
+        });
       }else{
-        //TODO: Agregar la respuesta a la base de datos.
-        String textAnswer = json.encode(text);
-        Question.answerPasser.sendWidget.add(textAnswer);
-        if(widget.owner) Question.answeredPasser.sendWidget.add('1');
-        InteractRoute.questionPositionController.reverse();
-        ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
-        ChatBar.mode = 0;
+        String questionId = Question.globalQuestionId;
+        DatabaseManager.addAnswers(questionId, author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
+          Map text = {
+            'text': val,
+            'author': author,
+            'questionId': questionId,
+            'authorId': authorId,
+            'owner': widget.owner,
+            'day': day,
+            'month': month,
+            'year': year,
+            'hours': hours,
+            'minutes': minutes,
+            'answerId': id,
+          };
+          String textAnswer = json.encode(text);
+          Question.answerPasser.sendWidget.add(textAnswer);
+          if(widget.owner) Question.answeredPasser.sendWidget.add('1');
+          InteractRoute.questionPositionController.reverse();
+          ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+          ChatBar.mode = 0;          
+        });        
       }
-      _chatBarTextfieldController.text = '';
+        _chatBarTextfieldController.text = '';
     }
     ChatBar.chatBarFocusNode.unfocus();
   }

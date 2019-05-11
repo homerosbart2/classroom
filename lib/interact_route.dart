@@ -12,16 +12,17 @@ import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 
 class InteractRoute extends StatefulWidget{
-  final String lessonId;
+  final String lessonId, presentationPath, authorId;
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
+  static WidgetPasser updateQuestions = WidgetPasser();
   static int index = 0;
-  final String presentationPath;
   final bool owner;
 
   const InteractRoute({
     @required this.lessonId,
+    @required this.authorId,
     this.presentationPath: '',
     this.owner: false,
   });
@@ -36,7 +37,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser;
+  WidgetPasser _questionPasser, _updateQuestions;
   ScrollController _scrollController;
 
   @override
@@ -48,6 +49,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _scrollController = ScrollController();
 
     _questionPasser = ChatBar.questionPasser;
+    _updateQuestions = InteractRoute.updateQuestions;
+
 
     _presentation = Presentation(
       file: widget.presentationPath,
@@ -104,12 +107,17 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
           DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
             (List<Question> lc) => setState(() {
               for(var question in lc){
-                if(question.authorId == Auth.uid) question.mine = true;
-                question.votesController = _votesController;
-                question.voted = true;
-                question.answered = true;
-                question.index = InteractRoute.index++;
-                InteractRoute.questions.add(question);
+                DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
+                  if(question.authorId == Auth.uid) question.mine = true;
+                  question.votesController = _votesController;
+                  if(voted) question.voted = true;
+                  if(question.votes > 0) question.answered = true;
+                  question.index = InteractRoute.index++;
+                  question.courseAuthorId = widget.authorId;
+                  setState(() {
+                    InteractRoute.questions.add(question);
+                  });              
+                });
               }
             })
           );         
@@ -117,32 +125,32 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     );
 
     
-    InteractRoute.questions.add(
-      Question(
-        text: '¿Qué significa que sea una presentación de ejemplo?',
-        author: 'Diego Alay',
-        authorId: "123123",
-        questionId: "12313123",
-        voted: true,
-        votes: 69,
-        index: InteractRoute.index++,
-        votesController: _votesController,
-        answered: true,
-      )
-    );
+    // InteractRoute.questions.add(
+    //   Question(
+    //     text: '¿Qué significa que sea una presentación de ejemplo?',
+    //     author: 'Diego Alay',
+    //     authorId: "123123",
+    //     questionId: "12313123",
+    //     voted: true,
+    //     votes: 69,
+    //     index: InteractRoute.index++,
+    //     votesController: _votesController,
+    //     answered: true,
+    //   )
+    // );
 
-    InteractRoute.questions.add(
-      Question(
-        authorId: "123123",
-        questionId: "12313123",
-        text: '¿Qué día es hoy?',
-        author: 'Henry Campos',
-        mine: true,
-        index: InteractRoute.index++,
-        votesController: _votesController,
-        owner: widget.owner,
-      )
-    );
+    // InteractRoute.questions.add(
+    //   Question(
+    //     authorId: "123123",
+    //     questionId: "12313123",
+    //     text: '¿Qué día es hoy?',
+    //     author: 'Henry Campos',
+    //     mine: true,
+    //     index: InteractRoute.index++,
+    //     votesController: _votesController,
+    //     owner: widget.owner,
+    //   )
+    // );
 
     _votesStream.listen((val) {
       if(val != null){
@@ -160,32 +168,25 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       }
     });
 
+    InteractRoute.updateQuestions.recieveWidget.listen((code){
+      if(code != null){
+        if(this.mounted){
+          setState(() {
+            
+          });
+        }
+      }
+    });
+
     _questionPasser.recieveWidget.listen((newQuestion){
       if(newQuestion != null){
         Map jsonQuestion = json.decode(newQuestion);
         if(this.mounted){
           setState(() {
-<<<<<<< HEAD
-            String questionText = jsonCourse['text'];
-            DatabaseManager.addQuestions(Auth.getName(), Auth.uid, widget.lessonId, questionText).then((id){
-              print("id: $id");
-              if(id != null){
-                InteractRoute.questions.add(
-                  Question(
-                    questionId: id,
-                    authorId: Auth.uid,
-                    text: questionText,
-                    author: Auth.getName(),
-                    mine: true,
-                    index: InteractRoute.index++,
-                    votesController: _votesController,
-                  )
-                );
-              }
-            });
-=======
             InteractRoute.questions.add(
               Question(
+                authorId: jsonQuestion['authorId'],
+                questionId: jsonQuestion['questionId'],
                 text: jsonQuestion['text'],
                 author: jsonQuestion['author'],
                 day: jsonQuestion['day'],
@@ -199,7 +200,6 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                 votesController: _votesController,
               )
             );
->>>>>>> develop
           });
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
@@ -219,6 +219,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   void dispose() {
     super.dispose();
     _questionPasser.sendWidget.add(null);
+    InteractRoute.updateQuestions.sendWidget.add(null);
     InteractRoute.index = 0;
   }
 
@@ -317,6 +318,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             ),
           ),
           ChatBar(
+            lessonId: widget.lessonId,
             owner: widget.owner,
           ),   
         ],
