@@ -136,6 +136,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
                 author: widget.author,
                 participants: widget.participants,
                 owner: widget.owner,
+                authorId: widget.authorId
               ),
               acessCode: widget.accessCode,
             );

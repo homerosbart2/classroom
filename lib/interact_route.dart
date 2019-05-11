@@ -12,16 +12,16 @@ import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 
 class InteractRoute extends StatefulWidget{
-  final String lessonId;
+  final String lessonId, presentationPath, authorId;
   static AnimationController questionPositionController;
   static List<Question> questions;
   static StreamController<String> questionController;
   static int index = 0;
-  final String presentationPath;
   final bool owner;
 
   const InteractRoute({
     @required this.lessonId,
+    @required this.authorId,
     this.presentationPath: '',
     this.owner: false,
   });
@@ -110,6 +110,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                   if(voted) question.voted = true;
                   if(question.votes > 0) question.answered = true;
                   question.index = InteractRoute.index++;
+                  question.courseAuthorId = widget.authorId;
                   setState(() {
                     InteractRoute.questions.add(question);
                   });              

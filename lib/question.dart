@@ -15,6 +15,7 @@ class Question extends StatefulWidget {
   static WidgetPasser answerPasser, answeredPasser;
   static String globalQuestionId;
   final String text, author, authorId, questionId;
+  String courseAuthorId;
   bool voted, mine, answered, owner;
   int votes, index, day, month, year, hours, minutes;
   StreamController<int> votesController;
@@ -24,6 +25,7 @@ class Question extends StatefulWidget {
     @required this.author,
     @required this.authorId,
     @required this.questionId,
+    this.courseAuthorId,
     this.votesController,
     this.mine: false,
     this.voted: false,
@@ -158,26 +160,21 @@ class _QuestionState extends State<Question>
     if (widget.answered) _boxResizeOpacityController.forward();
 
     if (_answers.isEmpty) {
-      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId)
-          .then((List<String> ls) => setState(() {
-                List<String> _answersListString = List<String>();
-                _answersListString = ls;
-                DatabaseManager.getAnswersPerQuestionByList(_answersListString)
-                    .then((List<Answer> la) => setState(() {
-                          for (var answer in la) {
-                            DatabaseManager.getVotesToUserPerAnswer(
-                                    Auth.uid, answer.answerId)
-                                .then((voted) {
-                              if (answer.authorId == Auth.uid)
-                                answer.owner = true;
-                              if (voted) answer.voted = true;
-                              setState(() {
-                                _answers.add(answer);
-                              });
-                            });
-                          }
-                        }));
-              }));
+      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls) => setState(() {
+        List<String> _answersListString = List<String>();
+        _answersListString = ls;
+        DatabaseManager.getAnswersPerQuestionByList(_answersListString).then((List<Answer> la) => setState(() {
+          for (var answer in la) {
+            DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
+              if(answer.authorId == widget.courseAuthorId) answer.owner = true;
+              if (voted) answer.voted = true;
+              setState(() {
+                _answers.add(answer);
+              });
+            });
+          }
+        }));
+      }));
     }
 
     // _answers.add(
