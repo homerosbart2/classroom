@@ -4,10 +4,14 @@ import 'package:classroom/lesson.dart';
 import 'package:classroom/question.dart';
 import 'package:classroom/auth.dart';
 import 'package:classroom/answer.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+// import 'package:file_picker/file_picker.dart';
+import 'dart:io';
 import 'dart:async';
 
 class DatabaseManager{
   static DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
+  static StorageReference storageRef = FirebaseStorage.instance.ref();
 
   static void addUserPerCourse(String uid, String course){
     mDatabase.child("UsersPerCourse").child(course).push().set({
@@ -135,6 +139,33 @@ class DatabaseManager{
     return question.key;
   }
 
+  static Future<void> removeAnswersPerQuestion(String questionId) async{
+    await mDatabase.child("answersPerQuestion").child(questionId).remove();
+  }
+
+  static Future<void> removeQuestionsPerLesson(String questionId) async{
+    await mDatabase.child("questionsPerLesson").once().then((DataSnapshot snapshot){
+      Map<dynamic, dynamic> map = snapshot.value;
+      if(map != null){
+        map.forEach((key, val) {
+          mDatabase.child("questionPerLesson").child(key).child(questionId).remove();
+        });
+      }
+    });           
+  }  
+
+  static Future<void> removeQuestionsPerUser(String questionId, String uid) async{
+    await mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
+  } 
+
+  static Future<void> deleteQuestion(String questionId, String uid) async{
+    await mDatabase.child("questions").child(questionId).remove().then((_){
+      // removeAnswersPerQuestion(questionId);
+      // removeQuestionsPerLesson(questionId);
+      // removeQuestionsPerUser(questionId, uid);
+    });
+  }
+
   static Future<String> addLesson(String uid, String name, String description, int day, int month, int year, String course) async{
     DatabaseReference lesson;
     lesson = mDatabase.child("lessons").push();
@@ -182,6 +213,21 @@ class DatabaseManager{
         });         
         break;        
       }      
+    }    
+  }
+
+  static void uploadFiles(String type, String lessonId, String filePath) async{  
+    storageRef.child(type);
+    switch(type){
+      case "pdfs": {
+        StorageUploadTask uploadTask = storageRef.put(
+          File(filePath),
+          StorageMetadata(
+            contentType: type + '/' + ".pdf",
+          ),
+        );  
+        break;        
+      }
     }    
   }
 

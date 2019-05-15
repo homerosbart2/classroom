@@ -23,8 +23,8 @@ dependencies:
   font_awesome_flutter: ^8.4.0
   firebase_auth: ^0.6.6
   firebase_database: ^0.4.0
-  firebase_core: ^0.2.5  # add dependency for Firebase Core  
-  # file_picker: ^1.0.2
+  firebase_core: ^0.2.5+1  # add dependency for Firebase Core  
+  file_picker: ^0.1.3
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

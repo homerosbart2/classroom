@@ -10,8 +10,11 @@ import 'package:vibration/vibration.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
 
 class InteractRoute extends StatefulWidget{
+  
   final String lessonId, presentationPath, authorId;
   static AnimationController questionPositionController;
   static List<Question> questions;
@@ -20,7 +23,7 @@ class InteractRoute extends StatefulWidget{
   static int index = 0;
   final bool owner;
 
-  const InteractRoute({
+  InteractRoute({
     @required this.lessonId,
     @required this.authorId,
     this.presentationPath: '',
@@ -39,6 +42,22 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions;
   ScrollController _scrollController;
+  String _filePath;
+
+  void getFilePath() async {
+    print("entra\n");
+    try {
+      String filePath = await FilePicker.getFilePath(type: FileType.PDF);
+      if (filePath == '') {
+        return;
+      }
+      print("File path: " + filePath);
+      setState((){this._filePath = filePath;});
+    }catch (e) {
+      print("Error picking the file: " + e.toString());
+    }
+  }
+
 
   @override
   void initState() {
@@ -56,7 +75,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     //   file: widget.presentationPath,
     // );
 
-    if(widget.owner){
+    if(true){
       _uploadPresentation = StatefulButton(
         text: 'CARGAR PRESENTACIÓN',
         fontSize: 13,
@@ -64,7 +83,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         borderColor: Colors.transparent,
         icon: FontAwesomeIcons.arrowAltCircleUp,
         onTap: (){
-          Vibration.vibrate(duration: 20);
+          getFilePath();
           //TODO: Hay que subir el archivo a FireBase y guardarlo en nuestra organizacion de archivos locales.
         },
       );

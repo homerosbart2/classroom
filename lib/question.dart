@@ -11,6 +11,8 @@ import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 
+
+
 class Question extends StatefulWidget {
   static WidgetPasser answerPasser, answeredPasser;
   static String globalQuestionId;
@@ -19,6 +21,7 @@ class Question extends StatefulWidget {
   bool voted, mine, answered, owner;
   int votes, index, day, month, year, hours, minutes;
   StreamController<int> votesController;
+  
 
   Question({
     @required this.text,
@@ -349,6 +352,8 @@ class _QuestionState extends State<Question>
                       if(!_disabled){
                         //print(widget.index);
                         //_boxResizeOpacityController2.reverse();
+                        // DatabaseManager.deleteQuestion(Question.globalQuestionId, Auth.uid);
+                        print("id: ${widget.questionId}");
                         _deleteHeightController.reverse();
                         _boxColorController.forward();
                         _expandAnswersController.reverse();
