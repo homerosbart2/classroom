@@ -242,14 +242,14 @@ class DatabaseManager{
             contentType: type,
           ),
         );
-        if(uploadTask.isSuccessful){
-          print("IN");
+        // if(uploadTask.isSuccessful){
+        //   print("IN");
           updateLesson(lessonId, "", "presentation");
-        }  
+        // }  
         break;        
       }
     }    
-    return file.path;
+    return filePath;
   }
 
   static Future<void> updateQuestion(String code, String param, String column) async{
