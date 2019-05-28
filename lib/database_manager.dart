@@ -1,15 +1,20 @@
+
 import 'package:firebase_database/firebase_database.dart';
 import 'package:classroom/course.dart';
 import 'package:classroom/lesson.dart';
 import 'package:classroom/question.dart';
 import 'package:classroom/auth.dart';
 import 'package:classroom/answer.dart';
-
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 import 'dart:async';
+import 'package:path_provider/path_provider.dart';
 
 class DatabaseManager{
   static DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
-
+  static StorageReference storageRef = FirebaseStorage.instance.ref();
+  static Directory tempDir = Directory.systemTemp;
+  
   static void addUserPerCourse(String uid, String course){
     mDatabase.child("UsersPerCourse").child(course).push().set({
       'uid': uid,
@@ -84,6 +89,7 @@ class DatabaseManager{
   }
 
   static void addVoteToAnswer(String authorId, String answer, String val){
+    print("answer here: $answer");
     updateAnswer(answer, val, "votes");
     if(val == "1"){
       addVotesToUserPerQuestion(authorId, answer, "votesToUserPerAnswer");
@@ -136,11 +142,39 @@ class DatabaseManager{
     return question.key;
   }
 
+  static Future<void> removeAnswersPerQuestion(String questionId) async{
+    await mDatabase.child("answersPerQuestion").child(questionId).remove();
+  }
+
+  static Future<void> removeQuestionsPerLesson(String questionId) async{
+    await mDatabase.child("questionsPerLesson").once().then((DataSnapshot snapshot){
+      Map<dynamic, dynamic> map = snapshot.value;
+      if(map != null){
+        map.forEach((key, val) {
+          mDatabase.child("questionPerLesson").child(key).child(questionId).remove();
+        });
+      }
+    });           
+  }  
+
+  static Future<void> removeQuestionsPerUser(String questionId, String uid) async{
+    await mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
+  } 
+
+  static Future<void> deleteQuestion(String questionId, String uid) async{
+    // await mDatabase.child("questions").child(questionId).remove().then((_){
+      // removeAnswersPerQuestion(questionId);
+      // removeQuestionsPerLesson(questionId);
+      // removeQuestionsPerUser(questionId, uid);
+    // });
+  }
+
   static Future<String> addLesson(String uid, String name, String description, int day, int month, int year, String course) async{
     DatabaseReference lesson;
     lesson = mDatabase.child("lessons").push();
     await lesson.set({
       'name': name,
+      'presentation' : false,
       'description': description,
       'month': month,
       'day': day,
@@ -186,6 +220,36 @@ class DatabaseManager{
     }    
   }
 
+  static Future<String> getFiles(String type, String lessonId) async{
+    StorageReference ref = storageRef.child(type).child(lessonId);
+    String path = ""; 
+    if(ref != null){
+      Directory tempDir = Directory.systemTemp;
+      File file = File('${tempDir.path}/$lessonId.pdf');
+      StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+      int byteNumber = (await downloadTask.future).totalByteCount;
+      path = file.path;
+    }
+    return path;
+  }
+
+  static void uploadFiles(String type, String lessonId, String filePath) async{  
+    switch(type){
+      case "pdf": {
+        StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
+          File(filePath),
+          StorageMetadata(
+            contentType: type,
+          ),
+        );
+        if(uploadTask.isSuccessful){
+          updateLesson(lessonId, "1", "presentation");
+        }  
+        break;        
+      }
+    }    
+  }
+
   static Future<void> updateQuestion(String code, String param, String column) async{
     DatabaseReference question;
     switch(column){
@@ -211,6 +275,14 @@ class DatabaseManager{
           'comments': currentLesson['comments'] + 1,
           }).then((_){/*nothing*/});
         });       
+        break;        
+      }
+      case "presentation": {
+        bool presentation = false;
+        if(param == "1") presentation = true; 
+        await mDatabase.child("lessons").child(code).update({
+          'presentation': presentation,
+        }).then((_){/*nothing*/});    
         break;        
       }
     }    
@@ -266,6 +338,20 @@ class DatabaseManager{
     return _course;
   }
 
+  static Future<dynamic> getFieldFrom(String parent, String child, String column) async{
+    print("PARENT: $parent");
+    print("CHILD: $child");
+    print("COLUMN: $column");
+    var field;
+    await mDatabase.child(parent).child(child).once().then((DataSnapshot snapshot){
+      Map<dynamic, dynamic> map = snapshot.value;
+      if(map != null){
+        field = map[column]; 
+      }
+    });    
+    return field;
+  }
+
   static Future<List<String>> getAnswersPerQuestion(String uid, String question) async{
     List<String> listAnswerString = List<String>();
     try{
@@ -317,7 +403,7 @@ class DatabaseManager{
     return voted;
   }  
 
-  static Future<List<Answer>> getAnswersPerQuestionByList(List<String> listString) async{
+  static Future<List<Answer>> getAnswersPerQuestionByList(List<String> listString, String questionId) async{
     List<Answer> _answersList = List<Answer>();
     try{
       for (var eachAnswer in listString) {
@@ -327,6 +413,7 @@ class DatabaseManager{
             _answersList.add(
               Answer( 
                 answerId: snapshot.key,
+                questionId: questionId,
                 text: answer['text'],
                 author: answer['author'],
                 authorId: answer['authorId'],
@@ -342,7 +429,7 @@ class DatabaseManager{
         }); 
       }
     }catch(e){
-      print("error getQuestionsPerLessonByList: $e");
+      print("error getAnswersPerLessonByList: $e");
     } 
     return _answersList;
   } 
@@ -389,6 +476,7 @@ class DatabaseManager{
             else userOwner = false;
             _lessonsList.add(
               Lesson(
+                presentation: lesson['presentation'],
                 lessonId: eachLesson,
                 comments: lesson['comments'],
                 day: lesson['day'],

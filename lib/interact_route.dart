@@ -10,8 +10,12 @@ import 'package:vibration/vibration.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
+import 'package:firebase_database/firebase_database.dart';
+// import 'package:firebase_storage/firebase_storage.dart';
+import 'package:file_picker/file_picker.dart';
 
 class InteractRoute extends StatefulWidget{
+  
   final String lessonId, presentationPath, authorId;
   static AnimationController questionPositionController;
   static List<Question> questions;
@@ -19,8 +23,8 @@ class InteractRoute extends StatefulWidget{
   static WidgetPasser updateQuestions = WidgetPasser();
   static int index = 0;
   final bool owner;
-
-  const InteractRoute({
+  
+  InteractRoute({
     @required this.lessonId,
     @required this.authorId,
     this.presentationPath: '',
@@ -40,6 +44,22 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   WidgetPasser _questionPasser, _updateQuestions;
   ScrollController _scrollController;
 
+  Future<String> getFilePath() async {
+    String filePath = null;
+    try {
+      filePath = await FilePicker.getFilePath(type: FileType.PDF);
+      if (filePath == '') {
+        return null;
+      }
+      print("File path: " + filePath);
+
+    }catch (e) {
+      print("Error picking the file: " + e.toString());
+    }
+    return filePath;
+  }
+
+
   @override
   void initState() {
     super.initState();
@@ -52,9 +72,18 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _updateQuestions = InteractRoute.updateQuestions;
 
 
-    _presentation = Presentation(
-      file: widget.presentationPath,
-    );
+    // _presentation = Presentation(
+    //   file: widget.presentationPath,
+    // ); 
+
+    DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
+      if(presentation){
+        DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
+        print("ARCHIVO:  $path");
+        
+        });
+      }
+    }); 
 
     if(widget.owner){
       _uploadPresentation = StatefulButton(
@@ -64,7 +93,13 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
         borderColor: Colors.transparent,
         icon: FontAwesomeIcons.arrowAltCircleUp,
         onTap: (){
-          Vibration.vibrate(duration: 20);
+          getFilePath().then((filePath){
+            setState((){
+              if(filePath != null){
+                DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath);
+              }
+            });
+          });
           //TODO: Hay que subir el archivo a FireBase y guardarlo en nuestra organizacion de archivos locales.
         },
       );
@@ -100,31 +135,77 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       ),
     );
 
-    DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
-        (List<String> ls) => setState(() {
-          List<String> __questionsListString = List<String>();
-          __questionsListString = ls;
-          DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+    FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).onChildAdded.listen((data) {
+      if(this.mounted){
+        setState(() {
+          List<String> lista = new List<String>();
+          String newQuestion = data.snapshot.value["question"];
+          print("pregunta: $newQuestion");
+          lista.add(newQuestion); 
+          DatabaseManager.getQuestionsPerLessonByList(lista).then(
             (List<Question> lc) => setState(() {
               for(var question in lc){
                 DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
                   if(question.authorId == Auth.uid) question.mine = true;
-                  question.votesController = _votesController;
                   if(voted) question.voted = true;
-                  if(question.votes > 0) question.answered = true;
-                  question.index = InteractRoute.index++;
+                  // if(question.votes > 0) question.answered = true;
                   question.courseAuthorId = widget.authorId;
                   setState(() {
+                    // Map text = {
+                    //   'text': question.text,
+                    //   'author': question.author,
+                    //   'authorId': question.authorId,
+                    //   'owner': question.owner,
+                    //   'day': question.day,
+                    //   'month': question.month,
+                    //   'year': question.year,
+                    //   'hours': question.hours,
+                    //   'minutes': question.minutes,
+                    //   'questionId': question.questionId,
+                    //   'mine': question.mine,
+                    //   'voted' : question.voted,
+                    //   'answered' : question.answered,
+                    //   'courseAuthorId': widget.authorId,
+                    //   'votes': question.votes,
+                    // };
+                    // String textQuestion = json.encode(text);
+                    // _questionPasser.sendWidget.add(textQuestion); 
                     InteractRoute.questions.add(question);
                   });              
                 });
               }
             })
-          );         
-        })
-    );
+          );     
+        });
+      }
+    });
 
-    
+
+    // DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
+    //     (List<String> ls) => setState(() {
+    //       List<String> __questionsListString = List<String>();
+    //       __questionsListString = ls;
+    //       DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
+    //         (List<Question> lc) => setState(() {
+    //           for(var question in lc){
+    //             DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
+    //               if(question.authorId == Auth.uid) question.mine = true;
+    //               question.votesController = _votesController;
+    //               if(voted) question.voted = true;
+    //               if(question.votes > 0) question.answered = true;
+    //               question.index = InteractRoute.index++;
+    //               question.courseAuthorId = widget.authorId;
+    //               setState(() {
+    //                 InteractRoute.questions.add(question);
+    //               });              
+    //             });
+    //           }
+    //         })
+    //       );         
+    //     })
+    // );
+
+
     // InteractRoute.questions.add(
     //   Question(
     //     text: '¿Qué significa que sea una presentación de ejemplo?',
@@ -187,6 +268,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
               Question(
                 authorId: jsonQuestion['authorId'],
                 questionId: jsonQuestion['questionId'],
+                courseAuthorId: jsonQuestion['courseAuthorId'],
                 text: jsonQuestion['text'],
                 author: jsonQuestion['author'],
                 day: jsonQuestion['day'],
@@ -195,19 +277,19 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
                 hours: jsonQuestion['hours'],
                 minutes: jsonQuestion['minutes'],
                 owner: jsonQuestion['owner'],
-                mine: true,
+                mine: jsonQuestion['mine'],
                 index: InteractRoute.index++,
                 votesController: _votesController,
               )
             );
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: Duration(
+                milliseconds: 500,
+              ),  
+              curve: Curves.ease,
+            );
           });
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: Duration(
-              milliseconds: 500,
-            ),  
-            curve: Curves.ease,
-          );
         }
       }
     });

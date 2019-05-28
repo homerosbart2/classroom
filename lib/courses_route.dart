@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class CoursesRoute extends StatefulWidget{
 
@@ -17,7 +18,7 @@ class CoursesRoute extends StatefulWidget{
 class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMixin{
   WidgetPasser _coursePasser;
   List<Course> _coursesList;
-
+  DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
 
   @override
   void initState() {
@@ -26,15 +27,15 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     _coursePasser = Nav.coursePasser;
     if(_coursesList.isEmpty){
       DatabaseManager.getCoursesPerUser().then(
-          (List<String> ls) => setState(() {
-            List<String> _coursesListString = List<String>();
-            _coursesListString = ls;
-            DatabaseManager.getCoursesPerUserByList(_coursesListString, Auth.uid).then(
-              (List<Course> lc) => setState(() {
-                _coursesList = lc;
-              })
-            );         
-          })
+        (List<String> ls) => setState(() {
+          List<String> _coursesListString = List<String>();
+          _coursesListString = ls;
+          DatabaseManager.getCoursesPerUserByList(_coursesListString, Auth.uid).then(
+            (List<Course> lc) => setState(() {
+              _coursesList = lc;
+            })
+          );         
+        })
       );
     }
 
@@ -51,6 +52,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
                 author: jsonCourse['author'],
                 authorId: jsonCourse['authorId'],
                 lessons: jsonCourse['lessons'],
+                owner: jsonCourse['owner'],
               )
             );
           });
