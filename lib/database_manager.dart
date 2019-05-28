@@ -226,7 +226,7 @@ class DatabaseManager{
     if(ref != null){
       Directory tempDir = Directory.systemTemp;
       File file = File('${tempDir.path}/$lessonId.pdf');
-      if(await file.exists()){
+      if(file.existsSync()){
         print("YES");
         path = file.path;
       }else{
