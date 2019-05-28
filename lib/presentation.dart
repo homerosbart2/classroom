@@ -40,7 +40,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
   }
 
   Future<void> _prepareDocument() async{
-    _document = await PDFDocument.openAsset(widget.file);
+    _document = await PDFDocument.openFile(widget.file);
   }
 
   @override

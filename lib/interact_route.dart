@@ -41,7 +41,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Animation<Offset> _offsetFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser, _updateQuestions;
+  WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
   ScrollController _scrollController;
   bool _presentationExist;
   Future<String> getFilePath() async {
@@ -71,6 +71,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _scrollController = ScrollController();
 
     _questionPasser = ChatBar.questionPasser;
+    _pathPasser = WidgetPasser();
     _updateQuestions = InteractRoute.updateQuestions;
 
 
@@ -81,10 +82,16 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
       print("PRESENTATION: $presentation");
       if(presentation){
-        _presentationExist = true;
+        setState(() {
+          _presentationExist = true;
+        });
         DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
         print("ARCHIVO:  $path");
-
+          setState(() {
+            _presentation = Presentation(
+              file: path,
+            );
+          });
         });
       }
     }); 
@@ -100,7 +107,17 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
           getFilePath().then((filePath){
             setState((){
               if(filePath != null){
-                DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath);
+                DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
+                  DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
+                    setState(() {
+                      _presentationExist = true;
+                      print('PATH: $path');
+                      _presentation = Presentation(
+                        file: path,
+                      );
+                    });
+                  });
+                });
               }
             });
           });
@@ -298,6 +315,16 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       }
     });
 
+    _pathPasser.recieveWidget.listen((path) {
+      if (path != null) {
+        setState(() {
+          _presentation = Presentation(
+            file: path,
+          );
+        });
+      }
+    });
+
   }
 
 
@@ -305,6 +332,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   void dispose() {
     super.dispose();
     _questionPasser.sendWidget.add(null);
+    _pathPasser.sendWidget.add(null);
     InteractRoute.updateQuestions.sendWidget.add(null);
     InteractRoute.index = 0;
   }
