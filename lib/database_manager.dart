@@ -226,14 +226,18 @@ class DatabaseManager{
     if(ref != null){
       Directory tempDir = Directory.systemTemp;
       File file = File('${tempDir.path}/$lessonId.pdf');
+<<<<<<< HEAD
       if(file.existsSync()){
         print("YES");
         path = file.path;
       }else{
+=======
+      if(!(await file.exists())){
+>>>>>>> 8dd1f14fe9674c09c0a07398bb636f9e8b19f2b0
         StorageFileDownloadTask downloadTask = ref.writeToFile(file);
         int byteNumber = (await downloadTask.future).totalByteCount;
-        path = file.path;
       }
+      path = file.path;
     }
     return path;
   }

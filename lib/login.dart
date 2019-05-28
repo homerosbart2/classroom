@@ -6,6 +6,7 @@ import 'package:classroom/courses_route.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatefulWidget {
   const Login();
@@ -20,7 +21,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
   TextEditingController _usernameController, _passwordController, _nameController;
   AnimationController _slideController;
   Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
-
 
   @override
   void initState() {

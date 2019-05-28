@@ -34,16 +34,19 @@ class InteractRoute extends StatefulWidget{
   _InteractRouteState createState() => _InteractRouteState();
 }
 
-class _InteractRouteState extends State<InteractRoute> with SingleTickerProviderStateMixin{
+class _InteractRouteState extends State<InteractRoute> with TickerProviderStateMixin{
   StreamController<int> _votesController;
   Stream<int> _votesStream;
   Stream<String> _questionStream;
+  AnimationController _loadingController;
   Animation<Offset> _offsetFloat;
+  Animation<double> _turnsFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
   ScrollController _scrollController;
-  bool _presentationExist;
+  bool _presentationExist, _presentationLoaded;
+
   Future<String> getFilePath() async {
     String filePath = null;
     try {
@@ -65,6 +68,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     super.initState();
 
     _presentationExist = false;
+    _presentationLoaded = false;
 
     _questionToAnswer = '';
 
@@ -74,25 +78,58 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
     _pathPasser = WidgetPasser();
     _updateQuestions = InteractRoute.updateQuestions;
 
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _turnsFloat = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _loadingController,
+        curve: Curves.linear,
+      ),
+    );
+
+    _startLoadingAnimation();
 
     // _presentation = Presentation(
     //   file: 'lib/assets/pdf/sample.pdf',
     // ); 
 
+    // try {
+    //   var result = await InternetAddress.lookup('google.com');
+    //   if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+    //     print('connected');
+    //   }
+    // } on SocketException catch (_) {
+    //   print('not connected');
+    // }
+
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
       print("PRESENTATION: $presentation");
-      if(presentation){
-        setState(() {
-          _presentationExist = true;
-        });
-        DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
-        print("ARCHIVO:  $path");
+      _presentationLoaded = true;
+      if(this.mounted){
+        if(presentation){
           setState(() {
-            _presentation = Presentation(
-              file: path,
-            );
+            _presentationExist = true;
           });
-        });
+          DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
+          print("ARCHIVO:  $path");
+            if(this.mounted) setState(() {
+              _presentation = Presentation(
+                file: path,
+                animationValue: _turnsFloat.value,
+              );
+            });
+          });
+        }else{
+          setState(() {
+            
+          });
+        }
       }
     }); 
 
@@ -108,14 +145,12 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             setState((){
               if(filePath != null){
                 DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
-                  DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
-                    setState(() {
-                      _presentationExist = true;
-                      print('PATH: $path');
-                      _presentation = Presentation(
-                        file: path,
-                      );
-                    });
+                  setState(() {
+                    _presentationExist = true; 
+                    print('PATH: $path');
+                    _presentation = Presentation(
+                      file: path,
+                    );
                   });
                 });
               }
@@ -327,18 +362,26 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
 
   }
 
+  void _startLoadingAnimation(){
+    _loadingController.forward(from: 0).then((_){
+      if(!_presentationLoaded){
+        _startLoadingAnimation();
+      }
+    });
+  }
 
   @override
   void dispose() {
-    super.dispose();
+    _loadingController.dispose();
     _questionPasser.sendWidget.add(null);
     _pathPasser.sendWidget.add(null);
     InteractRoute.updateQuestions.sendWidget.add(null);
     InteractRoute.index = 0;
+    super.dispose();
   }
 
-  Widget _getPresentation(){
-    if(!_presentationExist){
+  Widget _getPresentation(BuildContext context){
+    if(!_presentationExist && _presentationLoaded){
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
@@ -360,12 +403,26 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
           ],
         ),
       );
+    }else if(!_presentationExist){
+      return Container(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            RotationTransition(
+              turns: _turnsFloat,
+              child: Icon(
+                FontAwesomeIcons.circleNotch,
+              ),
+            ),
+          ],
+        ),
+      );
     }else{
       return _presentation;
     }
   }
 
-  Widget _getListView(double width, double height){
+  Widget _getListView(double width, double height, BuildContext context){
     final List<Question> _actualQuestions = List.from(InteractRoute.questions);
     return ListView.builder(
       reverse: false,
@@ -381,7 +438,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
             padding: EdgeInsets.symmetric(horizontal: 12),
             width: width,
             height: height + 68,
-            child: _getPresentation(),
+            child: _getPresentation(context),
           );
         }else{
           return _actualQuestions.elementAt(index - 1);
@@ -404,7 +461,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
               Expanded(
                 child: Container(
                   padding: EdgeInsets.only(bottom: 68),
-                  child: _getListView(_width, _height),
+                  child: _getListView(_width, _height, context),
                 ),
               )
             ],
