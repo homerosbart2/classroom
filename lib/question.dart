@@ -249,40 +249,6 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
     }else{
       _questionColor = Theme.of(context).cardColor;
       _answerColor = Theme.of(context).accentColor;
-      _header = Row(
-        children: <Widget>[
-          Expanded(
-            child: Container(
-              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 9),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    width: 3,
-                    color: Theme.of(context).accentColor,
-                  ),
-                ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Text(
-                    widget.author,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  /* Icon(
-                    FontAwesomeIcons.solidCircle,
-                    color: Theme.of(context).primaryColor,
-                    size: 8,
-                  ), */
-                ],
-              ),
-            ),
-          ),
-        ],
-      );
     }
   }
 
@@ -294,7 +260,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
         child: Container(
           padding: EdgeInsets.symmetric(vertical: 3, horizontal: 9),
           decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
+            color: _colorFloatText.value,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
@@ -309,7 +275,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
   }
 
   Widget _getDeleteButton(BuildContext context){
-    if(widget.mine){
+    if(widget.mine || widget.owner){
       return SizeTransition(
         axis: Axis.vertical,
         sizeFactor: _deleteHeightFloat,
@@ -329,6 +295,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
                         _boxColorController.forward();
                         _expandAnswersController.reverse();
                         _disabled = true;
+                        //TODO: Eliminar pregunta de la base de datos.
                       }
                     },
                     child: Container(
@@ -355,6 +322,48 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
             ],
           ),
         ),
+      );
+    }else{
+      return Container();
+    }
+  }
+
+  Widget _getHeader(){
+    if(!widget.mine){
+      return  Row(
+        children: <Widget>[
+          Expanded(
+            child: Container(
+              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 9),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    width: 3,
+                    color: _colorFloatText.value,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    widget.author,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: _colorFloatText.value,
+                    ),
+                  ),
+                  /* Icon(
+                    FontAwesomeIcons.solidCircle,
+                    color: Theme.of(context).primaryColor,
+                    size: 8,
+                  ), */
+                ],
+              ),
+            ),
+          ),
+        ],
       );
     }else{
       return Container();
@@ -426,7 +435,7 @@ class _QuestionState extends State<Question> with TickerProviderStateMixin, Auto
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            _header,
+                            _getHeader(),
                             Container(
                               padding: EdgeInsets.fromLTRB(9, 9, 9, 0),
                               child: Text(

@@ -183,6 +183,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
                                   section: 'interact',
                                   user: 'Henry Campos',
                                   title: widget.name,
+                                  owner: widget.owner,
                                   body: InteractRoute(
                                     //presentationPath: 'lib/assets/pdf/sample2.pdf',
                                     owner: widget.owner,

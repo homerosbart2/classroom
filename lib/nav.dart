@@ -4,6 +4,7 @@ import 'package:classroom/stateful_button.dart';
 import 'package:classroom/notification_hub.dart';
 import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:classroom/choice.dart';
 import 'dart:convert';
 
 class Nav extends StatefulWidget{
@@ -50,6 +51,11 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   Color _titleColor, _color, _actionsColor;
   FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
   //WidgetPasser courseBloc = WidgetPasser();
+
+  List<Choice> choices = <Choice>[
+    Choice(title: 'Fecha', icon: FontAwesomeIcons.calendar),
+    Choice(title: 'Descripción', icon: FontAwesomeIcons.pen),
+  ];
 
   @override
   void initState() {
@@ -338,6 +344,32 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           )
         );
       }
+    }else if(widget.section == 'interact' && widget.owner){
+      actions.add(
+        PopupMenuButton<Choice>(
+              onSelected: (choice){
+
+              },
+              itemBuilder: (BuildContext context) {
+                return choices.skip(0).map((Choice choice) {
+                  return PopupMenuItem<Choice>(
+                    value: choice,
+                    child: Container(
+                      child: Row(
+                        children: <Widget>[
+                          Container(
+                            child: Text(
+                              choice.title,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList();
+              },
+            )
+      );
     }
     if(widget.notificationsActive){
       actions.add(
