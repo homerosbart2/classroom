@@ -233,7 +233,7 @@ class DatabaseManager{
     return path;
   }
 
-  static void uploadFiles(String type, String lessonId, String filePath) async{  
+  static Future<String> uploadFiles(String type, String lessonId, String filePath) async{  
     switch(type){
       case "pdf": {
         StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
@@ -243,11 +243,13 @@ class DatabaseManager{
           ),
         );
         if(uploadTask.isSuccessful){
-          updateLesson(lessonId, "1", "presentation");
+          print("IN");
+          updateLesson(lessonId, "", "presentation");
         }  
         break;        
       }
     }    
+    return file.path;
   }
 
   static Future<void> updateQuestion(String code, String param, String column) async{
@@ -278,10 +280,8 @@ class DatabaseManager{
         break;        
       }
       case "presentation": {
-        bool presentation = false;
-        if(param == "1") presentation = true; 
         await mDatabase.child("lessons").child(code).update({
-          'presentation': presentation,
+          'presentation': true,
         }).then((_){/*nothing*/});    
         break;        
       }
