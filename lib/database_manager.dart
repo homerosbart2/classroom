@@ -247,14 +247,7 @@ class DatabaseManager{
             contentType: type,
           ),
         );
-<<<<<<< HEAD
         updateLesson(lessonId, "", "presentation");
-=======
-        // if(uploadTask.isSuccessful){
-        //   print("IN");
-          updateLesson(lessonId, "", "presentation");
-        // }  
->>>>>>> 7e9dea047adfe6ec7d690b47c932fccb5198b7e8
         break;        
       }
     }    
