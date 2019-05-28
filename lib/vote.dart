@@ -55,6 +55,8 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
         curve: Curves.elasticOut,
       ),
     );
+
+    _scaleController.forward();
   }
 
   @override
@@ -63,9 +65,9 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
     super.dispose();
   }
 
-  void _construcVoteWidget(bool solid){
+  void _construcVoteWidget(bool solid, bool animate){
     setState(() {
-      _scaleController.reset();
+      if(animate) _scaleController.reset();
       if(!solid){
         _voteWidget = ScaleTransition(
           scale: _scaleFloat,
@@ -88,7 +90,7 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
               }else{
                 _votes = widget.votes + 1;
               }
-              _construcVoteWidget(true);
+              _construcVoteWidget(true, true);
             },
           ),
         );
@@ -114,12 +116,14 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
               }else{
                 _votes = widget.votes;
               }
-              _construcVoteWidget(false);
+              _construcVoteWidget(false, true);
             },
           ),
         );
       }
-      _scaleController.forward();
+      if(animate){
+        _scaleController.forward();
+      }
     });
   }
 
@@ -149,7 +153,7 @@ class _VoteState extends State<Vote> with SingleTickerProviderStateMixin{
       _solidColor = Theme.of(context).accentColor;
     });
 
-    _construcVoteWidget(_voted);
+    _construcVoteWidget(_voted, false);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,

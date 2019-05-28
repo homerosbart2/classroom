@@ -8,21 +8,25 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Presentation extends StatefulWidget{
   final String file;
+  final double animationValue;
 
   const Presentation({
+    this.animationValue: 0,
     @required this.file
   });
 
   _PresentationState createState() => _PresentationState();
 }
 
-class _PresentationState extends State<Presentation> with AutomaticKeepAliveClientMixin{
+class _PresentationState extends State<Presentation> with AutomaticKeepAliveClientMixin, SingleTickerProviderStateMixin{
   PDFDocument _document;
   PDFPage _page;
   PDFPageImage _pageImage;
   int _actualPage;
   List<PDFPageImage> _pageImages;
-  bool _loading;
+  bool _loading, _firstPageLoaded;
+  AnimationController _loadingController;
+  Animation<double> _turnsFloat;
 
   @override
   void initState(){
@@ -37,6 +41,38 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
     _actualPage = 0;
 
     _loading = false;
+    _firstPageLoaded = false;
+
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _turnsFloat = Tween<double>(
+      begin: widget.animationValue,
+      end: 1,
+    ).animate(
+      CurvedAnimation(
+        parent: _loadingController,
+        curve: Curves.linear,
+      ),
+    );
+
+    _startLoadingAnimation();
+  }
+
+  @override
+  void dispose() {
+    _loadingController.dispose();
+    super.dispose();
+  }
+
+  void _startLoadingAnimation(){
+    _loadingController.forward(from: 0).then((_){
+      if(!_firstPageLoaded){
+        _startLoadingAnimation();
+      }
+    });
   }
 
   Future<void> _prepareDocument() async{
@@ -59,6 +95,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
       _pageImage = _pageImages[_actualPage];
       _loading = false;
     }
+    _firstPageLoaded = true;
     return Future.delayed(const Duration(milliseconds: 0), () => 
       Container(
         child: Stack(
@@ -149,11 +186,10 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                Text(
-                  'CARGANDO...',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Theme.of(context).accentColor,
+                RotationTransition(
+                  turns: _turnsFloat,
+                  child: Icon(
+                    FontAwesomeIcons.circleNotch
                   ),
                 ),
               ],
