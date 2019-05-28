@@ -226,9 +226,14 @@ class DatabaseManager{
     if(ref != null){
       Directory tempDir = Directory.systemTemp;
       File file = File('${tempDir.path}/$lessonId.pdf');
-      StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-      int byteNumber = (await downloadTask.future).totalByteCount;
-      path = file.path;
+      if(await file.exists()){
+        print("YES");
+        path = file.path;
+      }else{
+        StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+        int byteNumber = (await downloadTask.future).totalByteCount;
+        path = file.path;
+      }
     }
     return path;
   }
@@ -236,20 +241,17 @@ class DatabaseManager{
   static Future<String> uploadFiles(String type, String lessonId, String filePath) async{  
     switch(type){
       case "pdf": {
-        StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
+         StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
           File(filePath),
           StorageMetadata(
             contentType: type,
           ),
         );
-        if(uploadTask.isSuccessful){
-          print("IN");
-          updateLesson(lessonId, "", "presentation");
-        }  
+        updateLesson(lessonId, "", "presentation");
         break;        
       }
     }    
-    return file.path;
+    return filePath;
   }
 
   static Future<void> updateQuestion(String code, String param, String column) async{
