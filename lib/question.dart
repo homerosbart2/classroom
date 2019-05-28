@@ -43,6 +43,7 @@ class Question extends StatefulWidget {
     this.minutes: 55,
   });
 
+  
   _QuestionState createState() => _QuestionState();
 }
 
@@ -83,7 +84,6 @@ class _QuestionState extends State<Question>
     _answeredPasser = WidgetPasser();
 
     _disabled = false;
-
     _answers = List<Answer>();
 
     _questionColor = _answerColor = Colors.transparent;
@@ -205,10 +205,16 @@ class _QuestionState extends State<Question>
       DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls) => setState(() {
         List<String> _answersListString = List<String>();
         _answersListString = ls;
-        DatabaseManager.getAnswersPerQuestionByList(_answersListString).then((List<Answer> la) => setState(() {
+        DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la) => setState(() {
           for (var answer in la) {
             DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
-              if(answer.authorId == widget.courseAuthorId) answer.owner = true;
+              if(answer.authorId == Auth.uid) answer.mine = true;
+              if(answer.authorId == widget.courseAuthorId){
+                setState(() {
+                  _boxResizeOpacityController.forward();                  
+                });
+                answer.owner = true;
+              }
               if (voted) answer.voted = true;
               setState(() {
                 _answers.add(answer);
@@ -243,6 +249,9 @@ class _QuestionState extends State<Question>
           setState(() {
             _answers.add(Answer(
               author: jsonAnswer['author'],
+              authorId: jsonAnswer['authorId'],
+              answerId: jsonAnswer['answerId'],
+              questionId: jsonAnswer['questionId'],
               text: jsonAnswer['text'],
               owner: jsonAnswer['owner'],
               voted: false,
@@ -352,7 +361,7 @@ class _QuestionState extends State<Question>
                       if(!_disabled){
                         //print(widget.index);
                         //_boxResizeOpacityController2.reverse();
-                        // DatabaseManager.deleteQuestion(Question.globalQuestionId, Auth.uid);
+                        // DatabaseManager.deleteQuestion(widget.questionId, Auth.uid);
                         print("id: ${widget.questionId}");
                         _deleteHeightController.reverse();
                         _boxColorController.forward();
@@ -544,6 +553,7 @@ class _QuestionState extends State<Question>
                                             InteractRoute.questionPositionController.forward();
                                             _expandAnswersController.forward();
                                             Question.answerPasser = _answerPasser;
+                                            Question.globalQuestionId = widget.questionId;
                                             Question.answeredPasser = _answeredPasser;
                                             ChatBar.mode = 1;
                                             FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);

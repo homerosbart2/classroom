@@ -6,6 +6,7 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
+import 'package:firebase_database/firebase_database.dart';
 
 class LessonsRoute extends StatefulWidget{
   final String author, name, accessCode, authorId;
@@ -39,20 +40,50 @@ class _LessonsRouteState extends State<LessonsRoute>{
     _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
-    DatabaseManager.getLessonsPerCourse(widget.accessCode).then(
-      (List<String> ls) => setState(() {
-        List<String> _lessonsListString = List<String>();
-        _lessonsListString = ls;
-        DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid).then(
+    // DatabaseManager.getLessonsPerCourse(widget.accessCode).then(
+    //   (List<String> ls) => setState(() {
+    //     List<String> _lessonsListString = List<String>();
+    //     _lessonsListString = ls;
+    //     DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid).then(
+    //       (List<Lesson> lc) => setState(() {
+    //         for(var lesson in lc){
+    //           lesson.authorId = widget.authorId;
+    //           _lessons.add(lesson);
+    //         }
+    //       })
+    //     );         
+    //   })
+    // );
+
+    FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.accessCode).onChildAdded.listen((data) {
+      setState(() {
+        List<String> lista = new List<String>();
+        String newCourse = data.snapshot.value["lesson"];
+        print("curso: $newCourse");
+        lista.add(newCourse);
+        DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid).then(
           (List<Lesson> lc) => setState(() {
             for(var lesson in lc){
               lesson.authorId = widget.authorId;
-              _lessons.add(lesson);
+              Map text = {
+                //TODO: obtener los comentarios de la lección.
+                'lessonId': lesson.lessonId,
+                'name' : lesson.name,
+                'day' : lesson.day,
+                'month' : lesson.month, 
+                'year': lesson.year,
+                'comments': lesson.comments,
+                'owner': widget.owner,
+                'authorId': widget.authorId,
+              };
+              String textLesson = json.encode(text);
+              Nav.lessonPasser.sendWidget.add(textLesson);
             }
           })
-        );         
-      })
-    );
+        );        
+      });
+    });
+
 
     _lessonPasser.recieveWidget.listen((newLesson){
       if(newLesson != null){
@@ -61,6 +92,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
           setState(() {
             _lessons.add(
               Lesson(
+                presentation: jsonLesson['presentation'],
                 lessonId: jsonLesson['lessonId'],
                 name: jsonLesson['name'],
                 day: jsonLesson['day'],

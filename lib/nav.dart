@@ -15,7 +15,7 @@ class Nav extends StatefulWidget{
   static WidgetPasser coursePasser = WidgetPasser();
   static WidgetPasser lessonPasser = WidgetPasser();
   final Widget body;
-  final String title, user, section, subtitle;
+  final String title, section, subtitle;
   final double preferredSize, elevation;
   final bool drawerActive, addBarActive, notificationsActive, owner;
   final Color color, titleColor, actionsColor;
@@ -24,7 +24,6 @@ class Nav extends StatefulWidget{
   const Nav({
     @required this.body,
     @required this.title,
-    @required this.user,
     @required this.section,
     this.elevation: 1.0,
     this.color,
@@ -210,35 +209,37 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                     if(val.trim() != ''){
                       if(Nav.addBarMode == 0){
                         if(widget.section == 'courses'){
-                          Map text = {
-                            //TODO: Generar un nuevo código y agregar el curso a la base de datos.
-                            'name' : val,
-                            'author' : widget.user,
-                            'lessons' : 0,
-                            'participants' : 1, 
-                            'accessCode': code,
-                          };
-
-                          DatabaseManager.addCourse(authorId,author,val);
-                          String textCourse = json.encode(text);
-                          print(textCourse);
-                          Nav.coursePasser.sendWidget.add(textCourse);
+                          DatabaseManager.addCourse(authorId,author,val).then((accessCode){
+                            Map text = {
+                              //TODO: Generar un nuevo código y agregar el curso a la base de datos.
+                              'name' : val,
+                              'authorId': authorId,
+                              'author' : author,
+                              'lessons' : 0,
+                              'participants' : 1, 
+                              'accessCode': accessCode,
+                              'owner': true,
+                            };
+                            String textCourse = json.encode(text);
+                            print(textCourse);
+                            Nav.coursePasser.sendWidget.add(textCourse);
+                          });
                         }else if(widget.section == 'lessons'){
                           var nowDate = DateTime.now();
                           int day = nowDate.day;
                           int month = nowDate.month;
                           int year = nowDate.year;
                           DatabaseManager.addLesson(Auth.uid, val, "description", day, month, year, widget.acessCode);
-                          Map text = {
-                            //TODO: obtener los comentarios de la lección.
-                            'name' : val,
-                            'day' : nowDate.day,
-                            'month' : nowDate.month, 
-                            'year': nowDate.year,
-                            'comments': 0,
-                          };
-                          String textLesson = json.encode(text);
-                          Nav.lessonPasser.sendWidget.add(textLesson);
+                          // Map text = {
+                          //   //TODO: obtener los comentarios de la lección.
+                          //   'name' : val,
+                          //   'day' : nowDate.day,
+                          //   'month' : nowDate.month, 
+                          //   'year': nowDate.year,
+                          //   'comments': 0,
+                          // };
+                          // String textLesson = json.encode(text);
+                          // Nav.lessonPasser.sendWidget.add(textLesson);
                         }
                          _addButtonController.reverse();
                         _addBarController.reverse().then((val){

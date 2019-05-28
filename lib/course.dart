@@ -68,6 +68,7 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
     _boxResizeOpacityController.forward();
   }
 
+  
   Decoration _getCourseDecoration(BuildContext context){
     if(widget.owner){
       return BoxDecoration(
@@ -127,7 +128,6 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
               owner: widget.owner,
               preferredSize: 65,
               section: 'lessons',
-              user: 'Henry Campos',
               title: 'CLASES',
               subtitle: widget.name,
               body: LessonsRoute(

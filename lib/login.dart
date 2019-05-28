@@ -63,7 +63,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
       CupertinoPageRoute(builder: (BuildContext context) {
         return Nav(
           section: 'courses',
-          user: 'Henry Campos',
           title: 'CURSOS',
           body: CoursesRoute(),
         );

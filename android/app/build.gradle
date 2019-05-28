@@ -34,12 +34,12 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId "com.example.classroom"
-        minSdkVersion 16
+        minSdkVersion 21    
         targetSdkVersion 28
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
-        multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -63,11 +63,14 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'com.google.firebase:firebase-core:16.0.5'
-    implementation 'com.google.firebase:firebase-database:16.0.5'
-    implementation 'com.google.android.gms:play-services-gcm:9.2.0'
-    implementation 'com.google.firebase:firebase-storage:16.0.5'
     implementation 'com.android.support:multidex:1.0.3'
+    implementation "com.android.support:appcompat-v7:27.1.0"
+    // implementation 'androidx.appcompat:appcompat:1.0.0'
+    // implementation 'androidx.legacy:legacy-support-v4:1.0.0'   
+    implementation 'com.google.firebase:firebase-core'
+    implementation 'com.google.firebase:firebase-database'
+    implementation 'com.google.android.gms:play-services-gcm:9.2.0'
+    implementation 'com.google.firebase:firebase-storage'
 }
 
 apply plugin: 'com.google.gms.google-services'  // Gradle plugin

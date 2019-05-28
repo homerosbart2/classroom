@@ -67,25 +67,26 @@ class _ChatBarState extends State<ChatBar>{
       String author = Auth.getName();
       if(ChatBar.mode == 0){
         DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
-          Map text = {
-            'text': val,
-            'author': author,
-            'authorId': authorId,
-            'owner': widget.owner,
-            'day': day,
-            'month': month,
-            'year': year,
-            'hours': hours,
-            'minutes': minutes,
-            'questionId': id,
-          };
-          String textQuestion = json.encode(text);
-          ChatBar.questionPasser.sendWidget.add(textQuestion);          
+          // Map text = {
+          //   'text': val,
+          //   'author': author,
+          //   'authorId': authorId,
+          //   'owner': widget.owner,
+          //   'day': day,
+          //   'month': month,
+          //   'year': year,
+          //   'hours': hours,
+          //   'minutes': minutes,
+          //   'questionId': id,
+          // };
+          // String textQuestion = json.encode(text);
+          // ChatBar.questionPasser.sendWidget.add(textQuestion);          
         });
       }else{
         String questionId = Question.globalQuestionId;
         DatabaseManager.addAnswers(questionId, author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
           Map text = {
+            'answerId': id,
             'text': val,
             'author': author,
             'questionId': questionId,
@@ -96,7 +97,6 @@ class _ChatBarState extends State<ChatBar>{
             'year': year,
             'hours': hours,
             'minutes': minutes,
-            'answerId': id,
           };
           String textAnswer = json.encode(text);
           Question.answerPasser.sendWidget.add(textAnswer);
