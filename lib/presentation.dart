@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:native_pdf_renderer/native_pdf_renderer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pinch_zoom_image/pinch_zoom_image.dart';
 
 class Presentation extends StatefulWidget{
   final String file;
@@ -86,7 +87,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
     _loading = true;
     if(_pageImages[_actualPage] == null){
       _page = await _document.getPage(_actualPage + 1);
-      _pageImage = await _page.render(width: _page.width, height: _page.height);
+      _pageImage = await _page.render(width: _page.width, height: _page.height, backgroundColor: 'white');
       _pageImages[_actualPage] = _pageImage;
       await _page.close().then((_){
         _loading = false;
@@ -104,8 +105,10 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
               alignment: Alignment.topCenter,
               child: Container(
                 padding: EdgeInsets.only(bottom: 58),
-                child: Image(
-                  image: MemoryImage(_pageImage.bytes),
+                child: PinchZoomImage(
+                  image: Image(
+                    image: MemoryImage(_pageImage.bytes),
+                  ),
                 ),
               ),
             ),

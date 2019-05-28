@@ -61,6 +61,13 @@ class _StatefulNotificationState extends State<StatefulNotification> with Ticker
   }
 
   @override
+  void dispose() {
+    _notificationPositionController.dispose(); 
+    _notificationHeightController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SlideTransition(
       position: _offsetFloat,

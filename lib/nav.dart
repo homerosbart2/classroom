@@ -9,6 +9,7 @@ import 'package:classroom/database_manager.dart';
 import 'dart:math';
 import 'package:classroom/choice.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Nav extends StatefulWidget{
   static String addBarTitle;
@@ -55,6 +56,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   String _alertMessage;
   Color _titleColor, _color, _actionsColor;
   FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
+  SharedPreferences prefs;
   //WidgetPasser courseBloc = WidgetPasser();
 
   List<Choice> choices = <Choice>[
@@ -65,6 +67,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   @override
   void initState() {
     super.initState();
+
+    _initSharedPreferences();
   
     Nav.addBarTitle = ''; 
     Nav.addBarMode = 0;
@@ -132,6 +136,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
 
   int getRandom(){
     return random.nextInt(100000);
+  }
+
+  void _initSharedPreferences() async{
+    prefs = await SharedPreferences.getInstance();
   }
 
   Widget _postAlertInAddBar(){
@@ -593,8 +601,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   //TODO: Cerrar la sesión del usuario.
                   Auth.signOut().then((_)
                   {
+                    prefs.setInt('logged', 0);
                     Navigator.of(context).pop();
                     Navigator.of(context).pop();
+                    if(widget.section == 'lessons') Navigator.of(context).pop();
                   });
                 },
               ),
@@ -662,43 +672,48 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     return Container(
       color: Theme.of(context).accentColor,
       padding: EdgeInsets.only(top: widget.preferredSize - 60.0),
-      child: Scaffold(
-            drawer: _construcDrawer(),
-            appBar: PreferredSize(
-              preferredSize: Size.fromHeight(widget.preferredSize),
-              child: AppBar(
-                actions: _construcActions(),
-                elevation: widget.elevation,
-                title: Container(
-                  margin: EdgeInsets.only(top: (widget.preferredSize - 60.0)/2.0 + 2),
-                  child: _construcTitle(),
-                ), 
-                centerTitle: false,
-                backgroundColor: _color,
-                iconTheme: IconThemeData(
-                  color: widget.actionsColor,
+      child: WillPopScope(
+        onWillPop: () async{
+          return (widget.section != 'courses');
+        },
+        child: Scaffold(
+              drawer: _construcDrawer(),
+              appBar: PreferredSize(
+                preferredSize: Size.fromHeight(widget.preferredSize),
+                child: AppBar(
+                  actions: _construcActions(),
+                  elevation: widget.elevation,
+                  title: Container(
+                    margin: EdgeInsets.only(top: (widget.preferredSize - 60.0)/2.0 + 2),
+                    child: _construcTitle(),
+                  ), 
+                  centerTitle: false,
+                  backgroundColor: _color,
+                  iconTheme: IconThemeData(
+                    color: widget.actionsColor,
+                  ),
                 ),
               ),
-            ),
-            body: Stack(
-              children: <Widget>[
-                widget.body,
-                _construcAddBar(_width),
-                NotificationHub(
-                  notificationHubPositionController: _notificationHubPositionController,
-                ),
-                Positioned(
-                  top: -70,
-                  left: 0,
-                  child: Container(
-                    width: _width,
-                    height: 20,
-                    color: Colors.red,
+              body: Stack(
+                children: <Widget>[
+                  widget.body,
+                  _construcAddBar(_width),
+                  NotificationHub(
+                    notificationHubPositionController: _notificationHubPositionController,
                   ),
-                )
-              ],
+                  Positioned(
+                    top: -70,
+                    left: 0,
+                    child: Container(
+                      width: _width,
+                      height: 20,
+                      color: Colors.red,
+                    ),
+                  )
+                ],
+              ),
             ),
-          ),
+      ),
     );
   }
 }

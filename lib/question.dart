@@ -202,27 +202,31 @@ class _QuestionState extends State<Question>
     if (widget.answered) _boxResizeOpacityController.forward();
 
     if (_answers.isEmpty) {
-      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls) => setState(() {
-        List<String> _answersListString = List<String>();
-        _answersListString = ls;
-        DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la) => setState(() {
-          for (var answer in la) {
-            DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
-              if(answer.authorId == Auth.uid) answer.mine = true;
-              if(answer.authorId == widget.courseAuthorId){
-                setState(() {
-                  _boxResizeOpacityController.forward();                  
+      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls){
+        if(this.mounted) setState(() {
+          List<String> _answersListString = List<String>();
+          _answersListString = ls;
+          DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la){
+            if(this.mounted) setState(() {
+              for (var answer in la) {
+                DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
+                  if(answer.authorId == Auth.uid) answer.mine = true;
+                  if(answer.authorId == widget.courseAuthorId){
+                    setState(() {
+                      _boxResizeOpacityController.forward();                  
+                    });
+                    answer.owner = true;
+                  }
+                  if (voted) answer.voted = true;
+                  setState(() {
+                    _answers.add(answer);
+                  });
                 });
-                answer.owner = true;
               }
-              if (voted) answer.voted = true;
-              setState(() {
-                _answers.add(answer);
-              });
             });
-          }
-        }));
-      }));
+          });
+        });
+      });
     }
 
     // _answers.add(
@@ -273,9 +277,13 @@ class _QuestionState extends State<Question>
 
   @override
   void dispose() {
-    super.dispose();
-
+    _boxResizeOpacityController2.dispose();
+    _deleteHeightController.dispose();
+    _boxColorController.dispose();
+    _boxResizeOpacityController.dispose();
+    _expandAnswersController.dispose();
     _answerPasser.sendWidget.add(null);
+    super.dispose();
   }
 
   void _construcQuestions(BuildContext context) {
