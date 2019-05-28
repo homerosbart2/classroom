@@ -118,7 +118,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           });
           DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
           print("ARCHIVO:  $path");
-            setState(() {
+            if(this.mounted) setState(() {
               _presentation = Presentation(
                 file: path,
                 animationValue: _turnsFloat.value,

@@ -62,24 +62,28 @@ class _LessonsRouteState extends State<LessonsRoute>{
         print("curso: $newCourse");
         lista.add(newCourse);
         DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid).then(
-          (List<Lesson> lc) => setState(() {
-            for(var lesson in lc){
-              lesson.authorId = widget.authorId;
-              Map text = {
-                //TODO: obtener los comentarios de la lección.
-                'lessonId': lesson.lessonId,
-                'name' : lesson.name,
-                'day' : lesson.day,
-                'month' : lesson.month, 
-                'year': lesson.year,
-                'comments': lesson.comments,
-                'owner': widget.owner,
-                'authorId': widget.authorId,
-              };
-              String textLesson = json.encode(text);
-              Nav.lessonPasser.sendWidget.add(textLesson);
+          (List<Lesson> lc){
+            if(this.mounted){
+              setState(() {
+                for(var lesson in lc){
+                  lesson.authorId = widget.authorId;
+                  Map text = {
+                    //TODO: obtener los comentarios de la lección.
+                    'lessonId': lesson.lessonId,
+                    'name' : lesson.name,
+                    'day' : lesson.day,
+                    'month' : lesson.month, 
+                    'year': lesson.year,
+                    'comments': lesson.comments,
+                    'owner': widget.owner,
+                    'authorId': widget.authorId,
+                  };
+                  String textLesson = json.encode(text);
+                  Nav.lessonPasser.sendWidget.add(textLesson);
+                }
+              });
             }
-          })
+          }
         );        
       });
     });

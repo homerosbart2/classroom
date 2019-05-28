@@ -17,19 +17,27 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> with TickerProviderStateMixin{
   FocusNode myFocusNode;
-  bool _register;
+  bool _register, _logging, _actuallyLogged;
+  int _logged;
   TextEditingController _usernameController, _passwordController, _nameController;
   AnimationController _slideController;
   Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
+  SharedPreferences prefs;
+
 
   @override
   void initState() {
     super.initState();
     _register = false;
+    _actuallyLogged = false;
     myFocusNode = FocusNode();
     _nameController = TextEditingController();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
+
+    _logging = false;
+
+    _initSharedPreferences();
 
     _slideController = AnimationController(
       vsync: this,
@@ -57,8 +65,22 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     );
   }
 
+  void _initSharedPreferences() async{
+    prefs = await SharedPreferences.getInstance();
+    _logged = prefs.getInt('logged');
+    if(!_actuallyLogged && prefs.getInt('logged') == 1){
+      print("INICIADO");
+      validateAndSubmit(prefs.getString('email'), prefs.getString('password'), '');
+    }
+    String userEmail = prefs.getString('email');
+    if(userEmail != null){
+      print('USERNAME: $userEmail');
+      _usernameController.text = userEmail;
+      _passwordController.text = prefs.getString('password');
+    }
+  }
+
   void _navigateToCourses(BuildContext context) {
-    
     Navigator.of(context).push(
       CupertinoPageRoute(builder: (BuildContext context) {
         return Nav(
@@ -77,14 +99,32 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     try{ 
       if(_register == true){
         String user = await Auth.createUserWithEmailAndPassword(email,password,name);
-        if(user == null) print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
-        else _navigateToCourses(context);    
+        if(user == null){
+          print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
+          _logging = false;
+        }else{
+          prefs.setInt('logged', 1);
+          prefs.setString('email', email);
+          prefs.setString('password', password);
+          _navigateToCourses(context);
+          _logging = false;
+          _actuallyLogged = true;
+        }    
       }else{
         String user = await Auth.signInWithEmailAndPassword(email, password);
         print("Login: $user");
         Auth.currentUser().then((userId){
-          if(userId == null) print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
-          else _navigateToCourses(context);
+          if(userId == null){
+            print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+            _logging = false;
+          }else{
+            prefs.setInt('logged', 1);
+            prefs.setString('email', email);
+            prefs.setString('password', password);
+            _navigateToCourses(context);
+            _logging = false;
+            _actuallyLogged = true;
+          } 
         });
       }
     }catch(e){
@@ -172,8 +212,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
+                  if(!_logging){
+                    _logging = true;
+                    validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
                   //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
+                  }
                 },
               ),
             ],
@@ -258,7 +301,10 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  validateAndSubmit(_usernameController.text, _passwordController.text,"");
+                  if(!_logging){
+                    _logging = true;
+                     validateAndSubmit(_usernameController.text, _passwordController.text,"");
+                  }
                 },
               ),
             ],
@@ -270,7 +316,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-
     final loginWidget = FractionallySizedBox(
       widthFactor: 1,
       heightFactor: 1,

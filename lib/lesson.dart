@@ -74,6 +74,12 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
   }
 
   @override
+  void dispose() {
+    _boxResizeOpacityController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _opacityFloat,
