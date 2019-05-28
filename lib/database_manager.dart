@@ -339,9 +339,6 @@ class DatabaseManager{
   }
 
   static Future<dynamic> getFieldFrom(String parent, String child, String column) async{
-    print("PARENT: $parent");
-    print("CHILD: $child");
-    print("COLUMN: $column");
     var field;
     await mDatabase.child(parent).child(child).once().then((DataSnapshot snapshot){
       Map<dynamic, dynamic> map = snapshot.value;

@@ -186,6 +186,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
                                   notificationsActive: false,
                                   section: 'interact',
                                   title: widget.name,
+                                  owner: widget.owner,
                                   body: InteractRoute(
                                     authorId: widget.authorId,
                                     lessonId: widget.lessonId,

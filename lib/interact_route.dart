@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:classroom/question.dart';
-import 'package:classroom/presentation.dart';
 import 'package:classroom/chatbar.dart';
+import 'package:classroom/presentation.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'stateful_button.dart';
@@ -43,7 +43,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions;
   ScrollController _scrollController;
-
+  bool _presentationExist;
   Future<String> getFilePath() async {
     String filePath = null;
     try {
@@ -64,6 +64,8 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   void initState() {
     super.initState();
 
+    _presentationExist = false;
+
     _questionToAnswer = '';
 
     _scrollController = ScrollController();
@@ -73,14 +75,16 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
 
 
     // _presentation = Presentation(
-    //   file: widget.presentationPath,
+    //   file: 'lib/assets/pdf/sample.pdf',
     // ); 
 
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
+      print("PRESENTATION: $presentation");
       if(presentation){
+        _presentationExist = true;
         DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
         print("ARCHIVO:  $path");
-        
+
         });
       }
     }); 
@@ -306,7 +310,7 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
   }
 
   Widget _getPresentation(){
-    if(widget.presentationPath == ''){
+    if(!_presentationExist){
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
@@ -341,14 +345,14 @@ class _InteractRouteState extends State<InteractRoute> with SingleTickerProvider
       // physics: ScrollPhysics(
       //   parent: BouncingScrollPhysics(),
       // ),
-      padding: EdgeInsets.only(top: 10, bottom: 10),
+      padding: EdgeInsets.only(top: 12, bottom: 12),
       itemCount: _actualQuestions.length + 1,
       itemBuilder: (context, index){
         if(index == 0){
           return Container(
-            padding: EdgeInsets.all(12),
+            padding: EdgeInsets.symmetric(horizontal: 12),
             width: width,
-            height: height,
+            height: height + 68,
             child: _getPresentation(),
           );
         }else{
