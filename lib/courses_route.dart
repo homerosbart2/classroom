@@ -7,6 +7,7 @@ import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:qr_utils/qr_utils.dart';
+import 'package:classroom/notify.dart';
 
 class CoursesRoute extends StatefulWidget{
   static WidgetPasser activateQRPasser = WidgetPasser();
@@ -30,16 +31,43 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
       print(e);
     }
     if(_contentQR != null){
-      DatabaseManager.addCourseByAccessCode(_contentQR, Auth.uid).then((Map text){
-        if(text != null){  
-          String textCourse = json.encode(text);
-          print(textCourse);
-          _coursePasser.sendWidget.add(textCourse);           
+      DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, _contentQR, "course", "course", "", "i", "get").then((valid){
+        if(valid == ""){
+          DatabaseManager.addCourseByAccessCode(_contentQR,Auth.uid).then((dynamic text){
+            if(text == null){  
+              setState(() {
+              Notify.show(
+                  context: context,
+                  text: 'El curso no existe.',
+                  actionText: 'Ok',
+                  backgroundColor: Colors.red[200],
+                  textColor: Colors.black,
+                  actionColor: Colors.black,
+                  onPressed: (){
+                    
+                  }
+                );                                
+              });            
+            }else{
+              String textCourse = json.encode(text);
+              print(textCourse);
+              _coursePasser.sendWidget.add(textCourse);                              
+            }              
+          }); 
         }else{
-          print("NO ENCONTRADO");
-          //TODO: dialogo de curso no encontrado
-        }              
-      });  
+          Notify.show(
+            context: context,
+            text: 'El curso ya ha sido agregado.',
+            actionText: 'Ok',
+            backgroundColor: Colors.red[200],
+            textColor: Colors.black,
+            actionColor: Colors.black,
+            onPressed: (){
+              
+            } 
+          );                            
+        }
+      });                 
     }
   }
 

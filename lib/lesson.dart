@@ -9,8 +9,6 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 
 class Lesson extends StatefulWidget{
-  static WidgetPasser datePasser = WidgetPasser();
-  static WidgetPasser descriptionPasser = WidgetPasser();
   final String name, description, lessonId;
   String authorId;
   final int month, day, year, comments;
@@ -35,8 +33,7 @@ class Lesson extends StatefulWidget{
 class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   AnimationController _boxResizeOpacityController;
   Animation<double> _opacityFloat;
-  String _date, _description;
-  WidgetPasser _datePasser, _descriptionPasser;
+  String _date, _description, _comments;
 
   @override
   bool get wantKeepAlive => true;
@@ -47,36 +44,11 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
     String month = (widget.month < 10)? '0${widget.month}' : '${widget.month}';
     String year = '${widget.year}';
 
+    _comments = '${widget.comments}';
+
     _date = '$day/$month/$year';
 
     _description = widget.description;
-
-    _datePasser = WidgetPasser();
-    _descriptionPasser = WidgetPasser();
-
-    _datePasser.recieveWidget.listen((newDate) {
-      if (newDate != null) {
-        Map jsonDate = json.decode(newDate);
-        day = (jsonDate['day'] < 10)? '0${jsonDate['day']}' : '${jsonDate['day']}';
-        month = (jsonDate['month'] < 10)? '0${jsonDate['month']}' : '${jsonDate['month']}';
-        year = '${jsonDate['year']}';
-        if (this.mounted) {
-          setState(() {
-            _date = '$day/$month/$year';
-          });
-        }
-      }
-    });
-
-    _descriptionPasser.recieveWidget.listen((newDescription) {
-      if (newDescription != null) {
-        if (this.mounted) {
-          setState(() {
-            _description = newDescription;
-          });
-        }
-      }
-    });
 
     _boxResizeOpacityController = AnimationController(
       vsync: this,
@@ -96,9 +68,29 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
     _boxResizeOpacityController.forward();
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-      setState(() {
-        print(data);
-      });
+      if(mounted){
+        setState(() {
+          print("CAPTANDO CAMBIOS");
+          print("SNAPSHOT KEY: ${data.snapshot.key}");
+          print("SNAPSHOT VALUE: ${data.snapshot.value}");
+          String value = (data.snapshot.value).toString();
+          switch(data.snapshot.key){
+            case "comments":{
+              _comments = value;
+              break;
+            }
+            case "description": {
+              _description = value;
+              break;
+            }
+            case "date": {
+              String date = value.toString();
+              _date = value.substring(0,2)+"/"+value.substring(2,4)+"/"+value.substring(4,value.length);
+              break;
+            }            
+          }
+        });
+      }
     });
     super.initState();
   }
@@ -106,7 +98,6 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
   @override
   void dispose() {
     _boxResizeOpacityController.dispose();
-    Lesson.datePasser.sendWidget.add(null);
     super.dispose();
   }
 
@@ -161,7 +152,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
                               ),
                             ),
                             Text(
-                              '${widget.comments}',
+                              _comments,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
@@ -207,8 +198,6 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
                       message: 'Acceder',
                       child: GestureDetector(
                         onTap: (){
-                          Lesson.datePasser = _datePasser;
-                          Lesson.descriptionPasser = _descriptionPasser;
                           Vibration.vibrate(duration: 20);
                           print('funciona');
                           Navigator.of(context).push(

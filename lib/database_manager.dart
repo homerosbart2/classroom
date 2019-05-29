@@ -192,16 +192,21 @@ class DatabaseManager{
     });
   }  
 
+  static String addZero(int param){
+    String paramString = param.toString();
+    if(paramString.length > 1) return paramString;
+    else return "0"+paramString;
+  }
+
   static Future<String> addLesson(String uid, String name, String description, int day, int month, int year, String course) async{
-    DatabaseReference lesson;
+    DatabaseReference lesson;;
+    int date = int.parse(addZero(day)+addZero(month)+addZero(year));
     lesson = mDatabase.child("lessons").push();
     await lesson.set({
       'name': name,
       'presentation' : false,
       'description': description,
-      'month': month,
-      'day': day,
-      'year' : year,
+      'date': date,
       'comments' : 0
     }).then((_) {
       addLessonPerCourse(lesson.key,course);
@@ -221,7 +226,7 @@ class DatabaseManager{
       'lessons' : 0,
       'accessCode' : course.key
     }).then((_) {
-      addUserPerCourse(authorId,course.key);
+      // addUserPerCourse(authorId,course.key);
       addCoursePerUser(authorId,course.key);
       updateCourse(course.key,course.key,"accessCode");
     });
@@ -317,12 +322,16 @@ class DatabaseManager{
       }
       case "date": {
         await mDatabase.child("lessons").child(code).update({
-          'day': param.substring(0,2),
-          'month': param.substring(2,4),
-          'year': param.substring(4,param.length),
-        }).then((_){/*nothing*/});    
+          'date': int.parse(param), 
+        }).then((_){/*nothing*/});
         break;        
       }      
+      case "description": {
+        await mDatabase.child("lessons").child(code).update({
+          'description': param,
+        }).then((_){/*nothing*/});    
+        break;        
+      }       
     }    
   }
 
@@ -360,7 +369,7 @@ class DatabaseManager{
       Map<dynamic,dynamic> course = snapshot.value;
       if(course != null){
         int participants = course['participants'] + 1;
-        addUserPerCourse(uid,code);
+        // addUserPerCourse(uid,code);
         addCoursePerUser(uid,code);
         updateCourse(code,(participants).toString(),"participants");
         _course = {
@@ -563,14 +572,15 @@ class DatabaseManager{
           if(lesson != null){
             if(lesson['authorId'] == uid) userOwner = true;
             else userOwner = false;
+            String date = (lesson['date']).toString();
             _lessonsList.add(
               Lesson(
                 presentation: lesson['presentation'],
                 lessonId: eachLesson,
                 comments: lesson['comments'],
-                day: lesson['day'],
-                month: lesson['month'],
-                year: lesson['year'],
+                day: int.parse(date.substring(0,2)),
+                month: int.parse(date.substring(2,4)),
+                year: int.parse(date.substring(5,date.length)),
                 description: lesson['description'],
                 name: lesson['name'],
                 owner: userOwner,

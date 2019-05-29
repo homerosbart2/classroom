@@ -325,7 +325,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         print('DESCRIPCION: $val');
                         print('LECCION: ${widget.idObject}');
                         //TODO: Guardar la nueva descripcion en firebase
-                        Lesson.descriptionPasser.sendWidget.add(val);
+                        DatabaseManager.updateLesson(widget.idObject, val,"description");
                         _addBarController.reverse().then((val){
                           _addBarTextfieldController.text = '';
                           if(_addBarAlertController.status != AnimationStatus.dismissed){
@@ -378,10 +378,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         'year' : picked.year,
       };
       String textDate = json.encode(text);
+      print("ANTES");
       DatabaseManager.updateLesson(widget.idObject, picked.day.toString()+picked.month.toString()+picked.year.toString(),"date");
       print('FECHA: $textDate');
       print('LECCION: ${widget.idObject}');
-      Lesson.datePasser.sendWidget.add(textDate);
     }
   }
 
@@ -489,7 +489,6 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               _selectDate(context);
             }else if(choice.title == 'Descripción'){
               final status = _addBarController.status;
-
               if(status == AnimationStatus.completed){
                 _addBarController.reverse(
                   from: 1

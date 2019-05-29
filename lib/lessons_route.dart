@@ -77,7 +77,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
       setState(() {
         List<String> lista = new List<String>();
         String newCourse = data.snapshot.value["lesson"];
-        print("curso: $newCourse");
+        print("lesson: $newCourse");
         lista.add(newCourse);
         DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid).then(
           (List<Lesson> lc){
@@ -95,6 +95,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                     'comments': lesson.comments,
                     'owner': widget.owner,
                     'authorId': widget.authorId,
+                    'description': lesson.description,
                   };
                   String textLesson = json.encode(text);
                   Nav.lessonPasser.sendWidget.add(textLesson);
@@ -120,6 +121,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                 day: jsonLesson['day'],
                 month: jsonLesson['month'],
                 year: jsonLesson['year'],
+                description: jsonLesson['description'],
                 comments: jsonLesson['comments'],
                 owner: widget.owner,
                 authorId: widget.authorId,
