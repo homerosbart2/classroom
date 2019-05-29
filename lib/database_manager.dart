@@ -330,7 +330,8 @@ class DatabaseManager{
           'lessons': course['lessons'],
           'name': course['name'],
           'author': course['author'],
-          'authorId': course['authorId']          
+          'authorId': course['authorId'],
+          'owner': false
         };
       }
     });
@@ -504,7 +505,7 @@ class DatabaseManager{
             else userOwner = false;
             _coursesList.add(
               Course(
-                accessCode: course['accessCode'],
+                courseId: course['accessCode'],
                 participants: course['participants'],
                 lessons: course['lessons'],
                 name: course['name'],
@@ -588,7 +589,7 @@ class DatabaseManager{
           map.forEach((key, course) {  
               _coursesList.add(
                 Course(
-                  accessCode: course['accessCode'],
+                  courseId: course['accessCode'],
                   participants: course['participants'],
                   lessons: course['lessons'],
                   name: course['name'],

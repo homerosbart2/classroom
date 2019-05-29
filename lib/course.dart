@@ -6,7 +6,7 @@ import 'package:classroom/lessons_route.dart';
 import 'package:vibration/vibration.dart';
 
 class Course extends StatefulWidget{
-  final String name, author, accessCode, authorId;
+  final String name, author, courseId, authorId;
   final Color color;
   final int lessons, participants;
   final bool owner;
@@ -17,7 +17,7 @@ class Course extends StatefulWidget{
     @required this.authorId, 
     @required this.lessons,
     @required this.participants,
-    @required this.accessCode,
+    @required this.courseId,
     this.color,
     this.owner: false,
   });
@@ -130,15 +130,16 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
               section: 'lessons',
               title: 'CLASES',
               subtitle: widget.name,
+              idObject: widget.courseId,
               body: LessonsRoute(
                 name: widget.name,
-                accessCode: widget.accessCode,
+                courseId: widget.courseId,
                 author: widget.author,
                 participants: widget.participants,
                 owner: widget.owner,
                 authorId: widget.authorId
               ),
-              acessCode: widget.accessCode,
+              acessCode: widget.courseId,
             );
           }),
         );

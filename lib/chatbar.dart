@@ -9,6 +9,7 @@ import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 
 class ChatBar extends StatefulWidget{
+  static AnimationController chatBarOffsetController;
   static WidgetPasser questionPasser = WidgetPasser(), answerPasser = WidgetPasser(), labelPasser = WidgetPasser();
   final bool owner;
   final String lessonId;
@@ -23,14 +24,30 @@ class ChatBar extends StatefulWidget{
   _ChatBarState createState() => _ChatBarState();
 }
 
-class _ChatBarState extends State<ChatBar>{
+class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
   TextEditingController _chatBarTextfieldController;
   String _chatBarLabel;
+  Animation<Offset> _offsetFloat;
 
   @override
   void initState() {
     super.initState();
     ChatBar.mode = 0;
+
+    ChatBar.chatBarOffsetController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _offsetFloat = Tween<Offset>(
+      end: Offset(0, 1), 
+      begin: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: ChatBar.chatBarOffsetController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _chatBarLabel = 'Escribe una pregunta';
 
@@ -117,72 +134,75 @@ class _ChatBarState extends State<ChatBar>{
       bottom: 0,
       left: 0,
       right: 0,
-      child: Container(
-        color: Theme.of(context).accentColor,
-        padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
-        child: Stack(
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: StatefulTextfield(
-                    focusNode: ChatBar.chatBarFocusNode,
-                    controller: _chatBarTextfieldController,
-                    color: Theme.of(context).accentColor,
-                    fillColor: Colors.white,
-                    suffix: '',
-                    hint: _chatBarLabel,
-                    borderRadius: 30,
-                    padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
-                    onSubmitted: (val){
-                      _onSubmittedFunction(val);
-                    },
-                  ),
-                ),
-                Container(
-                  width: 48,
-                  height: 48,
-                  margin: EdgeInsets.only(left: 12),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white,
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      IconButton(
-                        icon: Icon(
-                          FontAwesomeIcons.paperclip,
-                          size: 18,
-                        ),
-                        onPressed: (){},
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            Positioned(
-              right: 60,
-              top: 0,
-              bottom: 0,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+      child: SlideTransition(
+        position: _offsetFloat,
+        child: Container(
+          color: Theme.of(context).accentColor,
+          padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+          child: Stack(
+            children: <Widget>[
+              Row(
                 children: <Widget>[
-                  IconButton(
-                    icon: Icon(
-                      FontAwesomeIcons.check,
-                      size: 18,
+                  Expanded(
+                    child: StatefulTextfield(
+                      focusNode: ChatBar.chatBarFocusNode,
+                      controller: _chatBarTextfieldController,
                       color: Theme.of(context).accentColor,
+                      fillColor: Colors.white,
+                      suffix: '',
+                      hint: _chatBarLabel,
+                      borderRadius: 30,
+                      padding: EdgeInsets.fromLTRB(15, 15, 45, 15),
+                      onSubmitted: (val){
+                        _onSubmittedFunction(val);
+                      },
                     ),
-                    onPressed: (){
-                      _onSubmittedFunction(_chatBarTextfieldController.text);
-                    },
                   ),
+                  // Container(
+                  //   width: 48,
+                  //   height: 48,
+                  //   margin: EdgeInsets.only(left: 12),
+                  //   decoration: BoxDecoration(
+                  //     shape: BoxShape.circle,
+                  //     color: Colors.white,
+                  //   ),
+                  //   child: Column(
+                  //     mainAxisAlignment: MainAxisAlignment.center,
+                  //     children: <Widget>[
+                  //       IconButton(
+                  //         icon: Icon(
+                  //           FontAwesomeIcons.paperclip,
+                  //           size: 18,
+                  //         ),
+                  //         onPressed: (){},
+                  //       ),
+                  //     ],
+                  //   ),
+                  // ),
                 ],
               ),
-            ),
-          ],
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    IconButton(
+                      icon: Icon(
+                        FontAwesomeIcons.check,
+                        size: 18,
+                        color: Theme.of(context).accentColor,
+                      ),
+                      onPressed: (){
+                        _onSubmittedFunction(_chatBarTextfieldController.text);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
