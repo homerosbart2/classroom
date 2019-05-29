@@ -85,7 +85,7 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
             }
             case "date": {
               String date = value.toString();
-              _date = value.substring(0,2)+"/"+value.substring(2,4)+"/"+value.substring(4,value.length);
+              _date = date.substring(0,2)+"/"+date.substring(2,4)+"/"+date.substring(4,value.length);
               break;
             }            
           }
