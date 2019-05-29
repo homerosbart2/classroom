@@ -16,7 +16,7 @@ import 'package:classroom/auth.dart';
 class Question extends StatefulWidget {
   static WidgetPasser answerPasser, answeredPasser;
   static String globalQuestionId;
-  final String text, author, authorId, questionId;
+  final String text, author, authorId, questionId, lessonId;
   String courseAuthorId;
   bool voted, mine, answered, owner;
   int votes, index, day, month, year, hours, minutes;
@@ -28,6 +28,7 @@ class Question extends StatefulWidget {
     @required this.author,
     @required this.authorId,
     @required this.questionId,
+    @required this.lessonId,
     this.courseAuthorId,
     this.votesController,
     this.mine: false,
@@ -335,7 +336,7 @@ class _QuestionState extends State<Question>
                       if(!_disabled){
                         //print(widget.index);
                         //_boxResizeOpacityController2.reverse();
-                        // DatabaseManager.deleteQuestion(widget.questionId, Auth.uid);
+                        DatabaseManager.deleteQuestion(widget.questionId, widget.lessonId, Auth.uid);
                         print("id: ${widget.questionId}");
                         _deleteHeightController.reverse();
                         _boxColorController.forward();
@@ -643,8 +644,9 @@ class _QuestionState extends State<Question>
                   voted: widget.voted,
                   votes: widget.votes,
                   onVote: (){
-                    DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "1");
+                    DatabaseManager.addVoteToQuestion(widget.lessonId, Auth.uid, widget.questionId, "1");
                     InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
+                      lessonId: widget.lessonId,
                       questionId: widget.questionId,
                       authorId: widget.authorId,
                       author: widget.author,
@@ -658,8 +660,9 @@ class _QuestionState extends State<Question>
                     //widget.votesController.add(1);
                   },
                   onUnvote: (){
-                    DatabaseManager.addVoteToQuestion(Auth.uid, widget.questionId, "-1");
+                    DatabaseManager.addVoteToQuestion(widget.lessonId, Auth.uid, widget.questionId, "-1");
                     InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
+                      lessonId: widget.lessonId,
                       authorId: widget.authorId,
                       questionId: widget.questionId,
                       author: widget.author,

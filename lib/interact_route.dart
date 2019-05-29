@@ -191,14 +191,14 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       ),
     );
 
-    FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).onChildAdded.listen((data) {
+    FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).orderByChild("votes").onChildAdded.listen((data) {
       if(this.mounted){
         setState(() {
           List<String> lista = new List<String>();
           String newQuestion = data.snapshot.value["question"];
           print("pregunta: $newQuestion");
           lista.add(newQuestion); 
-          DatabaseManager.getQuestionsPerLessonByList(lista).then(
+          DatabaseManager.getQuestionsPerLessonByList(lista,widget.lessonId).then(
             (List<Question> lc) => setState(() {
               for(var question in lc){
                 DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){

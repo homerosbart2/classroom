@@ -7,6 +7,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classroom/notify.dart';
+// import 'dart:io' show Platform;
 
 class Login extends StatefulWidget {
   const Login();
@@ -128,8 +130,21 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
         });
       }
     }catch(e){
-      print("Error in sign in: $e");
+      print(e.toString());
+      Notify.show(
+        context: context,
+        text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
+        actionText: 'Ok',
+        backgroundColor: Colors.red[200],
+        textColor: Colors.black,
+        actionColor: Colors.black,
+        onPressed: (){
+          
+        }
+      );
+      _logging = false;
     }
+
   } 
 
   Widget _registerForm(){
