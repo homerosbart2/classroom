@@ -1,3 +1,6 @@
+import 'package:classroom/courses_route.dart';
+import 'package:classroom/interact_route.dart';
+import 'package:classroom/lessons_route.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/stateful_button.dart';
@@ -6,11 +9,12 @@ import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:classroom/auth.dart';
 import 'package:classroom/database_manager.dart';
+import 'package:classroom/lesson.dart';
+import 'package:classroom/chatbar.dart';
 import 'dart:math';
 import 'package:classroom/choice.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:classroom/notify.dart';
 
 class Nav extends StatefulWidget{
   static String addBarTitle;
@@ -18,7 +22,7 @@ class Nav extends StatefulWidget{
   static WidgetPasser coursePasser = WidgetPasser();
   static WidgetPasser lessonPasser = WidgetPasser();
   final Widget body;
-  final String title, section, subtitle;
+  final String title, section, subtitle, idObject;
   final double preferredSize, elevation;
   final bool drawerActive, addBarActive, notificationsActive, owner;
   final Color color, titleColor, actionsColor;
@@ -37,6 +41,7 @@ class Nav extends StatefulWidget{
     this.notificationsActive: true,
     this.owner = false,
     this.subtitle: '',
+    this.idObject: 'NA',
     this.preferredSize: 60.0,
     this.acessCode,
   });
@@ -58,11 +63,15 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   Color _titleColor, _color, _actionsColor;
   FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
   SharedPreferences prefs;
+  bool _resizeScaffold;
+
+  DateTime selectedDate = DateTime.now();
   //WidgetPasser courseBloc = WidgetPasser();
 
   List<Choice> choices = <Choice>[
     Choice(title: 'Fecha', icon: FontAwesomeIcons.calendar),
     Choice(title: 'Descripción', icon: FontAwesomeIcons.pen),
+    Choice(title: 'Eliminar', icon: FontAwesomeIcons.pen),
   ];
 
   @override
@@ -70,6 +79,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     super.initState();
 
     _initSharedPreferences();
+
+    _resizeScaffold = widget.section == 'interact';
   
     Nav.addBarTitle = ''; 
     Nav.addBarMode = 0;
@@ -263,7 +274,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             _addBarAlertController.reverse();
                           }
                         });
-                      }else{
+                      }else if(Nav.addBarMode == 1){
                         DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, val, "course", "course", "", "i", "get").then((valid){
                           if(valid == ""){
                             DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
@@ -280,7 +291,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                                       
                                 //     }
                                 //   );   
-                                print("NO EXISTE");                               
+                                  print("NO EXISTE");                               
                                 });            
                               }else{
                                 String textCourse = json.encode(text);
@@ -309,7 +320,21 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             // );                           
                             print("DUPLICADO"); 
                           }
-                        });                                                                     
+                        });                                                                      
+                      }else if(Nav.addBarMode == 2){
+                        print('DESCRIPCION: $val');
+                        print('LECCION: ${widget.idObject}');
+                        //TODO: Guardar la nueva descripcion en firebase
+                        Lesson.descriptionPasser.sendWidget.add(val);
+                        _addBarController.reverse().then((val){
+                          _addBarTextfieldController.text = '';
+                          if(_addBarAlertController.status != AnimationStatus.dismissed){
+                            _addBarAlertController.reverse();
+                          }
+                        }); 
+                        ChatBar.chatBarOffsetController.reverse().then((val){
+                          InteractRoute.questionOpacityController.reverse();
+                        }); 
                       }
                     }else{
                       FocusScope.of(context).requestFocus(_getFocusNode());
@@ -335,6 +360,31 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }
   }
 
+  Future<Null> _selectDate(BuildContext context) async {
+    final DateTime picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDate,
+        firstDate: DateTime(2015, 8),
+        lastDate: DateTime(2101));
+    if (picked != null && picked != selectedDate){
+      setState(() {
+        selectedDate = picked;
+      });
+      print(picked.day);
+      Map text = {
+        //TODO: Guardar la fecha en firebase, yo actualizo la vista.
+        'day' : picked.day,
+        'month': picked.month,
+        'year' : picked.year,
+      };
+      String textDate = json.encode(text);
+      DatabaseManager.updateLesson(widget.idObject, picked.day.toString()+picked.month.toString()+picked.year.toString(),"date");
+      print('FECHA: $textDate');
+      print('LECCION: ${widget.idObject}');
+      Lesson.datePasser.sendWidget.add(textDate);
+    }
+  }
+
   List<Widget> _construcActions(){
     List<Widget> actions = List<Widget>();
     if(widget.section == 'courses' || widget.section == 'lessons'){
@@ -342,10 +392,22 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         actions.add(
           IconButton(
             icon: Icon(
-              FontAwesomeIcons.book,
+              FontAwesomeIcons.qrcode,
               size: 20,
             ),
-            tooltip: 'Unirse a curso',
+            tooltip: 'Unirse por QR',
+            onPressed: (){
+              CoursesRoute.activateQRPasser.sendWidget.add('QR');
+            },
+          )
+        );
+        actions.add(
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.key,
+              size: 20,
+            ),
+            tooltip: 'Unirse por código',
             onPressed: (){
               final status = _addBarController.status;
 
@@ -418,31 +480,64 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }else if(widget.section == 'interact' && widget.owner){
       actions.add(
         PopupMenuButton<Choice>(
-              onSelected: (choice){
+          onSelected: (choice){
+            if(choice.title == 'Eliminar'){
+              print('ELIMINAR LECCION: ${widget.idObject}');
+              DatabaseManager.deleteLesson(widget.idObject, Auth.uid);
+              //TODO: Eliminar la leccion de firebase.
+            }else if(choice.title == 'Fecha'){
+              _selectDate(context);
+            }else if(choice.title == 'Descripción'){
+              final status = _addBarController.status;
 
-              },
-              itemBuilder: (BuildContext context) {
-                return choices.skip(0).map((Choice choice) {
-                  return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Container(
-                      child: Row(
-                        children: <Widget>[
-                          Container(
-                            child: Text(
-                              choice.title,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+              if(status == AnimationStatus.completed){
+                _addBarController.reverse(
+                  from: 1
+                ).then((val){
+                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                    _addBarAlertController.reverse();
+                  }
+                });
+                ChatBar.chatBarOffsetController.reverse().then((value){
+                  InteractRoute.questionOpacityController.reverse();
+                });
+                FocusScope.of(context).requestFocus(new FocusNode());
+              }else if(status == AnimationStatus.dismissed){
+                  setState(() {
+                    Nav.addBarTitle = "Ingrese la nueva descripción";
+                    Nav.addBarMode = 2;
+                  });
+                  _addBarController.forward(
+                    from: 0
                   );
-                }).toList();
-              },
-            )
+                  ChatBar.chatBarOffsetController.forward();
+                  InteractRoute.questionOpacityController.forward();
+                  FocusScope.of(context).requestFocus(_getFocusNode());
+                }
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            return choices.skip(0).map((Choice choice) {
+              return PopupMenuItem<Choice>(
+                value: choice,
+                child: Container(
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        child: Text(
+                          choice.title,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList();
+          },
+        )
       );
     }
-    if(widget.notificationsActive){
+    if(false && widget.notificationsActive){
       actions.add(
         Container(
           padding: EdgeInsets.fromLTRB(0, 4, 5, 0),
@@ -473,6 +568,37 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               ),
             ],
           ),
+        )
+      );
+    }
+    if(widget.section == 'lessons' && widget.owner){
+      actions.add(
+        PopupMenuButton<Choice>(
+          onSelected: (choice){
+            if(choice.title == 'Eliminar'){
+              print('ELIMINAR CURSO: ${widget.idObject}');
+              //TODO: Eliminar el curso de firebase.
+              DatabaseManager.deleteCourse(widget.idObject, Auth.uid);
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            return choices.skip(2).map((Choice choice) {
+              return PopupMenuItem<Choice>(
+                value: choice,
+                child: Container(
+                  child: Row(
+                    children: <Widget>[
+                      Container(
+                        child: Text(
+                          choice.title,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList();
+          },
         )
       );
     }
@@ -704,9 +830,11 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
       padding: EdgeInsets.only(top: widget.preferredSize - 60.0),
       child: WillPopScope(
         onWillPop: () async{
+          
           return (widget.section != 'courses');
         },
         child: Scaffold(
+              resizeToAvoidBottomPadding: _resizeScaffold,
               drawer: _construcDrawer(),
               appBar: PreferredSize(
                 preferredSize: Size.fromHeight(widget.preferredSize),

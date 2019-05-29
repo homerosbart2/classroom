@@ -63,7 +63,7 @@ class _QuestionState extends State<Question>
   Animation<double> _sizeFloat2, _opacityFloat2, _deleteHeightFloat;
   Animation<Color> _colorFloat, _colorFloatText;
   Animation<Offset> _offsetVoteFloat;
-  bool _disabled;
+  bool _disabled, _hasAnswers;
 
   @override
   bool get wantKeepAlive => true;
@@ -71,6 +71,8 @@ class _QuestionState extends State<Question>
   @override
   void initState() {
     super.initState();
+
+    _hasAnswers = false;
 
     String day = (widget.day < 10) ? '0${widget.day}' : '${widget.day}';
     String month = (widget.month < 10) ? '0${widget.month}' : '${widget.month}';
@@ -209,6 +211,11 @@ class _QuestionState extends State<Question>
           _answersListString = ls;
           DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la){
             if(this.mounted) setState(() {
+              if(la.isNotEmpty) {
+                if(this.mounted) setState(() {
+                  _hasAnswers = true;
+                });
+              }
               for (var answer in la) {
                 DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
                   if(answer.authorId == Auth.uid) answer.mine = true;
@@ -417,6 +424,57 @@ class _QuestionState extends State<Question>
     }
   }
 
+  Widget _getAnswersButton(){
+    if(_hasAnswers) return Tooltip(
+      message: 'Respuestas',
+      child: GestureDetector(
+        onTap: (){
+          if(!_disabled){
+            Vibration.vibrate(duration: 20);
+            if(_expandAnswersController.status == AnimationStatus.dismissed || _expandAnswersController.reverse == AnimationStatus.dismissed){
+              _expandAnswersController.forward();
+            }else{
+              _expandAnswersController.reverse();
+            }
+          }
+        },
+        child: Container(
+          margin: EdgeInsets.only(bottom: 3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                padding: EdgeInsets.fromLTRB(0, 6, 0, 12),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      margin: EdgeInsets.only(right: 6),
+                      child: RotationTransition(
+                        turns: _angleFloat,
+                        child: Icon(
+                          FontAwesomeIcons.angleDown,
+                          size: 12,
+                          color: _colorFloatText.value,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      'RESPUESTAS',
+                      style: TextStyle(
+                        color: _colorFloatText.value,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    else return Container();
+  }
+
   @override
   Widget build(BuildContext context) {
     _construcQuestions(context);
@@ -511,53 +569,7 @@ class _QuestionState extends State<Question>
                             Row(
                               children: <Widget>[
                                 Expanded(
-                                  child: Tooltip(
-                                    message: 'Respuestas',
-                                    child: GestureDetector(
-                                      onTap: (){
-                                        if(!_disabled){
-                                          Vibration.vibrate(duration: 20);
-                                          if(_expandAnswersController.status == AnimationStatus.dismissed || _expandAnswersController.reverse == AnimationStatus.dismissed){
-                                            _expandAnswersController.forward();
-                                          }else{
-                                            _expandAnswersController.reverse();
-                                          }
-                                        }
-                                      },
-                                      child: Container(
-                                        margin: EdgeInsets.only(bottom: 3),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Container(
-                                              padding: EdgeInsets.fromLTRB(0, 6, 0, 12),
-                                              child: Row(
-                                                children: <Widget>[
-                                                  Container(
-                                                    margin: EdgeInsets.only(right: 6),
-                                                    child: RotationTransition(
-                                                      turns: _angleFloat,
-                                                      child: Icon(
-                                                        FontAwesomeIcons.angleDown,
-                                                        size: 12,
-                                                        color: _colorFloatText.value,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    'RESPUESTAS',
-                                                    style: TextStyle(
-                                                      color: _colorFloatText.value,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                                  child: _getAnswersButton(),
                                 ),
                                 Expanded(
                                   child: Tooltip(

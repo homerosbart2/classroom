@@ -181,6 +181,7 @@ class DatabaseManager{
   static Future<void> deleteLesson(String lessonId, String uid) async{
     await mDatabase.child("lessons").child(lessonId).remove().then((_){
       actionOnFieldFrom("questionsPerLesson", lessonId, "", "", "", "", "d", "delete");
+      // actionOnFieldFrom("lessonsPerCourse", courseId, lessonId, "lesson", "lesson", "", "i", "delete");
     });
   } 
 
@@ -314,6 +315,14 @@ class DatabaseManager{
         }).then((_){/*nothing*/});    
         break;        
       }
+      case "date": {
+        await mDatabase.child("lessons").child(code).update({
+          'day': param.substring(0,2),
+          'month': param.substring(2,4),
+          'year': param.substring(4,param.length),
+        }).then((_){/*nothing*/});    
+        break;        
+      }      
     }    
   }
 
@@ -588,7 +597,7 @@ class DatabaseManager{
             else userOwner = false;
             _coursesList.add(
               Course(
-                accessCode: course['accessCode'],
+                courseId: course['accessCode'],
                 participants: course['participants'],
                 lessons: course['lessons'],
                 name: course['name'],
@@ -672,7 +681,7 @@ class DatabaseManager{
           map.forEach((key, course) {  
               _coursesList.add(
                 Course(
-                  accessCode: course['accessCode'],
+                  courseId: course['accessCode'],
                   participants: course['participants'],
                   lessons: course['lessons'],
                   name: course['name'],

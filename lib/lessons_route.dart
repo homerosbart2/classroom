@@ -7,9 +7,10 @@ import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 class LessonsRoute extends StatefulWidget{
-  final String author, name, accessCode, authorId;
+  final String author, name, courseId, authorId;
   final int participants;
   final bool owner;
 
@@ -17,7 +18,7 @@ class LessonsRoute extends StatefulWidget{
     @required this.authorId,
     @required this.author,
     @required this.name,
-    @required this.accessCode,
+    @required this.courseId,
     this.participants: 1,
     this.owner: false,
   });
@@ -25,9 +26,11 @@ class LessonsRoute extends StatefulWidget{
   _LessonsRouteState createState() => _LessonsRouteState();
 }
 
-class _LessonsRouteState extends State<LessonsRoute>{
+class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderStateMixin{
   WidgetPasser _lessonPasser;
   ScrollController _scrollController;
+  AnimationController _qrHeightController;
+  Animation<Offset> _qrOffsetFloat;
 
   List<Lesson> _lessons;
 
@@ -35,12 +38,27 @@ class _LessonsRouteState extends State<LessonsRoute>{
   void initState() {
     super.initState();
 
+    _qrHeightController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400),
+    );
+
+    _qrOffsetFloat = Tween<Offset>(
+      end: Offset.zero,
+      begin: Offset(0, 0.8575),
+    ).animate(
+      CurvedAnimation(
+        parent: _qrHeightController,
+        curve: Curves.easeInOutQuart,
+      )
+    );
+
     _lessonPasser = Nav.lessonPasser;
 
     _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
-    // DatabaseManager.getLessonsPerCourse(widget.accessCode).then(
+    // DatabaseManager.getLessonsPerCourse(widget.courseId).then(
     //   (List<String> ls) => setState(() {
     //     List<String> _lessonsListString = List<String>();
     //     _lessonsListString = ls;
@@ -55,7 +73,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
     //   })
     // );
 
-    FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.accessCode).onChildAdded.listen((data) {
+    FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.courseId).onChildAdded.listen((data) {
       setState(() {
         List<String> lista = new List<String>();
         String newCourse = data.snapshot.value["lesson"];
@@ -152,6 +170,7 @@ class _LessonsRouteState extends State<LessonsRoute>{
 
   @override
   Widget build(BuildContext context) {
+    double height = MediaQuery.of(context).size.height;
     return Container(
       padding: EdgeInsets.only(top: 12),
       child: Column(
@@ -211,56 +230,94 @@ class _LessonsRouteState extends State<LessonsRoute>{
             ),
           ),
           Expanded(
-            child: Container(
-              child: ListView.builder(
-                controller: _scrollController,
-                // physics: ScrollPhysics(
-                //   parent: BouncingScrollPhysics(),
-                // ),
-                padding: EdgeInsets.only(top: 10, bottom: 10),
-                itemCount: _lessons.length,
-                itemBuilder: (context, index){
-                  return _lessons.elementAt(index);
-                },
-              ),
-            ),
-          ),
-          Container(
-            height: 65,
-            decoration: BoxDecoration(
-              //color: Colors.white,
-              border: Border(
-                top: BorderSide(
-                  color:Color.fromARGB(10, 0, 0, 0),
-                  width: 3,
-                ),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Stack(
               children: <Widget>[
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text(
-                      'Agrega nuevos miembros:',
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                      ),
-                    ),
-                    Text(
-                      widget.accessCode,
-                      style: TextStyle(
-                        color: Theme.of(context).accentColor,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                Container(
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    // physics: ScrollPhysics(
+                    //   parent: BouncingScrollPhysics(),
+                    // ),
+                    padding: EdgeInsets.only(top: 10, bottom: 65),
+                    itemCount: _lessons.length,
+                    itemBuilder: (context, index){
+                      return _lessons.elementAt(index);
+                    },
+                  ),
                 ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SlideTransition(
+                    position: _qrOffsetFloat,
+                    child: Container(
+                      padding: EdgeInsets.only(top: 6, bottom: 6),
+                      height: 400, //65
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          top: BorderSide(
+                            color:Color.fromARGB(10, 0, 0, 0),
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          GestureDetector(
+                            onTap: (){
+                              final AnimationStatus status = _qrHeightController.status;
+                              if(status == AnimationStatus.completed || status == AnimationStatus.forward) _qrHeightController.reverse();
+                              else if(status == AnimationStatus.dismissed || status == AnimationStatus.reverse) _qrHeightController.forward();
+                            },
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'Agrega nuevos miembros:',
+                                  style: TextStyle(
+                                    color: Theme.of(context).accentColor,
+                                  ),
+                                ),
+                                Text(
+                                  widget.courseId,
+                                  style: TextStyle(
+                                    color: Theme.of(context).accentColor,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: <Widget>[
+                                      Container(
+                                        padding: EdgeInsets.only(bottom: 65),
+                                        child: QrImage(
+                                          data: widget.courseId,
+                                          size: 200.0,
+                                          version: 2,
+                                          foregroundColor: Theme.of(context).accentColor,
+                                          errorCorrectionLevel: 1,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )
               ],
             ),
           ),
+          
         ],
       ),
     );

@@ -17,7 +17,7 @@ import 'package:file_picker/file_picker.dart';
 class InteractRoute extends StatefulWidget{
   
   final String lessonId, presentationPath, authorId;
-  static AnimationController questionPositionController;
+  static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
   static WidgetPasser updateQuestions = WidgetPasser();
@@ -40,7 +40,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   Stream<String> _questionStream;
   AnimationController _loadingController;
   Animation<Offset> _offsetFloat;
-  Animation<double> _turnsFloat;
+  Animation<double> _turnsFloat, _opacityFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
@@ -77,6 +77,21 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     _questionPasser = ChatBar.questionPasser;
     _pathPasser = WidgetPasser();
     _updateQuestions = InteractRoute.updateQuestions;
+
+    InteractRoute.questionOpacityController = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 0),
+    );
+
+    _opacityFloat = Tween<double>(
+      begin: 1,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: InteractRoute.questionOpacityController,
+        curve: Curves.easeInOut,
+      ),
+    );
 
     _loadingController = AnimationController(
       vsync: this,
@@ -470,18 +485,21 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
             bottom: 68,
             left: 0,
             right: 0,
-            child: SlideTransition(
-              position: _offsetFloat,
-              child: Container(
-                color: Theme.of(context).accentColor,
-                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                child: FractionallySizedBox(
-                  widthFactor: 1,
-                    child: Text(
-                    _questionToAnswer,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
+            child: FadeTransition(
+              opacity: _opacityFloat,
+              child: SlideTransition(
+                position: _offsetFloat,
+                child: Container(
+                  color: Theme.of(context).accentColor,
+                  padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                  child: FractionallySizedBox(
+                    widthFactor: 1,
+                      child: Text(
+                      _questionToAnswer,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),

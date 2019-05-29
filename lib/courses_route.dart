@@ -6,8 +6,10 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:qr_utils/qr_utils.dart';
 
 class CoursesRoute extends StatefulWidget{
+  static WidgetPasser activateQRPasser = WidgetPasser();
 
   const CoursesRoute();
 
@@ -19,6 +21,41 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
   WidgetPasser _coursePasser;
   List<Course> _coursesList;
   DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
+  String _contentQR;
+
+  void _scanQR() async{
+    try{
+      _contentQR = await QrUtils.scanQR;
+    }catch(e){
+      print(e);
+    }
+    if(_contentQR != null){
+      DatabaseManager.addCourseByAccessCode(_contentQR, Auth.uid).then((Map text){
+        if(text != null){  
+          String textCourse = json.encode(text);
+          print(textCourse);
+          _coursePasser.sendWidget.add(textCourse);           
+        }else{
+          print("NO ENCONTRADO");
+          //TODO: dialogo de curso no encontrado
+        }              
+      });  
+    }
+  }
+
+  void getCourses(){
+    DatabaseManager.getCoursesPerUser().then(
+      (List<String> ls) => setState(() {
+        List<String> _coursesListString = List<String>();
+        _coursesListString = ls;
+        DatabaseManager.getCoursesPerUserByList(_coursesListString, Auth.uid).then(
+          (List<Course> lc) => setState(() {
+            _coursesList = lc;
+          })
+        );         
+      })
+    );    
+  }
 
   @override
   void initState() {
@@ -26,18 +63,14 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
     _coursesList = List<Course>();
     _coursePasser = Nav.coursePasser;
     if(_coursesList.isEmpty){
-      DatabaseManager.getCoursesPerUser().then(
-        (List<String> ls) => setState(() {
-          List<String> _coursesListString = List<String>();
-          _coursesListString = ls;
-          DatabaseManager.getCoursesPerUserByList(_coursesListString, Auth.uid).then(
-            (List<Course> lc) => setState(() {
-              _coursesList = lc;
-            })
-          );         
-        })
-      );
+      getCourses();
     }
+
+    CoursesRoute.activateQRPasser.recieveWidget.listen((value){
+      if(value == 'QR'){
+        _scanQR();
+      }
+    });
 
     _coursePasser.recieveWidget.listen((newCourse){
       if(newCourse != null){
@@ -46,7 +79,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
           setState(() {
             _coursesList.add(
               Course(
-                accessCode: jsonCourse['accessCode'],
+                courseId: jsonCourse['accessCode'],
                 participants: jsonCourse['participants'],
                 name: jsonCourse['name'],
                 author: jsonCourse['author'],
@@ -87,8 +120,9 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
 
   @override
   void dispose() {
-    super.dispose();
+    CoursesRoute.activateQRPasser.sendWidget.add(null);
     _coursePasser.sendWidget.add(null);
+    super.dispose();
   }
 
   @override

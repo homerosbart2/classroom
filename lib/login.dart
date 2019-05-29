@@ -18,7 +18,7 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> with TickerProviderStateMixin{
-  FocusNode myFocusNode;
+  FocusNode _passwordFocusNode;
   bool _register, _logging, _actuallyLogged;
   int _logged;
   TextEditingController _usernameController, _passwordController, _nameController;
@@ -32,7 +32,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     super.initState();
     _register = false;
     _actuallyLogged = false;
-    myFocusNode = FocusNode();
+    _passwordFocusNode = FocusNode();
     _nameController = TextEditingController();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
@@ -78,7 +78,6 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     if(userEmail != null){
       print('USERNAME: $userEmail');
       _usernameController.text = userEmail;
-      _passwordController.text = prefs.getString('password');
     }
   }
 
@@ -109,6 +108,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           prefs.setString('email', email);
           prefs.setString('password', password);
           _navigateToCourses(context);
+          _passwordController.text = '';
           _logging = false;
           _actuallyLogged = true;
         }    
@@ -124,6 +124,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             prefs.setString('email', email);
             prefs.setString('password', password);
             _navigateToCourses(context);
+            _passwordController.text = '';
             _logging = false;
             _actuallyLogged = true;
           } 
@@ -278,10 +279,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             this.setState(() {   
             });
           },
+          onSubmitted: (String value){
+            FocusScope.of(context).requestFocus(_passwordFocusNode);
+          },
           controller: _usernameController,
         ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
+          focusNode: _passwordFocusNode,
           weight: FontWeight.bold,
           suffix: '',
           color: Colors.redAccent[100],
@@ -292,6 +297,12 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           onChangedFunction: (String value){
             this.setState(() {   
             });
+          },
+          onSubmitted: (String value){
+            if(!_logging){
+              _logging = true;
+                validateAndSubmit(_usernameController.text, _passwordController.text,"");
+            }
           },
           controller: _passwordController,
         ),
@@ -390,6 +401,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     );
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       body: loginWidget,
     );
   }
