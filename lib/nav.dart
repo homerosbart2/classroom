@@ -10,6 +10,7 @@ import 'dart:math';
 import 'package:classroom/choice.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classroom/notify.dart';
 
 class Nav extends StatefulWidget{
   static String addBarTitle;
@@ -263,23 +264,52 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           }
                         });
                       }else{
-                        DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((Map text){
-                          if(text != null){  
-                            String textCourse = json.encode(text);
-                            print(textCourse);
-                            Nav.coursePasser.sendWidget.add(textCourse);
-                            _addButtonController.reverse();
-                            _addBarController.reverse().then((val){
-                              _addBarTextfieldController.text = '';
-                              if(_addBarAlertController.status != AnimationStatus.dismissed){
-                                _addBarAlertController.reverse();
-                              }
-                            });            
+                        DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, val, "course", "course", "", "i", "get").then((valid){
+                          if(valid == ""){
+                            DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
+                              if(text == null){  
+                                setState(() {
+                                // Notify.show(
+                                //     context: context,
+                                //     text: 'El curso no existe.',
+                                //     actionText: 'Ok',
+                                //     backgroundColor: Colors.red[200],
+                                //     textColor: Colors.black,
+                                //     actionColor: Colors.black,
+                                //     onPressed: (){
+                                      
+                                //     }
+                                //   );   
+                                print("NO EXISTE");                               
+                                });            
+                              }else{
+                                String textCourse = json.encode(text);
+                                print(textCourse);
+                                Nav.coursePasser.sendWidget.add(textCourse);
+                                _addButtonController.reverse();
+                                _addBarController.reverse().then((val){
+                                  _addBarTextfieldController.text = '';
+                                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                                    _addBarAlertController.reverse();
+                                  }
+                                });                            
+                              }              
+                            }); 
                           }else{
-                            print("NO ENCONTRADO");
-                            //TODO: dialogo de curso no encontrado
-                          }              
-                        });                                                                      
+                            // Notify.show(
+                            //   context: context,
+                            //   text: 'El curso ya ha sido agregado.',
+                            //   actionText: 'Ok',
+                            //   backgroundColor: Colors.red[200],
+                            //   textColor: Colors.black,
+                            //   actionColor: Colors.black,
+                            //   onPressed: (){
+                                
+                            //   } 
+                            // );                           
+                            print("DUPLICADO"); 
+                          }
+                        });                                                                     
                       }
                     }else{
                       FocusScope.of(context).requestFocus(_getFocusNode());

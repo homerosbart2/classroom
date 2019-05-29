@@ -55,10 +55,10 @@ class _AnswerState extends State<Answer>{
               showVotes: false,
               small: true,
               onVote: (){
-                DatabaseManager.addVoteToAnswer(Auth.uid, widget.answerId, "1");
+                DatabaseManager.addVoteToAnswer(widget.questionId, Auth.uid, widget.answerId, "1");
               },
               onUnvote: (){
-                DatabaseManager.addVoteToAnswer(Auth.uid, widget.answerId, "-1");
+                DatabaseManager.addVoteToAnswer(widget.questionId, Auth.uid, widget.answerId, "-1");
               },              
             ),
           ),
