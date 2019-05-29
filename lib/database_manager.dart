@@ -177,6 +177,7 @@ class DatabaseManager{
     });
   }
 
+
   static Future<void> deleteLesson(String lessonId, String uid) async{
     await mDatabase.child("lessons").child(lessonId).remove().then((_){
       actionOnFieldFrom("questionsPerLesson", lessonId, "", "", "", "", "d", "delete");
