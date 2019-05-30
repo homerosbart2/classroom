@@ -31,12 +31,15 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   ScrollController _scrollController;
   AnimationController _qrHeightController;
   Animation<Offset> _qrOffsetFloat;
+  bool _disabled;
 
   List<Lesson> _lessons;
 
   @override
   void initState() {
     super.initState();
+
+    _disabled = false;
 
     _qrHeightController = AnimationController(
       vsync: this,
@@ -72,6 +75,12 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     //     );         
     //   })
     // );
+
+    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
+      if(this.mounted) setState(() {
+        _disabled = true;
+      });
+    });
 
     FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.courseId).onChildAdded.listen((data) {
       if(this.mounted) setState(() {
@@ -171,7 +180,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     double height = MediaQuery.of(context).size.height;
-    return Container(
+    if(!_disabled) return Container(
       padding: EdgeInsets.only(top: 12),
       child: Column(
         children: <Widget>[
@@ -318,6 +327,24 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
             ),
           ),
           
+        ],
+      ),
+    );
+    else return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'El curso ha sido eliminado.',
+                style: TextStyle(
+                  color: Theme.of(context).accentColor,
+                ),
+              )
+            ],
+          )
         ],
       ),
     );
