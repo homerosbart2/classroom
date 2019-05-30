@@ -294,6 +294,14 @@ class _QuestionState extends State<Question>
     super.dispose();
   }
 
+  //TODO: Método para eliminar pregunta.
+  void _deleteQuestion(){
+    _boxColorController.forward();
+    if(this.mounted) setState(() {
+      _disabled = true;
+    });
+  }
+
   void _construcQuestions(BuildContext context) {
     if (widget.mine) {
       _questionColor = Theme.of(context).primaryColorLight;

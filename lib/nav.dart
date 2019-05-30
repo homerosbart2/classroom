@@ -21,6 +21,7 @@ class Nav extends StatefulWidget{
   static int addBarMode;
   static WidgetPasser coursePasser = WidgetPasser();
   static WidgetPasser lessonPasser = WidgetPasser();
+  static WidgetPasser popPasser = WidgetPasser();
   final Widget body;
   final String title, section, subtitle, courseId, lessonId;
   final double preferredSize, elevation;
@@ -80,6 +81,14 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     super.initState();
 
     _initSharedPreferences();
+
+    Nav.popPasser.recieveWidget.listen((newPop) {
+      if (newPop != null) {
+        if (this.mounted) {
+          Navigator.of(context).pop();
+        }
+      }
+    });
 
     _resizeScaffold = widget.section == 'interact';
   
