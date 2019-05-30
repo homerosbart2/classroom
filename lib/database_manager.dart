@@ -165,7 +165,7 @@ class DatabaseManager{
   }  
 
   static Future<void> removeQuestionsPerUser(String questionId, String uid) async{
-    await mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
+    mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
   } 
 
   static Future<void> deleteQuestion(String questionId, String lessonId, String uid) async{
@@ -178,10 +178,11 @@ class DatabaseManager{
   }
 
 
-  static Future<void> deleteLesson(String lessonId, String uid) async{
+  static Future<void> deleteLesson(String lessonId,String courseId, String uid) async{
     await mDatabase.child("lessons").child(lessonId).remove().then((_){
+      updateCourse(courseId, "-1", "lessons");
       actionOnFieldFrom("questionsPerLesson", lessonId, "", "", "", "", "d", "delete");
-      // actionOnFieldFrom("lessonsPerCourse", courseId, lessonId, "lesson", "lesson", "", "i", "delete");
+      actionOnFieldFrom("lessonsPerCourse", courseId, lessonId, "lesson", "lesson", "", "i", "delete");
     });
   } 
 
@@ -210,7 +211,7 @@ class DatabaseManager{
       'comments' : 0
     }).then((_) {
       addLessonPerCourse(lesson.key,course);
-      updateCourse(course,"","lessons");
+      updateCourse(course,"1","lessons");
     });
     return lesson.key;
   }
@@ -336,13 +337,13 @@ class DatabaseManager{
     }    
   }
 
-  static Future<void> updateCourse(String code, String param, String column) async{
+  static Future<void> updateCourse(String code, var param, String column) async{
     DatabaseReference course;
     switch(column){
       case "participant": {
         int participants = int.parse(param);
         course = await mDatabase.child("courses").child(code).update({
-          'participants': participants + 1,
+          'participants': participants + int.parse(param),
         }).then((_){/*nothing*/});        
         break;
       }
@@ -369,10 +370,10 @@ class DatabaseManager{
     await mDatabase.child("courses").child(code).once().then((DataSnapshot snapshot){
       Map<dynamic,dynamic> course = snapshot.value;
       if(course != null){
-        int participants = course['participants'] + 1;
+        int participants = course['participants'];
+        updateCourse(code,(participants).toString(),"participants");
         // addUserPerCourse(uid,code);
         addCoursePerUser(uid,code);
-        updateCourse(code,(participants).toString(),"participants");
         _course = {
           'accessCode': course['accessCode'],
           'participants': participants,
@@ -563,7 +564,7 @@ class DatabaseManager{
     return _questionsList;
   } 
 
-  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString, String uid) async{
+  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString, String uid, String courseId) async{
     List<Lesson> _lessonsList = List<Lesson>();
     bool userOwner;
     try{
@@ -578,6 +579,7 @@ class DatabaseManager{
               Lesson(
                 presentation: lesson['presentation'],
                 lessonId: eachLesson,
+                courseId: courseId,
                 comments: lesson['comments'],
                 date: lesson['date'],
                 description: lesson['description'],

@@ -45,7 +45,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
     _qrOffsetFloat = Tween<Offset>(
       end: Offset.zero,
-      begin: Offset(0, 0.8575),
+      begin: Offset(0, 0.8425),
     ).animate(
       CurvedAnimation(
         parent: _qrHeightController,
@@ -74,12 +74,12 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     // );
 
     FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.courseId).onChildAdded.listen((data) {
-      setState(() {
+      if(this.mounted) setState(() {
         List<String> lista = new List<String>();
         String newCourse = data.snapshot.value["lesson"];
         print("lesson: $newCourse");
         lista.add(newCourse);
-        DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid).then(
+        DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid, widget.courseId).then(
           (List<Lesson> lc){
             if(this.mounted){
               setState(() {
@@ -93,6 +93,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                     'comments': lesson.comments,
                     'owner': widget.owner,
                     'authorId': widget.authorId,
+                    'courseId': widget.courseId,
                     'description': lesson.description,
                   };
                   String textLesson = json.encode(text);
@@ -115,6 +116,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
               Lesson(
                 presentation: jsonLesson['presentation'],
                 lessonId: jsonLesson['lessonId'],
+                courseId: jsonLesson['courseId'],
                 name: jsonLesson['name'],
                 date: jsonLesson['date'],
                 description: jsonLesson['description'],
@@ -139,8 +141,8 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    super.dispose();
     _lessonPasser.sendWidget.add(null);
+    super.dispose();
   }
 
   Widget _getCourseAuthor(BuildContext context){

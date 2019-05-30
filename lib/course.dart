@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/lessons_route.dart';
 import 'package:vibration/vibration.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class Course extends StatefulWidget{
   final String name, author, courseId, authorId;
@@ -26,10 +27,16 @@ class Course extends StatefulWidget{
   _CourseState createState() => _CourseState();
 }
 
-class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
+class _CourseState extends State<Course> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Color _color;
-  AnimationController _boxResizeOpacityController;
+  AnimationController _boxResizeOpacityController, _courseDeleteController;
   Animation<double> _sizeFloat, _opacityFloat;
+  Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
+  bool _disabled;
+  String _lessons, _participants;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -40,9 +47,19 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
       _color = widget.color;
     }
 
+    _participants = '${widget.participants}';
+    _lessons = '${widget.lessons}';
+
+    _disabled = false;
+
+    _courseDeleteController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300)
+    );
+
     _boxResizeOpacityController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 300),
     );
 
     _sizeFloat = Tween<double>(
@@ -65,40 +82,60 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
       ),
     );
 
+    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data){
+      _deleteCourse();
+    });
+    
+    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
+      var value = (data.snapshot.value);
+      String key = data.snapshot.key;
+      print("key: $key");
+      print("value: $value");
+      switch(key){
+        case "participants":{
+          if(this.mounted){
+            setState(() {
+              _participants = value.toString();
+            });
+          }
+          break;
+        }
+        case "lessons": {
+          if(this.mounted){
+            setState(() {
+              _lessons = value.toString();
+            });
+          }              
+          break;
+        }           
+      }
+    });
+
     _boxResizeOpacityController.forward();
   }
 
-  
-  Decoration _getCourseDecoration(BuildContext context){
-    if(widget.owner){
-      return BoxDecoration(
-        border: Border.all(
-          color: _color,
-          width: 1,
-        ),
-        color: _color,
-        borderRadius: BorderRadius.circular(3),
-      );
-    }else{
-      return BoxDecoration(
-        border: Border.all(
-          color: Theme.of(context).primaryColorLight,
-          width: 1,
-        ),
-        color: Theme.of(context).primaryColorLight,
-        borderRadius: BorderRadius.circular(3),
-      );
-    }
+  @override
+  void dispose() {
+    _boxResizeOpacityController.dispose();
+    super.dispose();
   }
 
-  Widget _getCourseAuthor(){
+  //TODO: Llamar para eliminar el curso.
+  void _deleteCourse(){
+    _courseDeleteController.forward();
+    if(this.mounted) setState(() {
+      _disabled = true;
+    });
+  }
+
+  Widget _getCourseAuthor(Color textColor){
     if(widget.owner){
       return Container();
     }else{
       return Text(
         widget.author,
         style: TextStyle(
-          color: Theme.of(context).accentColor,
+          color: textColor,
         ),
       );
     }
@@ -119,30 +156,64 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
+    if(widget.owner){
+      _deleteBackgroundColorFloat = ColorTween(
+        begin: _color,
+        end: Colors.grey[200],
+      ).animate(
+        CurvedAnimation(
+          parent: _courseDeleteController,
+          curve: Curves.easeIn,
+        )
+      );
+    }else{
+      _deleteBackgroundColorFloat = ColorTween(
+        begin: Theme.of(context).primaryColorLight,
+        end: Colors.grey[200],
+      ).animate(
+        CurvedAnimation(
+          parent: _courseDeleteController,
+          curve: Curves.easeIn,
+        )
+      );
+    }
+
+    _deleteTextColorFloat = ColorTween(
+      begin: Theme.of(context).accentColor,
+      end: Colors.grey,
+    ).animate(
+      CurvedAnimation(
+        parent: _courseDeleteController,
+        curve: Curves.easeIn,
+      )
+    );
+
     return InkWell(
       onTap: (){
-        Vibration.vibrate(duration: 20);
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (BuildContext context) {
-            return Nav(
-              owner: widget.owner,
-              preferredSize: 65,
-              section: 'lessons',
-              title: 'CLASES',
-              subtitle: widget.name,
-              idObject: widget.courseId,
-              body: LessonsRoute(
-                name: widget.name,
-                courseId: widget.courseId,
-                author: widget.author,
-                participants: widget.participants,
+        if(!_disabled){
+          Vibration.vibrate(duration: 20);
+          Navigator.of(context).push(
+            CupertinoPageRoute(builder: (BuildContext context) {
+              return Nav(
                 owner: widget.owner,
-                authorId: widget.authorId
-              ),
-              acessCode: widget.courseId,
-            );
-          }),
-        );
+                preferredSize: 65,
+                section: 'lessons',
+                title: 'LECCIONES',
+                subtitle: widget.name,
+                courseId: widget.courseId,
+                body: LessonsRoute(
+                  name: widget.name,
+                  courseId: widget.courseId,
+                  author: widget.author,
+                  participants: widget.participants,
+                  owner: widget.owner,
+                  authorId: widget.authorId
+                ),
+                acessCode: widget.courseId,
+              );
+            }),
+          );
+        }
       },
       splashColor: Colors.redAccent[100],
       child: FractionallySizedBox(
@@ -152,92 +223,104 @@ class _CourseState extends State<Course> with SingleTickerProviderStateMixin{
           opacity: _opacityFloat,
           child: ScaleTransition(
             scale: _sizeFloat,
-            child: Container(
-              margin: EdgeInsets.all(6),
-              padding: EdgeInsets.all(6),
-              decoration: _getCourseDecoration(context),
-              child: Stack(
-                children: <Widget>[
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+            child: AnimatedBuilder(
+              animation: _deleteBackgroundColorFloat,
+              builder: (context, child) {
+                return Container(
+                  margin: EdgeInsets.all(6),
+                  padding: EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: _deleteBackgroundColorFloat.value,
+                      width: 1,
+                    ),
+                    color: _deleteBackgroundColorFloat.value,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Stack(
                     children: <Widget>[
-                      Container(
-                        margin: EdgeInsets.only(bottom: 5),
-                        child: Text(
-                          widget.name,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).accentColor,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            margin: EdgeInsets.only(bottom: 5),
+                            child: Text(
+                              widget.name,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: _deleteTextColorFloat.value,
+                              ),
+                            ),
                           ),
-                        ),
+                          _getCourseAuthor(_deleteTextColorFloat.value),
+                          Container(
+                            margin: EdgeInsets.only(top: 5),
+                            alignment: Alignment(0, 0),
+                            height: 20,
+                            decoration: BoxDecoration(
+                              color: _deleteTextColorFloat.value,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              _lessons + ' clases',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      _getCourseAuthor(),
-                      Container(
-                        margin: EdgeInsets.only(top: 5),
-                        alignment: Alignment(0, 0),
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).accentColor,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          '${widget.lessons} clases',
-                          style: TextStyle(
-                            color: Colors.white,
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        left: 0,
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(8, 4, 8, 4),
+                          decoration: BoxDecoration(
+                            /* border: Border(
+                              bottom: BorderSide(
+                                color: Theme.of(context).accentColor,
+                                width: 6,
+                              ),
+                            ), */
+                            //borderRadius: BorderRadius.circular(30),
+                            color: Colors.transparent,
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              _getProprietaryLabel(),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: <Widget>[
+                                  Icon(
+                                    FontAwesomeIcons.male,
+                                    size: 16,
+                                    color: _deleteTextColorFloat.value,
+                                  ),
+                                  Container(
+                                    padding: EdgeInsets.only(top: 2),
+                                    child: Text(
+                                      _participants,
+                                      style: TextStyle(
+                                        color: _deleteTextColorFloat.value,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    left: 0,
-                    child: Container(
-                      padding: EdgeInsets.fromLTRB(8, 4, 8, 4),
-                      decoration: BoxDecoration(
-                        /* border: Border(
-                          bottom: BorderSide(
-                            color: Theme.of(context).accentColor,
-                            width: 6,
-                          ),
-                        ), */
-                        //borderRadius: BorderRadius.circular(30),
-                        color: Colors.transparent,
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          _getProprietaryLabel(),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: <Widget>[
-                              Icon(
-                                FontAwesomeIcons.male,
-                                size: 16,
-                                color: Theme.of(context).accentColor,
-                              ),
-                              Container(
-                                padding: EdgeInsets.only(top: 2),
-                                child: Text(
-                                  '${widget.participants}',
-                                  style: TextStyle(
-                                    color: Theme.of(context).accentColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                );
+              }
             ),
           ),
         ),

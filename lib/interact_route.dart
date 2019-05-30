@@ -337,6 +337,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           setState(() {
             InteractRoute.questions.add(
               Question(
+                lessonId: widget.lessonId,
                 authorId: jsonQuestion['authorId'],
                 questionId: jsonQuestion['questionId'],
                 courseAuthorId: jsonQuestion['courseAuthorId'],

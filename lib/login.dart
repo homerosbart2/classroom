@@ -133,7 +133,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     }catch(e){
       print(e.toString());
       Notify.show(
-        context: context,
+        context: this.context,
         text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
         actionText: 'Ok',
         backgroundColor: Colors.red[200],

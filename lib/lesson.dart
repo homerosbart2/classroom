@@ -9,7 +9,7 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description, lessonId, date;
+  final String name, description, lessonId, date, courseId;
   String authorId;
   int comments;
   final bool owner, presentation;
@@ -17,6 +17,7 @@ class Lesson extends StatefulWidget{
 
   Lesson({
     @required this.lessonId,
+    @required this.courseId,
     @required this.name,
     @required this.presentation,
     this.authorId,
@@ -29,10 +30,13 @@ class Lesson extends StatefulWidget{
   _LessonState createState() => _LessonState();
 }
 
-class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin{
-  AnimationController _boxResizeOpacityController;
+class _LessonState extends State<Lesson> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin{
+  AnimationController _boxResizeOpacityController, _lessonDeleteController;
   Animation<double> _opacityFloat;
-  String _date, _description, _comments;
+  String _date, _description;
+  String _comments;
+  Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
+  bool _disabled;
 
   @override
   bool get wantKeepAlive => true;
@@ -44,6 +48,13 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
     _comments = '${widget.comments}';
 
     _date = '${widget.date}';
+
+    _disabled = false;
+
+    _lessonDeleteController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300)
+    );
 
     _description = widget.description;
 
@@ -64,16 +75,19 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
 
     _boxResizeOpacityController.forward();
 
+    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data){
+      _deleteLesson();
+    });
+    
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-      print("CAPTANDO CAMBIOS");
-      print("SNAPSHOT KEY: ${data.snapshot.key}");
-      print("SNAPSHOT VALUE: ${data.snapshot.value}");
-      String value = (data.snapshot.value).toString();
-      switch(data.snapshot.key){
+      var value = (data.snapshot.value);
+      var key = data.snapshot.key;
+      switch(key){
         case "comments":{
           if(this.mounted){
             setState(() {
-              _comments = value;
+              print(value);
+              _comments = value.toString();
             });
           }
           break;
@@ -105,157 +119,198 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
     super.dispose();
   }
 
+  //TODO: Llamar para eliminar la leccion.
+  void _deleteLesson(){
+    _lessonDeleteController.forward();
+    if(this.mounted) setState(() {
+      _disabled = true;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _deleteBackgroundColorFloat = ColorTween(
+      begin: Theme.of(context).cardColor,
+      end: Colors.grey[200],
+    ).animate(
+      CurvedAnimation(
+        parent: _lessonDeleteController,
+        curve: Curves.easeIn,
+      )
+    );
+
+    _deleteTextColorFloat = ColorTween(
+      begin: Theme.of(context).accentColor,
+      end: Colors.grey,
+    ).animate(
+      CurvedAnimation(
+        parent: _lessonDeleteController,
+        curve: Curves.easeIn,
+      )
+    );
+
     return FadeTransition(
       opacity: _opacityFloat,
-      child: Container(
-        margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-        padding: EdgeInsets.fromLTRB(9, 0, 0, 0),
-        decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          borderRadius: BorderRadius.all(Radius.circular(3)),
-        ),
-        child: Stack(
-          children: <Widget>[
-            Container(
-              margin: EdgeInsets.fromLTRB(0, 0, 40, 0),
-              padding: EdgeInsets.only(right: 9),
-              decoration: BoxDecoration(
-                border: Border(
-                  right: BorderSide(
-                    width: 9,
-                    color: Colors.white,
+      child: AnimatedBuilder(
+        animation: _deleteBackgroundColorFloat,
+        builder: (context, child) {
+          return Container(
+            margin: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+            padding: EdgeInsets.fromLTRB(9, 0, 0, 0),
+            decoration: BoxDecoration(
+              color: _deleteBackgroundColorFloat.value,
+              borderRadius: BorderRadius.all(Radius.circular(3)),
+            ),
+            child: Stack(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.fromLTRB(0, 0, 40, 0),
+                  padding: EdgeInsets.only(right: 9),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      right: BorderSide(
+                        width: 9,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Container(
-                    margin: EdgeInsets.only(top: 9, bottom: 3),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text(
-                          widget.name,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).accentColor,
-                          ),
-                        ),
-                        Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Container(
+                        margin: EdgeInsets.only(top: 9, bottom: 3),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.only(right: 3),
-                              child: Icon(
-                                FontAwesomeIcons.solidCommentAlt,
-                                size: 12,
-                                color: Theme.of(context).accentColor,
+                            Text(
+                              widget.name,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: _deleteTextColorFloat.value,
                               ),
                             ),
-                            Text(
-                              _comments,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Row(
+                              children: <Widget>[
+                                Container(
+                                  margin: EdgeInsets.only(right: 3),
+                                  child: Icon(
+                                    FontAwesomeIcons.solidCommentAlt,
+                                    size: 12,
+                                    color: _deleteTextColorFloat.value,
+                                  ),
+                                ),
+                                Text(
+                                  _comments,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _deleteTextColorFloat.value,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Text(
+                        _description,
+                        textAlign: TextAlign.justify,
+                        style: TextStyle(
+                          color: _deleteTextColorFloat.value,
+                        ),
+                      ),
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
+                                Container(
+                                  margin: EdgeInsets.only(top: 3, bottom: 9),
+                                  child: Text(
+                                    _date,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 17,
+                                      color: _deleteTextColorFloat.value
+                                    ),
+                                  ),
+                                ),
+                              ]
+                            ),
+                          ),
+                        ],
+                      )
+                    ],
                   ),
-                  Text(
-                    _description,
-                    textAlign: TextAlign.justify,
-                  ),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: <Widget>[
-                            Container(
-                              margin: EdgeInsets.only(top: 3, bottom: 9),
-                              child: Text(
-                                _date,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
+                ),
+                Positioned(
+                        top: 0,
+                        bottom: 0,
+                        right: 0,
+                        child: Tooltip(
+                          message: 'Acceder',
+                          child: GestureDetector(
+                            onTap: (){
+                              if(!_disabled){
+                                Vibration.vibrate(duration: 20);
+                                print('funciona');
+                                Navigator.of(context).push(
+                                  CupertinoPageRoute(builder: (BuildContext context) {
+                                    return Nav(
+                                      elevation: 0,
+                                      color: Colors.transparent,
+                                      actionsColor: Theme.of(context).accentColor,
+                                      titleColor: Theme.of(context).accentColor,
+                                      addBarActive: true,
+                                      drawerActive: false,
+                                      notificationsActive: false,
+                                      section: 'interact',
+                                      title: widget.name,
+                                      owner: widget.owner,
+                                      courseId: widget.courseId,
+                                      lessonId: widget.lessonId,
+                                      body: InteractRoute(
+                                        authorId: widget.authorId,
+                                        lessonId: widget.lessonId,
+                                        presentationPath: '/data/user/0/com.example.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
+                                        owner: widget.owner,
+                                      ),
+                                    ); 
+                                  })
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 40,
+                              decoration: BoxDecoration(
+                                color: _deleteTextColorFloat.value,
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(3),
+                                  bottomRight: Radius.circular(3),
+                                ),
+                              ),
+                              child: Container(
+                                margin: EdgeInsets.only(right: 0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: <Widget>[
+                                    Icon(
+                                      FontAwesomeIcons.externalLinkSquareAlt,
+                                      color: Colors.white,
+                                      size: 17,
+                                    )
+                                  ],
                                 ),
                               ),
                             ),
-                          ]
+                          ),
                         ),
-                      ),
-                    ],
-                  )
-                ],
-              ),
+                      )
+              ],
             ),
-            Positioned(
-                    top: 0,
-                    bottom: 0,
-                    right: 0,
-                    child: Tooltip(
-                      message: 'Acceder',
-                      child: GestureDetector(
-                        onTap: (){
-                          Vibration.vibrate(duration: 20);
-                          print('funciona');
-                          Navigator.of(context).push(
-                            CupertinoPageRoute(builder: (BuildContext context) {
-                              return Nav(
-                                elevation: 0,
-                                color: Colors.transparent,
-                                actionsColor: Theme.of(context).accentColor,
-                                titleColor: Theme.of(context).accentColor,
-                                addBarActive: true,
-                                drawerActive: false,
-                                notificationsActive: false,
-                                section: 'interact',
-                                title: widget.name,
-                                owner: widget.owner,
-                                idObject: widget.lessonId,
-                                body: InteractRoute(
-                                  authorId: widget.authorId,
-                                  lessonId: widget.lessonId,
-                                  presentationPath: '/data/user/0/com.example.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
-                                  owner: widget.owner,
-                                ),
-                              ); 
-                            })
-                          );
-                        },
-                        child: Container(
-                          width: 40,
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).accentColor,
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(3),
-                              bottomRight: Radius.circular(3),
-                            ),
-                          ),
-                          child: Container(
-                            margin: EdgeInsets.only(right: 0),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                Icon(
-                                  FontAwesomeIcons.externalLinkSquareAlt,
-                                  color: Colors.white,
-                                  size: 17,
-                                )
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  )
-          ],
-        ),
+          );
+        }
       ),
     );
   }
