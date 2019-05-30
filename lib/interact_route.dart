@@ -4,6 +4,7 @@ import 'package:classroom/question.dart';
 import 'package:classroom/chatbar.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:classroom/nav.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'stateful_button.dart';
 import 'package:vibration/vibration.dart';
@@ -149,16 +150,23 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     }); 
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
-    
+      Future.delayed(Duration.zero, (){
+        if(this.mounted){
+          
+        } 
+      });
     });
     
     FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
-    
+      // Nav.popPasser.sendWidget.add('POP');
+      // Nav.popPasser.sendWidget.add('POP');
     });
 
     // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
     //   var value = (data.snapshot.value);
     //   String key = data.snapshot.key;
+    //   print("key: $key");
+    //   print("value: $value");
     //   switch(key){
     //     case "presentation":{
     //       if(value == true){
@@ -251,6 +259,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               for(var question in lc){
                 DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
                   if(question.authorId == Auth.uid) question.mine = true;
+                  print("voted: $voted");
                   if(voted) question.voted = true;
                   // if(question.votes > 0) question.answered = true;
                   question.courseAuthorId = widget.authorId;

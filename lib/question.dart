@@ -10,7 +10,7 @@ import 'package:classroom/chatbar.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 
 class Question extends StatefulWidget {
@@ -237,9 +237,9 @@ class _QuestionState extends State<Question>
       });
     }
 
-    // FirebaseDatabase.instance.reference().child("questions").child(widget.questionId)..listen((data) {
-
-    // });
+    FirebaseDatabase.instance.reference().child("questions").child(widget.questionId).onChildRemoved.listen((data) {
+      _deleteQuestion();
+    });
 
     // _answers.add(
     //   Answer(
@@ -291,7 +291,7 @@ class _QuestionState extends State<Question>
   void dispose() {
     _boxResizeOpacityController2.dispose();
     _deleteHeightController.dispose();
-    _boxColorController.dispose();
+    //_boxColorController.dispose();
     _boxResizeOpacityController.dispose();
     _expandAnswersController.dispose();
     _answerPasser.sendWidget.add(null);

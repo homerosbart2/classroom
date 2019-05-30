@@ -31,7 +31,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   ScrollController _scrollController;
   AnimationController _qrHeightController;
   Animation<Offset> _qrOffsetFloat;
-
+  String _participants;
   List<Lesson> _lessons;
 
   @override
@@ -54,7 +54,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     );
 
     _lessonPasser = Nav.lessonPasser;
-
+    _participants = '${widget.participants}';
     _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
@@ -136,6 +136,21 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
         }
       }
     });
+
+ FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
+    var value = (data.snapshot.value);
+    String key = data.snapshot.key;
+    switch(key){
+      case "participants":{
+        if(this.mounted){
+          setState(() {
+            _participants = value.toString();
+          });
+        }
+        break;
+      }          
+    }
+  });    
     
   }
 

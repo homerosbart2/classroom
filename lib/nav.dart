@@ -85,7 +85,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     Nav.popPasser.recieveWidget.listen((newPop) {
       if (newPop != null) {
         if (this.mounted) {
-          Navigator.of(context).pop();
+          Navigator.pop(context, true);
         }
       }
     });
@@ -154,6 +154,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
       ),
     );
     //_addButtonController.forward();
+  }
+
+  @override
+  void dispose(){
+    Nav.popPasser.sendWidget.add(null);
+    super.dispose();
   }
 
   int getRandom(){
