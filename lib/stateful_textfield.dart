@@ -3,25 +3,38 @@ import 'package:classroom/textfield_bloc.dart';
 
 class StatefulTextfield extends StatefulWidget {
   final String suffix;
-  final Color color;
-  final String helper;
-  final String label;
+  final Color color, fillColor, borderColor, suffixColor;
+  final String helper, label, hint;
   final TextInputType type;
   final TextfieldBloc channel;
-  final Function onChangedFunction;
+  final Function onChangedFunction, onSubmitted;
   final bool isObscure;
   final TextEditingController controller;
+  final FontWeight weight;
+  final FocusNode focusNode;
+  final EdgeInsets margin, padding;
+  final double borderRadius;
 
   const StatefulTextfield({
     @required this.suffix,
-    @required this.color,
-    @required this.helper,
-    @required this.label,
+    this.color : Colors.black,
+    this.margin : const EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 10.0),
+    this.padding : const EdgeInsets.all(18),
+    this.onSubmitted,
+    this.focusNode,
+    this.borderColor : Colors.white,
+    this.suffixColor : Colors.black,
+    this.hint,
+    this.label,
+    this.helper,
+    this.fillColor,
     this.controller,
     this.type,
     this.channel,
     this.onChangedFunction,
-    this.isObscure,
+    this.isObscure : false,
+    this.weight : FontWeight.normal,
+    this.borderRadius : 4.0,
   });
 
   @override
@@ -30,44 +43,56 @@ class StatefulTextfield extends StatefulWidget {
 
 class _StatefulTextfieldState extends State<StatefulTextfield> {
   String _actualSuffixSelected;
-  bool _obscured;
+  bool _filled;
+  Color _fillColor;
 
   @override
   void initState() {
     super.initState();
     this._actualSuffixSelected = widget.suffix;
-    if(widget.isObscure != null){
-      this._obscured = widget.isObscure;
+
+    if(widget.fillColor != null){
+      _fillColor = widget.fillColor;
+      _filled = true;
     }else{
-      this._obscured = false;
+      _fillColor = Colors.transparent;
+      _filled = false;
     }
   }
 
   Widget baseTextfield(String suffix){
     return Container(
-      margin: EdgeInsets.fromLTRB(0.0, 10.0, 0.0, 10.0),
+      margin: widget.margin,
       child: TextField(
-          onChanged: (String value){
+          onChanged: (val){
             if(widget.onChangedFunction != null){
-              widget.onChangedFunction(value);
+              widget.onChangedFunction(val);
+            }
+          },
+          focusNode: widget.focusNode,
+          onSubmitted: (val){
+            if(widget.onSubmitted != null){
+              widget.onSubmitted(val);
             }
           },
           controller: widget.controller,
-          obscureText: this._obscured,
+          obscureText: widget.isObscure,
           //textAlign: TextAlign.center,
           keyboardType: widget.type,
           decoration: InputDecoration(
-            //fillColor: Colors.white,
-            //filled: true,
+            contentPadding: widget.padding,
+            fillColor: _fillColor,
+            filled: _filled,
             suffixText: suffix,
             suffixStyle: TextStyle(
-              color: widget.color,
+              color: widget.suffixColor,
             ),
             labelText: widget.label,
             hintStyle: TextStyle(
+
               color: Colors.grey,
             ),
-            //hintText: 'Insert an input.',
+            hintText: widget.hint,
             helperText: widget.helper,
             helperStyle: TextStyle(
               color: Colors.white,
@@ -78,10 +103,10 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
             ),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(
-                color: widget.color,
+                color: widget.borderColor,
                 width: 3.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             hasFloatingPlaceholder: true,
             enabledBorder: OutlineInputBorder(
@@ -89,7 +114,7 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
                 color: Colors.white,
                 width: 1.0,
               ),
-              borderRadius: BorderRadius.circular(4.0),
+              borderRadius: BorderRadius.circular(widget.borderRadius),
             ),
             border: OutlineInputBorder(
               borderSide: BorderSide(
@@ -99,12 +124,12 @@ class _StatefulTextfieldState extends State<StatefulTextfield> {
           ),
           style: TextStyle(
             fontFamily: 'Roboto Condensed',
-            fontSize: 24.0,
+            fontSize: 18.0,
             //color: Color.fromARGB(255, 0, 11, 43),
-            color: Colors.redAccent[100],
-            fontWeight: FontWeight.w700,
+            color: widget.color,
+            fontWeight: widget.weight,
           ),
-          cursorColor: Colors.redAccent[100],
+          cursorColor: widget.color,
         ),
     );
   }

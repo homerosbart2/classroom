@@ -3,8 +3,12 @@ import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/stateful_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/courses_route.dart';
-import 'package:classroom/choice.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:classroom/nav.dart';
+import 'package:classroom/auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classroom/notify.dart';
+// import 'dart:io' show Platform;
 
 class Login extends StatefulWidget {
   const Login();
@@ -13,255 +17,147 @@ class Login extends StatefulWidget {
   _LoginState createState() => _LoginState();
 }
 
-class _LoginState extends State<Login> {
-  FocusNode myFocusNode;
-  bool _register;
-  TextEditingController _usernameController;
-  TextEditingController _passwordController;
-  List<Choice> _choices;
+class _LoginState extends State<Login> with TickerProviderStateMixin{
+  FocusNode _passwordFocusNode;
+  bool _register, _logging, _actuallyLogged;
+  int _logged;
+  TextEditingController _usernameController, _passwordController, _nameController;
+  AnimationController _slideController;
+  Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
+  SharedPreferences prefs;
+
 
   @override
   void initState() {
     super.initState();
     _register = false;
-    myFocusNode = FocusNode();
-    _usernameController = new TextEditingController();
-    _passwordController = new TextEditingController();
+    _actuallyLogged = false;
+    _passwordFocusNode = FocusNode();
+    _nameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _passwordController = TextEditingController();
+
+    _logging = false;
+
+    _initSharedPreferences();
+
+    _slideController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+
+    _registerOffsetFloat = Tween<Offset>(
+      begin: Offset(2, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: Curves.easeInOut,
+      )
+    );
+
+    _loginOffsetFloat = Tween<Offset>(
+      begin: Offset.zero,
+      end: Offset(-2, 0),
+    ).animate(
+      CurvedAnimation(
+        parent: _slideController,
+        curve: Curves.easeInOut,
+      )
+    );
   }
 
-  
+  void _initSharedPreferences() async{
+    prefs = await SharedPreferences.getInstance();
+    _logged = prefs.getInt('logged');
+    if(!_actuallyLogged && prefs.getInt('logged') == 1){
+      print("INICIADO");
+      validateAndSubmit(prefs.getString('email'), prefs.getString('password'), '');
+    }
+    String userEmail = prefs.getString('email');
+    if(userEmail != null){
+      print('USERNAME: $userEmail');
+      _usernameController.text = userEmail;
+    }
+  }
 
   void _navigateToCourses(BuildContext context) {
-    _choices = const <Choice>[
-      const Choice(title: 'Perfil', icon: Icons.directions_car),
-    ];
-
     Navigator.of(context).push(
       CupertinoPageRoute(builder: (BuildContext context) {
-        return Scaffold(
-          drawer: Drawer(
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                DrawerHeader(
-                  child: Column(
-                    children: <Widget>[
-                      Row(
-                        children: <Widget>[
-                          Text(
-                            'Classroom',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                              fontFamily: 'Vampiro One',
-                              fontSize: 26,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 3,
-                                ),
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: AssetImage('lib/assets/images/default.png'),
-                                ),
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  Container(
-                                    margin: EdgeInsets.only(right: 2),
-                                    child: Text(
-                                      '@',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
-                                  Text(
-                                    'henry.campos',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin: EdgeInsets.only(top: 2),
-                              child: Text(
-                                'Ver más',
-                                style: TextStyle(
-                                  color: Theme.of(context).primaryColor,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: AssetImage('lib/assets/images/bg_dark.jpg'),
-                    ),
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                  ),
-                  child: ListTile(
-                    title: Row(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(right: 15),
-                          child: StatefulButton(
-                            type: 'a',
-                            icon: FontAwesomeIcons.book,
-                            text: '',
-                            color: Theme.of(context).accentColor,
-                            onTap: (){},
-                          ),
-                        ),
-                        Text(
-                          'Clases',
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            //fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      // Update the state of the app
-                      // ...
-                    },
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: Colors.grey[200]))
-                  ),
-                  child: ListTile(
-                    title: Row(
-                      children: <Widget>[
-                        Container(
-                          margin: EdgeInsets.only(right: 15),
-                          child: StatefulButton(
-                            type: 'a',
-                            icon: FontAwesomeIcons.signOutAlt,
-                            text: '',
-                            color: Theme.of(context).accentColor,
-                            onTap: (){},
-                          ),
-                        ),
-                        Text(
-                          'Salir',
-                          style: TextStyle(
-                            color: Theme.of(context).accentColor,
-                            //fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    onTap: () {
-                      //TODO: Cerrar la sesión del usuario.
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          appBar: AppBar(
-            actions: <Widget>[
-              IconButton(
-                icon: new Icon(
-                  FontAwesomeIcons.search,
-                  size: 20,
-                ), 
-                onPressed: () { 
-                  //Navigator.of(context).pop(); 
-                },
-              ),
- 
-              /* PopupMenuButton<Choice>(
-              onSelected: (choice){},
-              itemBuilder: (BuildContext context) {
-                return _choices.map((Choice choice) {
-                  return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Text(choice.title),
-                  );
-                }).toList();
-              },
-            ), */
-            ],
-            elevation: 1.0,
-            title: Container(
-              padding: EdgeInsets.all(3.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    'Cursos',
-                    style: TextStyle(
-                      color: Theme.of(context).primaryColor,
-                      fontSize: 24.0,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Inicio',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.normal,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            centerTitle: false,
-            backgroundColor: Theme.of(context).accentColor,
-            iconTheme: IconThemeData(
-              color: Colors.white,
-            ),
-          ),
-          body: CoursesRoute(
-          ),
+        return Nav(
+          section: 'courses',
+          title: 'CURSOS',
+          body: CoursesRoute(),
         );
       }),
     );
   }
+
+  void validateAndSubmit(String email, String password, String name) async {
+    email = email.toString().trim().toLowerCase();
+    password = password.toString().trim();
+    //TODO: validar email valido y password no empty
+    try{ 
+      if(_register == true){
+        String user = await Auth.createUserWithEmailAndPassword(email,password,name);
+        if(user == null){
+          print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
+          _logging = false;
+        }else{
+          prefs.setInt('logged', 1);
+          prefs.setString('email', email);
+          prefs.setString('password', password);
+          _navigateToCourses(context);
+          _passwordController.text = '';
+          _logging = false;
+          _actuallyLogged = true;
+        }    
+      }else{
+        String user = await Auth.signInWithEmailAndPassword(email, password);
+        print("Login: $user");
+        Auth.currentUser().then((userId){
+          if(userId == null){
+            print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+            _logging = false;
+          }else{
+            prefs.setInt('logged', 1);
+            prefs.setString('email', email);
+            prefs.setString('password', password);
+            _navigateToCourses(context);
+            _passwordController.text = '';
+            _logging = false;
+            _actuallyLogged = true;
+          } 
+        });
+      }
+    }catch(e){
+      print(e.toString());
+      Notify.show(
+        context: this.context,
+        text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
+        actionText: 'Ok',
+        backgroundColor: Colors.red[200],
+        textColor: Colors.black,
+        actionColor: Colors.black,
+        onPressed: (){
+          
+        }
+      );
+      _logging = false;
+    }
+
+  } 
 
   Widget _registerForm(){
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
-          helper: 'Nombre de usuario.',
-          label: 'Usuario',
+          color: Colors.redAccent[100],
+          helper: 'correo electrónico.',
+          label: 'Email',
           type: TextInputType.text,
           onChangedFunction: (String value){
             this.setState(() {   
@@ -269,10 +165,24 @@ class _LoginState extends State<Login> {
           },
           controller: _usernameController,
         ),
+        StatefulTextfield(
+          weight: FontWeight.bold,
+          suffix: '',
+          color: Colors.redAccent[100],
+          helper: 'Nombre de usuario.',
+          label: 'Usuario',
+          type: TextInputType.text,
+          onChangedFunction: (String value){
+            this.setState(() {   
+            });
+          },
+          controller: _nameController,
+        ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,
@@ -284,8 +194,9 @@ class _LoginState extends State<Login> {
           controller: _passwordController,
         ),
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,
@@ -305,9 +216,8 @@ class _LoginState extends State<Login> {
                 text: 'CANCELAR',
                 color: Theme.of(context).primaryColor,
                 onTap: (){
-                  setState(() {
-                    _register = false;
-                  });
+                  _slideController.reverse();
+                  _register = false;
                 },
                 type: 'a',
                 weight: FontWeight.bold,
@@ -318,7 +228,11 @@ class _LoginState extends State<Login> {
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
+                  if(!_logging){
+                    _logging = true;
+                    validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
                   //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
+                  }
                 },
               ),
             ],
@@ -355,8 +269,9 @@ class _LoginState extends State<Login> {
           ),
         ),
         StatefulTextfield(
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Nombre de usuario.',
           label: 'Usuario',
           type: TextInputType.text,
@@ -364,12 +279,17 @@ class _LoginState extends State<Login> {
             this.setState(() {   
             });
           },
+          onSubmitted: (String value){
+            FocusScope.of(context).requestFocus(_passwordFocusNode);
+          },
           controller: _usernameController,
         ),
         //ELEMENT: Campo para la CONTRASEÑA.
         StatefulTextfield(
+          focusNode: _passwordFocusNode,
+          weight: FontWeight.bold,
           suffix: '',
-          color: Colors.white,
+          color: Colors.redAccent[100],
           helper: 'Contraseña del usuario.',
           label: 'Contraseña',
           type: TextInputType.text,
@@ -377,6 +297,12 @@ class _LoginState extends State<Login> {
           onChangedFunction: (String value){
             this.setState(() {   
             });
+          },
+          onSubmitted: (String value){
+            if(!_logging){
+              _logging = true;
+                validateAndSubmit(_usernameController.text, _passwordController.text,"");
+            }
           },
           controller: _passwordController,
         ),
@@ -389,9 +315,8 @@ class _LoginState extends State<Login> {
                 text: 'REGISTRARSE',
                 color: Theme.of(context).primaryColor,
                 onTap: (){
-                  setState(() {
-                    _register = true;
-                  });
+                  _slideController.forward();
+                  _register = true;
                 },
                 type: 'a',
                 weight: FontWeight.bold,
@@ -402,8 +327,10 @@ class _LoginState extends State<Login> {
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
-                  _navigateToCourses(context);
+                  if(!_logging){
+                    _logging = true;
+                     validateAndSubmit(_usernameController.text, _passwordController.text,"");
+                  }
                 },
               ),
             ],
@@ -415,7 +342,6 @@ class _LoginState extends State<Login> {
 
   @override
   Widget build(BuildContext context) {
-
     final loginWidget = FractionallySizedBox(
       widthFactor: 1,
       heightFactor: 1,
@@ -437,11 +363,17 @@ class _LoginState extends State<Login> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Expanded(
-                child: AnimatedCrossFade(
-                  firstChild: _loginForm(),
-                  secondChild: _registerForm(),
-                  duration: Duration(milliseconds: 0),
-                  crossFadeState: _register ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+                child: Stack(
+                  children: <Widget>[
+                    SlideTransition(
+                      position: _loginOffsetFloat,
+                      child: _loginForm()
+                    ),
+                    SlideTransition(
+                      position: _registerOffsetFloat,
+                      child: _registerForm()
+                    ),
+                  ],
                 ),
               ),
               RichText(
@@ -469,6 +401,7 @@ class _LoginState extends State<Login> {
     );
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       body: loginWidget,
     );
   }
