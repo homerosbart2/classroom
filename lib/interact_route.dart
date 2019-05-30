@@ -158,32 +158,32 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       Nav.popPasser.sendWidget.add('POP');
     });
 
-    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-      var value = (data.snapshot.value);
-      String key = data.snapshot.key;
-      print("key: $key");
-      print("value: $value");
-      switch(key){
-        case "presentation":{
-          if(value == true){
-            if(this.mounted){
-              setState(() {
-                DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
-                print("ARCHIVO:  $path");
-                  if(this.mounted) setState(() {
-                    _presentation = Presentation(
-                      file: path,
-                      animationValue: _turnsFloat.value,
-                    );
-                  });
-                });
-              });
-            }
-          }
-          break;
-        }
-      }
-    });
+    // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
+    //   var value = (data.snapshot.value);
+    //   String key = data.snapshot.key;
+    //   print("key: $key");
+    //   print("value: $value");
+    //   switch(key){
+    //     case "presentation":{
+    //       if(value == true){
+    //         if(this.mounted){
+    //           setState(() {
+    //             DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
+    //             print("ARCHIVO:  $path");
+    //               if(this.mounted) setState(() {
+    //                 _presentation = Presentation(
+    //                   file: path,
+    //                   animationValue: _turnsFloat.value,
+    //                 );
+    //               });
+    //             });
+    //           });
+    //         }
+    //       }
+    //       break;
+    //     }
+    //   }
+    // });
 
     if(widget.owner){
       _uploadPresentation = StatefulButton(
