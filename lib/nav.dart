@@ -22,7 +22,7 @@ class Nav extends StatefulWidget{
   static WidgetPasser coursePasser = WidgetPasser();
   static WidgetPasser lessonPasser = WidgetPasser();
   final Widget body;
-  final String title, section, subtitle, idObject;
+  final String title, section, subtitle, idCourse, idLesson;
   final double preferredSize, elevation;
   final bool drawerActive, addBarActive, notificationsActive, owner;
   final Color color, titleColor, actionsColor;
@@ -41,7 +41,8 @@ class Nav extends StatefulWidget{
     this.notificationsActive: true,
     this.owner = false,
     this.subtitle: '',
-    this.idObject: 'NA',
+    this.idCourse: 'NA',
+    this.idLesson: 'NA',
     this.preferredSize: 60.0,
     this.acessCode,
   });
@@ -323,9 +324,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         });                                                                      
                       }else if(Nav.addBarMode == 2){
                         print('DESCRIPCION: $val');
-                        print('LECCION: ${widget.idObject}');
+                        print('CURSO: ${widget.idCourse}');
+                        print('LECCION: ${widget.idLesson}');
                         //TODO: Guardar la nueva descripcion en firebase
-                        DatabaseManager.updateLesson(widget.idObject, val,"description");
+                        DatabaseManager.updateLesson(widget.idLesson, val,"description");
                         _addBarController.reverse().then((val){
                           _addBarTextfieldController.text = '';
                           if(_addBarAlertController.status != AnimationStatus.dismissed){
@@ -379,9 +381,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
       };
       String textDate = json.encode(text);
       print("ANTES");
-      DatabaseManager.updateLesson(widget.idObject, picked.day.toString()+picked.month.toString()+picked.year.toString(),"date");
+      DatabaseManager.updateLesson(widget.idLesson, picked.day.toString()+picked.month.toString()+picked.year.toString(),"date");
       print('FECHA: $textDate');
-      print('LECCION: ${widget.idObject}');
+      print('LECCION: ${widget.idCourse}');
+      print('LECCION: ${widget.idLesson}');
     }
   }
 
@@ -482,8 +485,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         PopupMenuButton<Choice>(
           onSelected: (choice){
             if(choice.title == 'Eliminar'){
-              print('ELIMINAR LECCION: ${widget.idObject}');
-              DatabaseManager.deleteLesson(widget.idObject, Auth.uid);
+              print('ELIMINAR LECCION: ${widget.idLesson}');
+              print('DEL CURSO: ${widget.idCourse}');
+              DatabaseManager.deleteLesson(widget.idLesson, Auth.uid);
               //TODO: Eliminar la leccion de firebase.
             }else if(choice.title == 'Fecha'){
               _selectDate(context);
@@ -575,9 +579,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         PopupMenuButton<Choice>(
           onSelected: (choice){
             if(choice.title == 'Eliminar'){
-              print('ELIMINAR CURSO: ${widget.idObject}');
+              print('ELIMINAR CURSO: ${widget.idCourse}');
               //TODO: Eliminar el curso de firebase.
-              DatabaseManager.deleteCourse(widget.idObject, Auth.uid);
+              DatabaseManager.deleteCourse(widget.idCourse, Auth.uid);
             }
           },
           itemBuilder: (BuildContext context) {

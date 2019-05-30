@@ -9,13 +9,14 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description, lessonId;
+  final String name, description, lessonId, courseId;
   String authorId;
   final int month, day, year, comments;
   final bool owner, presentation;
 
   Lesson({
     @required this.lessonId,
+    @required this.courseId,
     @required this.name,
     @required this.presentation,
     this.authorId,
@@ -259,7 +260,8 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                       section: 'interact',
                                       title: widget.name,
                                       owner: widget.owner,
-                                      idObject: widget.lessonId,
+                                      idCourse: widget.courseId,
+                                      idLesson: widget.lessonId,
                                       body: InteractRoute(
                                         authorId: widget.authorId,
                                         lessonId: widget.lessonId,

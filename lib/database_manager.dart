@@ -165,7 +165,7 @@ class DatabaseManager{
   }  
 
   static Future<void> removeQuestionsPerUser(String questionId, String uid) async{
-    await mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
+    mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
   } 
 
   static Future<void> deleteQuestion(String questionId, String lessonId, String uid) async{
@@ -562,7 +562,7 @@ class DatabaseManager{
     return _questionsList;
   } 
 
-  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString, String uid) async{
+  static Future<List<Lesson>> getLessonsPerCourseByList(List<String> listString, String uid, String courseId) async{
     List<Lesson> _lessonsList = List<Lesson>();
     bool userOwner;
     try{
@@ -577,6 +577,7 @@ class DatabaseManager{
               Lesson(
                 presentation: lesson['presentation'],
                 lessonId: eachLesson,
+                courseId: courseId,
                 comments: lesson['comments'],
                 day: int.parse(date.substring(0,2)),
                 month: int.parse(date.substring(2,4)),

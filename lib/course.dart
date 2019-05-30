@@ -166,7 +166,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
                 section: 'lessons',
                 title: 'LECCIONES',
                 subtitle: widget.name,
-                idObject: widget.courseId,
+                idCourse: widget.courseId,
                 body: LessonsRoute(
                   name: widget.name,
                   courseId: widget.courseId,
