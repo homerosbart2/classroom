@@ -10,7 +10,7 @@ import 'package:classroom/chatbar.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class Question extends StatefulWidget {
@@ -236,6 +236,10 @@ class _QuestionState extends State<Question>
         });
       });
     }
+
+    // FirebaseDatabase.instance.reference().child("questions").child(widget.questionId)..listen((data) {
+
+    // });
 
     // _answers.add(
     //   Answer(

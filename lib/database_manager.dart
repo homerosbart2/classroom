@@ -357,7 +357,7 @@ class DatabaseManager{
         await mDatabase.child("courses").child(code).once().then((DataSnapshot snapshot){
           Map<dynamic,dynamic> currentCourse = snapshot.value;
           mDatabase.child("courses").child(code).update({
-          'lessons': currentCourse['lessons'] + 1,
+          'lessons': currentCourse['lessons'] + int.parse(param),
           }).then((_){/*nothing*/});
         });       
         break;        
