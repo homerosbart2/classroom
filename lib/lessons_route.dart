@@ -239,7 +239,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                         Container(
                           padding: EdgeInsets.only(top: 2),
                           child: Text(
-                            '${widget.participants}',
+                            _participants,
                             style: TextStyle(
                               color: Theme.of(context).accentColor,
                               fontWeight: FontWeight.bold,
