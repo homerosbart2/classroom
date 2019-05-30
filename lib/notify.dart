@@ -18,6 +18,7 @@ class Notify{
         text,
         style: TextStyle(
           color: textColor,
+          fontFamily: 'Roboto Condensed'
         ),
       ),
       action: SnackBarAction(

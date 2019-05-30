@@ -45,7 +45,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
     _qrOffsetFloat = Tween<Offset>(
       end: Offset.zero,
-      begin: Offset(0, 0.8575),
+      begin: Offset(0, 0.8425),
     ).animate(
       CurvedAnimation(
         parent: _qrHeightController,
@@ -143,8 +143,8 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    super.dispose();
     _lessonPasser.sendWidget.add(null);
+    super.dispose();
   }
 
   Widget _getCourseAuthor(BuildContext context){

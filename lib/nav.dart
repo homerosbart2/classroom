@@ -255,7 +255,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           int day = nowDate.day;
                           int month = nowDate.month;
                           int year = nowDate.year;
-                          DatabaseManager.addLesson(Auth.uid, val, "description", day, month, year, widget.acessCode);
+                          DatabaseManager.addLesson(Auth.uid, val, "", day, month, year, widget.acessCode);
                           // Map text = {
                           //   //TODO: obtener los comentarios de la lección.
                           //   'name' : val,
