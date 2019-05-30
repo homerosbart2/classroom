@@ -47,7 +47,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
   ScrollController _scrollController;
-  bool _presentationExist, _presentationLoaded;
+  bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled;
 
   Future<String> getFilePath() async {
     String filePath = null;
@@ -71,6 +71,8 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
     _presentationExist = false;
     _presentationLoaded = false;
+    _lessonDisabled = false;
+    _courseDisabled = false;
 
     _questionToAnswer = '';
 
@@ -150,16 +152,15 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     }); 
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
-      Future.delayed(Duration.zero, (){
-        if(this.mounted){
-          
-        } 
+      if(this.mounted) setState(() {
+        _lessonDisabled = true;
       });
     });
     
     FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
-      // Nav.popPasser.sendWidget.add('POP');
-      // Nav.popPasser.sendWidget.add('POP');
+      if(this.mounted) setState(() {
+        _courseDisabled = true;
+      });
     });
 
     // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
@@ -505,11 +506,16 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     );
   }
 
+  String _getDisabledText(){
+    if(_lessonDisabled) return 'La lección ha sido eliminada.';
+    else return 'El curso ha sido eliminado.';
+  }
+
   @override
   Widget build(BuildContext context) {
     double _width = MediaQuery.of(context).size.width;
     double _height = (_width/4)*3;
-    return FractionallySizedBox(
+    if(!_lessonDisabled && !_courseDisabled) return FractionallySizedBox(
       widthFactor: 1,
       heightFactor: 1,
       child: Stack(
@@ -553,6 +559,24 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
             lessonId: widget.lessonId,
             owner: widget.owner,
           ),   
+        ],
+      ),
+    );
+    else return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                _getDisabledText(),
+                style: TextStyle(
+                  color: Theme.of(context).accentColor,
+                ),
+              )
+            ],
+          )
         ],
       ),
     );
