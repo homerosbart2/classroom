@@ -4,6 +4,7 @@ import 'package:classroom/question.dart';
 import 'package:classroom/chatbar.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:classroom/nav.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'stateful_button.dart';
 import 'package:vibration/vibration.dart';
@@ -149,12 +150,12 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     }); 
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
-      Navigator.of(context).pop();
+      Nav.popPasser.sendWidget.add('POP');
     });
     
     FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
-      Navigator.of(context).pop();
-      Navigator.of(context).pop();
+      Nav.popPasser.sendWidget.add('POP');
+      Nav.popPasser.sendWidget.add('POP');
     });
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {

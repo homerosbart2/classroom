@@ -156,6 +156,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     //_addButtonController.forward();
   }
 
+  @override
+  void dispose(){
+    Nav.popPasser.sendWidget.add(null);
+    super.dispose();
+  }
+
   int getRandom(){
     return random.nextInt(100000);
   }
