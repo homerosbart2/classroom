@@ -255,7 +255,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           int day = nowDate.day;
                           int month = nowDate.month;
                           int year = nowDate.year;
-                          DatabaseManager.addLesson(Auth.uid, val, "description", day, month, year, widget.acessCode);
+                          DatabaseManager.addLesson(Auth.uid, val, "", day, month, year, widget.acessCode);
                           // Map text = {
                           //   //TODO: obtener los comentarios de la lección.
                           //   'name' : val,
@@ -360,6 +360,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }
   }
 
+  String addZero(int param){
+    String paramString = param.toString();
+    if(paramString.length > 1) return paramString;
+    else return "0"+paramString;
+  }
+
   Future<Null> _selectDate(BuildContext context) async {
     final DateTime picked = await showDatePicker(
         context: context,
@@ -371,16 +377,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         selectedDate = picked;
       });
       print(picked.day);
-      Map text = {
-        //TODO: Guardar la fecha en firebase, yo actualizo la vista.
-        'day' : picked.day,
-        'month': picked.month,
-        'year' : picked.year,
-      };
-      String textDate = json.encode(text);
-      print("ANTES");
-      DatabaseManager.updateLesson(widget.idObject, picked.day.toString()+picked.month.toString()+picked.year.toString(),"date");
-      print('FECHA: $textDate');
+      String date = addZero(picked.day)+"/"+addZero(picked.month)+"/"+addZero(picked.year);
+      DatabaseManager.updateLesson(widget.idObject, date,"date");
+      print('FECHA: $date');
       print('LECCION: ${widget.idObject}');
     }
   }

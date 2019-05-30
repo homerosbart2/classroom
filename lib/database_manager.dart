@@ -200,7 +200,7 @@ class DatabaseManager{
 
   static Future<String> addLesson(String uid, String name, String description, int day, int month, int year, String course) async{
     DatabaseReference lesson;;
-    int date = int.parse(addZero(day)+addZero(month)+addZero(year));
+    String date = (addZero(day)+"/"+addZero(month)+"/"+addZero(year));
     lesson = mDatabase.child("lessons").push();
     await lesson.set({
       'name': name,
@@ -304,6 +304,7 @@ class DatabaseManager{
 
   static Future<void> updateLesson(String code, String param, String column) async{
     DatabaseReference lesson;
+    print("param: $param");
     switch(column){
       case "comments": {
         await mDatabase.child("lessons").child(code).once().then((DataSnapshot snapshot){
@@ -322,7 +323,7 @@ class DatabaseManager{
       }
       case "date": {
         await mDatabase.child("lessons").child(code).update({
-          'date': int.parse(param), 
+          'date': param,
         }).then((_){/*nothing*/});
         break;        
       }      
@@ -578,9 +579,7 @@ class DatabaseManager{
                 presentation: lesson['presentation'],
                 lessonId: eachLesson,
                 comments: lesson['comments'],
-                day: int.parse(date.substring(0,2)),
-                month: int.parse(date.substring(2,4)),
-                year: int.parse(date.substring(5,date.length)),
+                date: lesson['date'],
                 description: lesson['description'],
                 name: lesson['name'],
                 owner: userOwner,

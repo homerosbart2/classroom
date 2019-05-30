@@ -9,10 +9,11 @@ import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description, lessonId;
+  final String name, description, lessonId, date;
   String authorId;
-  final int month, day, year, comments;
+  int comments;
   final bool owner, presentation;
+  
 
   Lesson({
     @required this.lessonId,
@@ -20,9 +21,7 @@ class Lesson extends StatefulWidget{
     @required this.presentation,
     this.authorId,
     this.description: '',
-    this.month: 1,
-    this.day: 1,
-    this.year: 1999,
+    this.date: '',
     this.comments: 0,
     this.owner: false,
   });
@@ -40,13 +39,11 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
 
   @override
   void initState() {
-    String day = (widget.day < 10)? '0${widget.day}' : '${widget.day}';
-    String month = (widget.month < 10)? '0${widget.month}' : '${widget.month}';
-    String year = '${widget.year}';
+    String day = widget.date;
 
     _comments = '${widget.comments}';
 
-    _date = '$day/$month/$year';
+    _date = '${widget.date}';
 
     _description = widget.description;
 
@@ -68,28 +65,35 @@ class _LessonState extends State<Lesson> with SingleTickerProviderStateMixin, Au
     _boxResizeOpacityController.forward();
 
     FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-      if(mounted){
-        setState(() {
-          print("CAPTANDO CAMBIOS");
-          print("SNAPSHOT KEY: ${data.snapshot.key}");
-          print("SNAPSHOT VALUE: ${data.snapshot.value}");
-          String value = (data.snapshot.value).toString();
-          switch(data.snapshot.key){
-            case "comments":{
+      print("CAPTANDO CAMBIOS");
+      print("SNAPSHOT KEY: ${data.snapshot.key}");
+      print("SNAPSHOT VALUE: ${data.snapshot.value}");
+      String value = (data.snapshot.value).toString();
+      switch(data.snapshot.key){
+        case "comments":{
+          if(this.mounted){
+            setState(() {
               _comments = value;
-              break;
-            }
-            case "description": {
-              _description = value;
-              break;
-            }
-            case "date": {
-              String date = value.toString();
-              _date = date.substring(0,2)+"/"+date.substring(2,4)+"/"+date.substring(4,value.length);
-              break;
-            }            
+            });
           }
-        });
+          break;
+        }
+        case "description": {
+          if(this.mounted){
+            setState(() {
+              _description = value;
+            });
+          }              
+          break;
+        }
+        case "date": {
+          if(this.mounted){
+            setState(() {
+              _date = value;
+            });
+          }              
+          break;
+        }            
       }
     });
     super.initState();
