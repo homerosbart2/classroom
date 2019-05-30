@@ -89,8 +89,8 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
     FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
       var value = (data.snapshot.value);
       String key = data.snapshot.key;
-      print("key: $key");
-      print("value: $value");
+      // print("key: $key");
+      // print("value: $value");
       switch(key){
         case "participants":{
           if(this.mounted){

@@ -273,6 +273,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                       body: InteractRoute(
                                         authorId: widget.authorId,
                                         lessonId: widget.lessonId,
+                                        courseId: widget.courseId,
                                         presentationPath: '/data/user/0/com.example.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
                                         owner: widget.owner,
                                       ),

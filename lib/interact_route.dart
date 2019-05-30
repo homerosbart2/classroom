@@ -11,12 +11,12 @@ import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:firebase_database/firebase_database.dart';
-// import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
 class InteractRoute extends StatefulWidget{
   
-  final String lessonId, presentationPath, authorId;
+  final String lessonId, presentationPath, authorId, courseId;
   static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
@@ -27,6 +27,7 @@ class InteractRoute extends StatefulWidget{
   InteractRoute({
     @required this.lessonId,
     @required this.authorId,
+    @required this.courseId,
     this.presentationPath: '',
     this.owner: false,
   });
@@ -124,7 +125,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     // }
 
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
-      print("PRESENTATION: $presentation");
       _presentationLoaded = true;
       if(this.mounted){
         if(presentation){
@@ -147,6 +147,42 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
         }
       }
     }); 
+
+    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
+      Navigator.of(context).pop();
+    });
+    
+    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
+      Navigator.of(context).pop();
+      Navigator.of(context).pop();
+    });
+
+    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
+      var value = (data.snapshot.value);
+      String key = data.snapshot.key;
+      print("key: $key");
+      print("value: $value");
+      switch(key){
+        case "presentation":{
+          if(value == true){
+            if(this.mounted){
+              setState(() {
+                DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
+                print("ARCHIVO:  $path");
+                  if(this.mounted) setState(() {
+                    _presentation = Presentation(
+                      file: path,
+                      animationValue: _turnsFloat.value,
+                    );
+                  });
+                });
+              });
+            }
+          }
+          break;
+        }
+      }
+    });
 
     if(widget.owner){
       _uploadPresentation = StatefulButton(

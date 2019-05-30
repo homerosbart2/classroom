@@ -259,10 +259,10 @@ class DatabaseManager{
     if(ref != null){
       Directory tempDir = Directory.systemTemp;
       File file = File('${tempDir.path}/$lessonId.pdf');
-      if(!(await file.exists())){
+      // if(true || !(await file.exists())){
         StorageFileDownloadTask downloadTask = ref.writeToFile(file);
         int byteNumber = (await downloadTask.future).totalByteCount;
-      }
+      // }
       path = file.path;
     }
     return path;
@@ -340,7 +340,7 @@ class DatabaseManager{
   static Future<void> updateCourse(String code, var param, String column) async{
     DatabaseReference course;
     switch(column){
-      case "participant": {
+      case "participants": {
         int participants = int.parse(param);
         course = await mDatabase.child("courses").child(code).update({
           'participants': participants + int.parse(param),
@@ -376,7 +376,7 @@ class DatabaseManager{
         addCoursePerUser(uid,code);
         _course = {
           'accessCode': course['accessCode'],
-          'participants': participants,
+          'participants': participants + 1,
           'lessons': course['lessons'],
           'name': course['name'],
           'author': course['author'],
