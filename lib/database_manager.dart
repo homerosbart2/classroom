@@ -57,48 +57,24 @@ class DatabaseManager{
     }).then((_) { });
   }
 
-  static void removeVotesToParamPerUser(String uid, String question, String param){
-    mDatabase.child(param).child(uid).child(question).runTransaction((MutableData transaction) async{
-      transaction.value = (transaction.value ?? 0) + 1;
-      return transaction;
-    }).then((transaction){
-      if(transaction.committed) mDatabase.child(param).child(uid).child(question).remove();
-    });    
+  static void removeVotesToParamPerUser(String uid, String question, String param) async{
+    mDatabase.child(param).child(uid).child(question).remove();  
   }
 
-  static void removeVotesToUserPerParam(String uid, String val, String param){
-    mDatabase.child(param).child(val).child(uid).runTransaction((MutableData transaction) async{
-      transaction.value = (transaction.value ?? 0) + 1;
-      return transaction;
-    }).then((transaction){
-      if(transaction.committed) mDatabase.child(param).child(val).child(uid).remove();
-    });
+  static void removeVotesToUserPerParam(String uid, String val, String param) async {
+    mDatabase.child(param).child(val).child(uid).remove();
   }
   
-  static void addVotesToUserPerQuestion(String uid, String val, String param){
-    mDatabase.child(param).child(uid).child(val).runTransaction((MutableData transaction) async{
-      transaction.value = (transaction.value ?? 0) + 1;
-      return transaction;
-    }).then((transaction){
-      if(transaction.committed){
-        mDatabase.child(param).child(uid).child(val).push().set({
+  static void addVotesToUserPerQuestion(String uid, String val, String param) async {
+    mDatabase.child(param).child(uid).child(val).push().set({
           'voted': true,
-        }).then((_) {/*nothing*/});        
-      }
-    });
+    }).then((_) {/*nothing*/});        
   }
 
   static void addVotesToParamPerUser(String uid, String question, String param){
-    mDatabase.child(param).child(question).child(uid).runTransaction((MutableData transaction) async{
-      transaction.value = (transaction.value ?? 0) + 1;
-      return transaction;
-    }).then((transaction){
-      if(transaction.committed){
-        mDatabase.child(param).child(question).child(uid).push().set({
-          'voted': true,
-        }).then((_) {/*nothing*/});
-      }
-    });
+      mDatabase.child(param).child(question).child(uid).push().set({
+        'voted': true,
+      }).then((_) {/*nothing*/});
   }  
 
   static void addVoteToQuestion(String lessonId, String authorId, String question, String val){
