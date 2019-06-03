@@ -14,6 +14,7 @@ import 'package:classroom/database_manager.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class InteractRoute extends StatefulWidget{
   
@@ -40,12 +41,11 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   StreamController<int> _votesController;
   Stream<int> _votesStream;
   Stream<String> _questionStream;
-  AnimationController _loadingController;
   Animation<Offset> _offsetFloat;
-  Animation<double> _turnsFloat, _opacityFloat;
+  Animation<double> _opacityFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
+  WidgetPasser _questionPasser, _updateQuestions, _pathPasser, _presentationSignal;
   ScrollController _scrollController;
   bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled;
 
@@ -80,6 +80,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
     _questionPasser = ChatBar.questionPasser;
     _pathPasser = WidgetPasser();
+    _presentationSignal = WidgetPasser();
     _updateQuestions = InteractRoute.updateQuestions;
 
     InteractRoute.questionOpacityController = AnimationController(
@@ -97,23 +98,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       ),
     );
 
-    _loadingController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-
-    _turnsFloat = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(
-      CurvedAnimation(
-        parent: _loadingController,
-        curve: Curves.linear,
-      ),
-    );
-
-    _startLoadingAnimation();
-
     // _presentation = Presentation(
     //   file: 'lib/assets/pdf/sample.pdf',
     // ); 
@@ -128,19 +112,18 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     // }
 
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
-      _presentationLoaded = true;
       if(this.mounted){
         if(presentation){
-          setState(() {
+          if(this.mounted) setState(() {
             _presentationExist = true;
           });
           DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
-          print("ARCHIVO:  $path");
+            print("ARCHIVO:  $path");
             if(this.mounted) setState(() {
               _presentation = Presentation(
                 file: path,
-                animationValue: _turnsFloat.value,
               );
+              _presentationLoaded = true;
             });
           });
         }else{
@@ -421,17 +404,8 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
   }
 
-  void _startLoadingAnimation(){
-    _loadingController.forward(from: 0).then((_){
-      if(!_presentationLoaded){
-        _startLoadingAnimation();
-      }
-    });
-  }
-
   @override
   void dispose() {
-    _loadingController.dispose();
     _questionPasser.sendWidget.add(null);
     _pathPasser.sendWidget.add(null);
     InteractRoute.updateQuestions.sendWidget.add(null);
@@ -462,16 +436,15 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           ],
         ),
       );
-    }else if(!_presentationExist){
+    }else if(!_presentationExist || !_presentationLoaded){
       return Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            RotationTransition(
-              turns: _turnsFloat,
-              child: Icon(
-                FontAwesomeIcons.circleNotch,
-              ),
+            SpinKitRing(
+              color: Theme.of(context).accentColor,
+              size: 30.0,
+              lineWidth: 4,
             ),
           ],
         ),
