@@ -118,6 +118,17 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
         Auth.currentUser().then((userId){
           if(userId == null){
             print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+            Notify.show(
+              context: this.context,
+              text: 'El usuario no se encuentra disponible, verifique sus datos.',
+              actionText: 'Ok',
+              backgroundColor: Colors.red[200],
+              textColor: Colors.black,
+              actionColor: Colors.black,
+              onPressed: (){
+                
+              }
+            );            
             _logging = false;
           }else{
             prefs.setInt('logged', 1);
