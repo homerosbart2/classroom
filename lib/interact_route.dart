@@ -128,7 +128,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           });
         }else{
           setState(() {
-            
+            _presentationLoaded = true;
           });
         }
       }

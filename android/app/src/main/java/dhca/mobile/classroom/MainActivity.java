@@ -1,4 +1,4 @@
-package com.example.classroom;
+package dhca.mobile.classroom;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;

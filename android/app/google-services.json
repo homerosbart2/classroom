@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:1050024971555:android:c95ddaa0e1cb6f53",
         "android_client_info": {
-          "package_name": "com.example.classroom"
+          "package_name": "dhca.mobile.classroom"
         }
       },
       "oauth_client": [
@@ -18,7 +18,7 @@
           "client_id": "1050024971555-8t5usdjj0tib38h49clpa6a671ck5ttk.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.classroom",
+            "package_name": "dhca.mobile.classroom",
             "certificate_hash": "8bc4a7b0db878261d1860e3b615a9b86f178ff4e"
           }
         },
@@ -43,7 +43,7 @@
               "client_id": "1050024971555-co3enibpq7bceudd3gbrhvgmt4al2nkf.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.classroom"
+                "bundle_id": "dhca.mobile.classroom"
               }
             }
           ]
