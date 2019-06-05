@@ -21,7 +21,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
   FocusNode _passwordFocusNode;
   bool _register, _logging, _actuallyLogged;
   int _logged;
-  TextEditingController _usernameController, _passwordController, _nameController;
+  TextEditingController _usernameController, _passwordController, _nameController, _passwordRepeatController;
   AnimationController _slideController;
   Animation<Offset> _registerOffsetFloat, _loginOffsetFloat;
   SharedPreferences prefs;
@@ -36,6 +36,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     _nameController = TextEditingController();
     _usernameController = TextEditingController();
     _passwordController = TextEditingController();
+    _passwordRepeatController = TextEditingController();
 
     _logging = false;
 
@@ -109,6 +110,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           prefs.setString('password', password);
           _navigateToCourses(context);
           _passwordController.text = '';
+          _passwordRepeatController.text = '';
           _logging = false;
           _actuallyLogged = true;
         }    
@@ -136,6 +138,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             prefs.setString('password', password);
             _navigateToCourses(context);
             _passwordController.text = '';
+            _passwordRepeatController.text = '';
             _logging = false;
             _actuallyLogged = true;
           } 
@@ -216,6 +219,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             this.setState(() {   
             });
           },
+          controller: _passwordRepeatController,
         ),
         Container(
           margin: EdgeInsets.only(top: 12),
@@ -239,10 +243,25 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
+                  print("1: ${_passwordRepeatController.text}");
+                  print("1: ${_passwordController.text}");
                   if(!_logging){
-                    _logging = true;
-                    validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
-                  //TODO: Hay que verificar que el usuario tenga cuenta en la base de datos y verificar el hash.
+                    if(_passwordRepeatController.text == _passwordController.text){
+                      _logging = true;
+                      validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
+                    }else{
+                      Notify.show(
+                        context: this.context,
+                        text: 'Las contraseñas no coinciden.',
+                        actionText: 'Ok',
+                        backgroundColor: Colors.red[200],
+                        textColor: Colors.black,
+                        actionColor: Colors.black,
+                        onPressed: (){
+                          
+                        }
+                      );
+                    }
                   }
                 },
               ),
