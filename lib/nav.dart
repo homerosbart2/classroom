@@ -301,7 +301,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                               if(text == null){  
                                 setState(() {
                                   Notify.show(
-                                    context: context,
+                                    context: this.context,
                                     text: 'El curso no existe.',
                                     actionText: 'Ok',
                                     backgroundColor: Colors.red[200],
@@ -328,7 +328,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             }); 
                           }else{
                             Notify.show(
-                              context: context,
+                              context: this.context,
                               text: 'El curso ya ha sido agregado.',
                               actionText: 'Ok',
                               backgroundColor: Colors.red[200],
@@ -532,12 +532,11 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               ),
               tooltip: 'Salir del curso',
               onPressed: (){
-                //TODO: Terminar desasignarse
                 Course.deactivateListener.sendWidget.add('deactivate');               
-                Navigator.of(context).pop();
-                DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, widget.courseId, "", "course", "course", "i", "delete").then((_){
+                DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, widget.courseId, "course", "course", "course", "i", "delete").then((_){
                   DatabaseManager.updateCourse(widget.courseId, "-1", "participants");
                 });
+                Navigator.of(context).pop();
               },
             ),
           )

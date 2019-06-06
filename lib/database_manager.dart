@@ -251,8 +251,7 @@ class DatabaseManager{
 
   static Future<String> getFiles(String type, String lessonId) async{
     StorageReference ref =  storageRef.child(type).child(lessonId);
-    print(ref);
-    List<int> bytes = await ref.getData(1024*1024*10); 
+    List<int> bytes = await ref.getData(1024*100); 
     File file;
     var directory = await getApplicationDocumentsDirectory();
     file = new File('${directory.path}/$lessonId.pdf');
@@ -339,7 +338,8 @@ class DatabaseManager{
     DatabaseReference course;
     switch(column){
       case "participants": {
-        int participants = int.parse(param);
+        int participants = await getFieldFrom("courses", code, "participants");
+        print("participants: $participants");
         course = await mDatabase.child("courses").child(code).update({
           'participants': participants + int.parse(param),
         }).then((_){/*nothing*/});        
@@ -375,7 +375,7 @@ class DatabaseManager{
       Map<dynamic,dynamic> course = snapshot.value;
       if(course != null){
         int participants = course['participants'];
-        updateCourse(code,(participants).toString(),"participants");
+        updateCourse(code,"1","participants");
         // addUserPerCourse(uid,code);
         addCoursePerUser(uid,code);
         _course = {
@@ -390,7 +390,8 @@ class DatabaseManager{
       }
     });
     return _course;
-}
+  }
+
 
   static Future<dynamic> actionOnFieldFrom(String parent, String child1, String child2, String param, String column, var value, String type, String action) async{
     var data = "";
@@ -436,7 +437,8 @@ class DatabaseManager{
           }
           case "delete":{
             mDatabase.child(parent).child(child1).remove();
-          }
+            break;
+          }         
         }
       }
     }
