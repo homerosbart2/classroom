@@ -451,7 +451,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SpinKitRing(
-              color: Colors.green,
+              color: Theme.of(context).accentColor,
               size: 30.0,
               lineWidth: 4,
             ),
