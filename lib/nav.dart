@@ -14,6 +14,7 @@ import 'package:classroom/chatbar.dart';
 import 'dart:math';
 import 'package:classroom/choice.dart';
 import 'dart:convert';
+import 'package:classroom/notify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Nav extends StatefulWidget{
@@ -296,17 +297,17 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
                               if(text == null){  
                                 setState(() {
-                                // Notify.show(
-                                //     context: context,
-                                //     text: 'El curso no existe.',
-                                //     actionText: 'Ok',
-                                //     backgroundColor: Colors.red[200],
-                                //     textColor: Colors.black,
-                                //     actionColor: Colors.black,
-                                //     onPressed: (){
+                                  Notify.show(
+                                    context: context,
+                                    text: 'El curso no existe.',
+                                    actionText: 'Ok',
+                                    backgroundColor: Colors.red[200],
+                                    textColor: Colors.black,
+                                    actionColor: Colors.black,
+                                    onPressed: (){
                                       
-                                //     }
-                                //   );   
+                                    }
+                                  );   
                                   print("NO EXISTE");                               
                                 });            
                               }else{
@@ -323,17 +324,17 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                               }              
                             }); 
                           }else{
-                            // Notify.show(
-                            //   context: context,
-                            //   text: 'El curso ya ha sido agregado.',
-                            //   actionText: 'Ok',
-                            //   backgroundColor: Colors.red[200],
-                            //   textColor: Colors.black,
-                            //   actionColor: Colors.black,
-                            //   onPressed: (){
+                            Notify.show(
+                              context: context,
+                              text: 'El curso ya ha sido agregado.',
+                              actionText: 'Ok',
+                              backgroundColor: Colors.red[200],
+                              textColor: Colors.black,
+                              actionColor: Colors.black,
+                              onPressed: (){
                                 
-                            //   } 
-                            // );                           
+                              } 
+                            );                           
                             print("DUPLICADO"); 
                           }
                         });                                                                      
