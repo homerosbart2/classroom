@@ -697,7 +697,6 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           onSelected: (choice){
             if(choice.title == 'Eliminar'){
               print('ELIMINAR CURSO: ${widget.courseId}');
-              //TODO: Eliminar el curso de firebase.
               DatabaseManager.deleteCourse(widget.courseId, Auth.uid);
             }else if(choice.title == 'Nombre'){
               print('SELECCION DE NOMBRE');
@@ -899,7 +898,6 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   ],
                 ),
                 onTap: () {
-                  //TODO: Cerrar la sesión del usuario.
                   Auth.signOut().then((_)
                   {
                     prefs.setInt('logged', 0);
