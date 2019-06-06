@@ -95,42 +95,54 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
   }
 
   void validateAndSubmit(String email, String password, String name) async {
-    email = email.toString().trim().toLowerCase();
-    password = password.toString().trim();
-    //TODO: validar email valido y password no empty
-    try{ 
-      if(_register == true){
-        String user = await Auth.createUserWithEmailAndPassword(email,password,name);
-        if(user == null){
-          print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
-          _logging = false;
-        }else{
-          prefs.setInt('logged', 1);
-          prefs.setString('email', email);
-          prefs.setString('password', password);
-          _navigateToCourses(context);
-          _passwordController.text = '';
-          _passwordRepeatController.text = '';
-          _logging = false;
-          _actuallyLogged = true;
-        }    
-      }else{
-        String user = await Auth.signInWithEmailAndPassword(email, password);
-        print("Login: $user");
-        Auth.currentUser().then((userId){
-          if(userId == null){
-            print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
-            Notify.show(
-              context: this.context,
-              text: 'El usuario no se encuentra disponible, verifique sus datos.',
-              actionText: 'Ok',
-              backgroundColor: Colors.red[200],
-              textColor: Colors.black,
-              actionColor: Colors.black,
-              onPressed: (){
-                
-              }
-            );            
+    if((email == null || email == "") && (password == "" || password == null)){
+      Notify.show(
+        context: this.context,
+        text: 'Debe ingresar el correo y contraseña.',
+        actionText: 'Ok',
+        backgroundColor: Colors.red[200],
+        textColor: Colors.black,
+        actionColor: Colors.black,
+        onPressed: (){
+          
+        }
+      );
+      _logging = false;
+    }else if(password == null || password == ""){
+      Notify.show(
+        context: this.context,
+        text: 'Debe ingresar la contraseña.',
+        actionText: 'Ok',
+        backgroundColor: Colors.red[200],
+        textColor: Colors.black,
+        actionColor: Colors.black,
+        onPressed: (){
+          
+        }
+      );      
+      _logging = false;
+    }else if(email == null || email == ""){
+      Notify.show(
+        context: this.context,
+        text: 'Debe ingresar la dirección de correo.',
+        actionText: 'Ok',
+        backgroundColor: Colors.red[200],
+        textColor: Colors.black,
+        actionColor: Colors.black,
+        onPressed: (){
+          
+        }
+      );      
+      _logging = false;
+    }else{
+      email = email.toString().trim().toLowerCase();
+      password = password.toString().trim();
+      //TODO: validar email valido y password no empty
+      try{ 
+        if(_register == true){
+          String user = await Auth.createUserWithEmailAndPassword(email,password,name);
+          if(user == null){
+            print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
             _logging = false;
           }else{
             prefs.setInt('logged', 1);
@@ -141,23 +153,52 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
             _passwordRepeatController.text = '';
             _logging = false;
             _actuallyLogged = true;
-          } 
-        });
-      }
-    }catch(e){
-      print(e.toString());
-      Notify.show(
-        context: this.context,
-        text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
-        actionText: 'Ok',
-        backgroundColor: Colors.red[200],
-        textColor: Colors.black,
-        actionColor: Colors.black,
-        onPressed: (){
-          
+          }    
+        }else{
+          String user = await Auth.signInWithEmailAndPassword(email, password);
+          print("Login: $user");
+          Auth.currentUser().then((userId){
+            if(userId == null){
+              print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
+              Notify.show(
+                context: this.context,
+                text: 'La dirección de correo no se encuentra disponible, verifique sus datos.',
+                actionText: 'Ok',
+                backgroundColor: Colors.red[200],
+                textColor: Colors.black,
+                actionColor: Colors.black,
+                onPressed: (){
+                  
+                }
+              );            
+              _logging = false;
+            }else{
+              prefs.setInt('logged', 1);
+              prefs.setString('email', email);
+              prefs.setString('password', password);
+              _navigateToCourses(context);
+              _passwordController.text = '';
+              _passwordRepeatController.text = '';
+              _logging = false;
+              _actuallyLogged = true;
+            } 
+          });
         }
-      );
-      _logging = false;
+      }catch(e){
+        print(e.toString());
+        Notify.show(
+          context: this.context,
+          text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
+          actionText: 'Ok',
+          backgroundColor: Colors.red[200],
+          textColor: Colors.black,
+          actionColor: Colors.black,
+          onPressed: (){
+            
+          }
+        );
+        _logging = false;
+      }
     }
 
   } 
@@ -243,12 +284,24 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 borderColor: Theme.of(context).primaryColor,
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
-                  print("1: ${_passwordRepeatController.text}");
-                  print("1: ${_passwordController.text}");
                   if(!_logging){
                     if(_passwordRepeatController.text == _passwordController.text){
-                      _logging = true;
-                      validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);
+                      if(_nameController.text == null || _nameController.text == ""){
+                        Notify.show(
+                          context: this.context,
+                          text: 'Debe ingresar el nombre de usuario.',
+                          actionText: 'Ok',
+                          backgroundColor: Colors.red[200],
+                          textColor: Colors.black,
+                          actionColor: Colors.black,
+                          onPressed: (){
+                            
+                          }
+                        );                        
+                      }else{
+                        _logging = true;
+                        validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);                        
+                      }
                     }else{
                       Notify.show(
                         context: this.context,

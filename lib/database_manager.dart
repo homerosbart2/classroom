@@ -8,6 +8,7 @@ import 'package:classroom/answer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'dart:async';
+import 'package:path_provider/path_provider.dart';
 
 class DatabaseManager{
   static DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
@@ -248,30 +249,36 @@ class DatabaseManager{
   }
 
   static Future<String> getFiles(String type, String lessonId) async{
-    StorageReference ref = storageRef.child(type).child(lessonId);
-    String path = ""; 
+    StorageReference ref =  storageRef.child(type).child(lessonId);
+    print(ref);
+    List<int> bytes = await ref.getData(1024*500); 
+    File file;
     if(ref != null){
       Directory tempDir = Directory.systemTemp;
-      File file = File('${tempDir.path}/$lessonId.pdf');
+      // file = File('${tempDir.path}/$lessonId.pdf');
       // if(true || !(await file.exists())){
-        StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-        int byteNumber = (await downloadTask.future).totalByteCount;
+        // StorageFileDownloadTask downloadTask = ref.writeToFile(file);
+        // int byteNumber = (await downloadTask.future).totalByteCount;
       // }
-      path = file.path;
     }
-    return path;
+
+
+    var directory = await getApplicationDocumentsDirectory();
+    file = new File('${directory.path}/$lessonId.pdf');
+    await file.writeAsBytes(bytes);
+    return file.path;
   }
 
   static Future<String> uploadFiles(String type, String lessonId, String filePath) async{  
     switch(type){
       case "pdf": {
-         StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
+        StorageUploadTask uploadTask = storageRef.child(type).child(lessonId).putFile(
           File(filePath),
           StorageMetadata(
             contentType: type,
           ),
         );
-        updateLesson(lessonId, "", "presentation");
+        await updateLesson(lessonId, "", "presentation");
         break;        
       }
     }    
