@@ -1,6 +1,5 @@
 import 'package:classroom/courses_route.dart';
 import 'package:classroom/interact_route.dart';
-import 'package:classroom/lessons_route.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/stateful_button.dart';
@@ -9,7 +8,7 @@ import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/widget_passer.dart';
 import 'package:classroom/auth.dart';
 import 'package:classroom/database_manager.dart';
-import 'package:classroom/lesson.dart';
+import 'package:classroom/course.dart';
 import 'package:classroom/chatbar.dart';
 import 'dart:math';
 import 'package:classroom/choice.dart';
@@ -62,7 +61,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   AnimationController _addButtonController;
   Animation<double> _angleFloat;
   AnimationController _addBarController, _addBarAlertController; 
-  String _alertMessage;
+  String _alertMessage, _navTitle, _navSubtitle;
   Color _titleColor, _color, _actionsColor;
   FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
   SharedPreferences prefs;
@@ -74,6 +73,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   List<Choice> choices = <Choice>[
     Choice(title: 'Fecha', icon: FontAwesomeIcons.calendar),
     Choice(title: 'Descripción', icon: FontAwesomeIcons.pen),
+    Choice(title: 'Nombre', icon: FontAwesomeIcons.pen),
     Choice(title: 'Eliminar', icon: FontAwesomeIcons.pen),
   ];
 
@@ -90,6 +90,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         }
       }
     });
+
+    _navTitle = widget.title;
+    _navSubtitle = widget.subtitle;
 
     _resizeScaffold = widget.section == 'interact';
   
@@ -342,8 +345,31 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         print('DESCRIPCION: $val');
                         print('CURSO: ${widget.courseId}');
                         print('LECCION: ${widget.lessonId}');
-                        //TODO: Guardar la nueva descripcion en firebase
                         DatabaseManager.updateLesson(widget.lessonId, val,"description");
+                        _addBarController.reverse().then((val){
+                          _addBarTextfieldController.text = '';
+                          if(_addBarAlertController.status != AnimationStatus.dismissed){
+                            _addBarAlertController.reverse();
+                          }
+                        }); 
+                        ChatBar.chatBarOffsetController.reverse().then((val){
+                          InteractRoute.questionOpacityController.reverse();
+                        }); 
+                      }else if(Nav.addBarMode == 3){
+                        print('NOMBRE: $val');
+                        print('CURSO: ${widget.courseId}');
+                        if(widget.section == 'interact'){
+                          print('LECCION: ${widget.lessonId}');
+                          if(this.mounted) setState(() {
+                            _navTitle = val;
+                          });
+                          DatabaseManager.updateLesson(widget.lessonId, val,"name");
+                        }else if(widget.section == 'lessons'){
+                          if(this.mounted) setState(() {
+                            _navSubtitle = val;
+                          });
+                          DatabaseManager.updateCourse(widget.courseId, val,"name");
+                        }
                         _addBarController.reverse().then((val){
                           _addBarTextfieldController.text = '';
                           if(_addBarAlertController.status != AnimationStatus.dismissed){
@@ -494,6 +520,29 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           )
         );
       }
+
+      if(widget.section == 'lessons' && !widget.owner){
+        actions.add(
+          Container(
+            margin: EdgeInsets.only(right: 9),
+            child: IconButton(
+              icon: Icon(
+                FontAwesomeIcons.doorOpen,
+                size: 20,
+              ),
+              tooltip: 'Salir del curso',
+              onPressed: (){
+                //TODO: Terminar desasignarse
+                Course.deactivateListener.sendWidget.add('deactivate');               
+                Navigator.of(context).pop();
+                DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, widget.courseId, "", "course", "course", "i", "delete").then((_){
+                  DatabaseManager.updateCourse(widget.courseId, "-1", "participants");
+                });
+              },
+            ),
+          )
+        );
+      }
     }else if(widget.section == 'interact' && widget.owner){
       actions.add(
         PopupMenuButton<Choice>(
@@ -523,6 +572,32 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   setState(() {
                     Nav.addBarTitle = "Ingrese la nueva descripción";
                     Nav.addBarMode = 2;
+                  });
+                  _addBarController.forward(
+                    from: 0
+                  );
+                  ChatBar.chatBarOffsetController.forward();
+                  InteractRoute.questionOpacityController.forward();
+                  FocusScope.of(context).requestFocus(_getFocusNode());
+                }
+            }else if(choice.title == 'Nombre'){
+              final status = _addBarController.status;
+              if(status == AnimationStatus.completed){
+                _addBarController.reverse(
+                  from: 1
+                ).then((val){
+                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                    _addBarAlertController.reverse();
+                  }
+                });
+                ChatBar.chatBarOffsetController.reverse().then((value){
+                  InteractRoute.questionOpacityController.reverse();
+                });
+                FocusScope.of(context).requestFocus(new FocusNode());
+              }else if(status == AnimationStatus.dismissed){
+                  setState(() {
+                    Nav.addBarTitle = "Ingrese el nuevo nombre";
+                    Nav.addBarMode = 3;
                   });
                   _addBarController.forward(
                     from: 0
@@ -596,6 +671,31 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               print('ELIMINAR CURSO: ${widget.courseId}');
               //TODO: Eliminar el curso de firebase.
               DatabaseManager.deleteCourse(widget.courseId, Auth.uid);
+            }else if(choice.title == 'Nombre'){
+              print('SELECCION DE NOMBRE');
+              final status = _addBarController.status;
+              if(status == AnimationStatus.completed){
+                _addBarController.reverse(
+                  from: 1
+                ).then((val){
+                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                    _addBarAlertController.reverse();
+                  }
+                });
+                ChatBar.chatBarOffsetController.reverse().then((value){
+                  InteractRoute.questionOpacityController.reverse();
+                });
+                FocusScope.of(context).requestFocus(new FocusNode());
+              }else if(status == AnimationStatus.dismissed){
+                  setState(() {
+                    Nav.addBarTitle = "Ingrese el nuevo nombre";
+                    Nav.addBarMode = 3;
+                  });
+                  _addBarController.forward(
+                    from: 0
+                  );
+                  FocusScope.of(context).requestFocus(_getFocusNode());
+                }
             }
           },
           itemBuilder: (BuildContext context) {
@@ -803,7 +903,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
 
     if(widget.subtitle == ''){
       return Text(
-        widget.title,
+        _navTitle,
         style: TextStyle(
           color: _titleColor,
           fontSize: 26.0,
@@ -825,7 +925,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
             ),
           ),
           Text(
-            widget.subtitle,
+            _navSubtitle,
             style: TextStyle(
               color: Colors.redAccent[100],
               fontSize: 15,
