@@ -8,15 +8,8 @@ import 'package:classroom/answer.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
 import 'dart:async';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import 'package:path_provider/path_provider.dart';
-=======
 import 'package:flutter/services.dart';
->>>>>>> Stashed changes
-=======
-import 'package:flutter/services.dart';
->>>>>>> Stashed changes
 
 class DatabaseManager{
   static DatabaseReference mDatabase = FirebaseDatabase.instance.reference();
