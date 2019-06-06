@@ -1,5 +1,6 @@
 import 'package:classroom/courses_route.dart';
 import 'package:classroom/interact_route.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/stateful_button.dart';
@@ -15,6 +16,7 @@ import 'package:classroom/choice.dart';
 import 'dart:convert';
 import 'package:classroom/notify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:classroom/database_manager.dart';
 
 class Nav extends StatefulWidget{
   static String addBarTitle;
@@ -360,13 +362,40 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         print('CURSO: ${widget.courseId}');
                         if(widget.section == 'interact'){
                           print('LECCION: ${widget.lessonId}');
+                          FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
+                            var value = (data.snapshot.value);
+                            String key = data.snapshot.key;
+                            switch(key){
+                              case "name":{
+                                if(this.mounted){
+                                  setState(() {
+                                    _navTitle = value.toString();
+                                  });
+                                }
+                                break;
+                              }
+                            }
+                          });                          
                           if(this.mounted) setState(() {
                             _navTitle = val;
                           });
                           DatabaseManager.updateLesson(widget.lessonId, val,"name");
                         }else if(widget.section == 'lessons'){
                           if(this.mounted) setState(() {
-                            _navSubtitle = val;
+                            FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
+                              var value = (data.snapshot.value);
+                              String key = data.snapshot.key;
+                              switch(key){
+                                case "name":{
+                                  if(this.mounted){
+                                    setState(() {
+                                      _navSubtitle = value.toString();
+                                    });
+                                  }
+                                  break;
+                                }
+                              }
+                            }); 
                           });
                           DatabaseManager.updateCourse(widget.courseId, val,"name");
                         }
