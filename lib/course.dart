@@ -5,8 +5,12 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/lessons_route.dart';
 import 'package:vibration/vibration.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:classroom/widget_passer.dart';
+import 'notify.dart';
 
 class Course extends StatefulWidget{
+  static WidgetPasser deactivateListener = WidgetPasser();
+
   final String name, author, courseId, authorId;
   final Color color;
   final int lessons, participants;
@@ -34,6 +38,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
   Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
   bool _disabled;
   String _lessons, _participants, _name;
+  WidgetPasser _deactivateListener;
 
   @override
   bool get wantKeepAlive => true;
@@ -46,6 +51,14 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
     }else{
       _color = widget.color;
     }
+
+    _deactivateListener = WidgetPasser();
+    _deactivateListener.recieveWidget.listen((msg){
+      if(msg != null){
+        _disabled = true;
+        _courseDeleteController.forward();
+      }
+    });
 
     _participants = '${widget.participants}';
     _lessons = '${widget.lessons}';
@@ -200,6 +213,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
     return InkWell(
       onTap: (){
         if(!_disabled){
+          Course.deactivateListener = _deactivateListener;
           Vibration.vibrate(duration: 20);
           Navigator.of(context).push(
             CupertinoPageRoute(builder: (BuildContext context) {
@@ -208,10 +222,10 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
                 preferredSize: 65,
                 section: 'lessons',
                 title: 'LECCIONES',
-                subtitle: widget.name,
+                subtitle: _name,
                 courseId: widget.courseId,
                 body: LessonsRoute(
-                  name: widget.name,
+                  name: _name,
                   courseId: widget.courseId,
                   author: widget.author,
                   participants: widget.participants,
@@ -222,6 +236,18 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
               );
             }),
           );
+        }else{
+          Notify.show(
+            context: context,
+            text: 'El curso $_name ya no se encuentra disponible.',
+            actionText: 'Ok',
+            backgroundColor: Theme.of(context).accentColor,
+            textColor: Colors.white,
+            actionColor: Colors.white,
+            onPressed: (){
+              
+            }
+          ); 
         }
       },
       splashColor: Colors.redAccent[100],

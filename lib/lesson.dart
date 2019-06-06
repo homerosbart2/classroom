@@ -4,9 +4,8 @@ import 'package:vibration/vibration.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/interact_route.dart';
-import 'widget_passer.dart';
-import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
+import 'notify.dart';
 
 class Lesson extends StatefulWidget{
   final String name, description, lessonId, date, courseId;
@@ -274,7 +273,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                       drawerActive: false,
                                       notificationsActive: false,
                                       section: 'interact',
-                                      title: widget.name,
+                                      title: _name,
                                       owner: widget.owner,
                                       courseId: widget.courseId,
                                       lessonId: widget.lessonId,
@@ -288,6 +287,18 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                     ); 
                                   })
                                 );
+                              }else{
+                                Notify.show(
+                                  context: context,
+                                  text: 'La lección $_name ya no se encuentra disponible.',
+                                  actionText: 'Ok',
+                                  backgroundColor: Theme.of(context).accentColor,
+                                  textColor: Colors.white,
+                                  actionColor: Colors.white,
+                                  onPressed: (){
+                                    
+                                  }
+                                ); 
                               }
                             },
                             child: Container(
