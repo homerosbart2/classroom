@@ -8,7 +8,7 @@ import 'package:classroom/nav.dart';
 import 'package:classroom/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:classroom/notify.dart';
-// import 'dart:io' show Platform;
+import 'dart:io';
 
 class Login extends StatefulWidget {
   const Login();
@@ -94,83 +94,56 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
     );
   }
 
+  Future<bool> isConnected() async{
+    try {
+      final result = await InternetAddress.lookup('google.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        return true;
+      }
+    } on SocketException catch (_) {
+      return false;
+    } 
+    return false;   
+  }
   void validateAndSubmit(String email, String password, String name) async {
     if((email == null || email == "") && (password == "" || password == null)){
-      Notify.show(
-        context: this.context,
-        text: 'Debe ingresar el correo y contraseña.',
-        actionText: 'Ok',
-        backgroundColor: Colors.red[200],
-        textColor: Colors.black,
-        actionColor: Colors.black,
-        onPressed: (){
-          
-        }
-      );
+      showNotification('Debe ingresar el correo y contraseña.');
       _logging = false;
     }else if(password == null || password == ""){
-      Notify.show(
-        context: this.context,
-        text: 'Debe ingresar la contraseña.',
-        actionText: 'Ok',
-        backgroundColor: Colors.red[200],
-        textColor: Colors.black,
-        actionColor: Colors.black,
-        onPressed: (){
-          
-        }
-      );      
+      showNotification('Debe ingresar la contraseña.');     
       _logging = false;
     }else if(email == null || email == ""){
-      Notify.show(
-        context: this.context,
-        text: 'Debe ingresar la dirección de correo.',
-        actionText: 'Ok',
-        backgroundColor: Colors.red[200],
-        textColor: Colors.black,
-        actionColor: Colors.black,
-        onPressed: (){
-          
-        }
-      );      
+      showNotification('Debe ingresar la dirección de correo.');      
       _logging = false;
     }else{
       email = email.toString().trim().toLowerCase();
       password = password.toString().trim();
-      //TODO: validar email valido y password no empty
       try{ 
         if(_register == true){
-          String user = await Auth.createUserWithEmailAndPassword(email,password,name);
-          if(user == null){
-            print("USER IS NOT CREATE"); //TODO: message that user could not register correctly.\
-            _logging = false;
-          }else{
-            prefs.setInt('logged', 1);
-            prefs.setString('email', email);
-            prefs.setString('password', password);
-            _navigateToCourses(context);
-            _passwordController.text = '';
-            _passwordRepeatController.text = '';
-            _logging = false;
-            _actuallyLogged = true;
-          }    
+          await Auth.createUserWithEmailAndPassword(email,password,name);
+          Auth.currentUser(name).then((userId){
+            print("user: $userId");
+            if(userId == null){
+              showNotification('La dirección de correo no se puede registrar, ya ha sido tomada.'); 
+              _logging = false;
+            }else{
+              prefs.setInt('logged', 1);
+              prefs.setString('email', email);
+              prefs.setString('password', password);
+              _navigateToCourses(context);
+              _passwordController.text = '';
+              _nameController.text = '';
+              _passwordRepeatController.text = '';
+              _logging = false;
+              _actuallyLogged = true;
+            }
+          });    
         }else{
           String user = await Auth.signInWithEmailAndPassword(email, password);
           print("Login: $user");
-          Auth.currentUser().then((userId){
+          Auth.currentUser("").then((userId){
             if(userId == null){
-              print("USER IS NOT LOGIN"); //TODO: message that user is not login correctly.\
-              Notify.show(
-                context: this.context,
-                text: 'La dirección de correo no se encuentra disponible, verifique sus datos.',
-                actionText: 'Ok',
-                backgroundColor: Colors.red[200],
-                textColor: Colors.black,
-                actionColor: Colors.black,
-                onPressed: (){
-                  
-                }
-              );            
+              showNotification('La dirección de correo no se encuentra, verifique sus datos.');            
               _logging = false;
             }else{
               prefs.setInt('logged', 1);
@@ -186,23 +159,26 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
         }
       }catch(e){
         print(e.toString());
-        Notify.show(
-          context: this.context,
-          text: 'La contraseña o dirección de correo que has introducido son incorrectos.',
-          actionText: 'Ok',
-          backgroundColor: Colors.red[200],
-          textColor: Colors.black,
-          actionColor: Colors.black,
-          onPressed: (){
-            
-          }
-        );
+        showNotification('La contraseña o dirección de correo que has introducido son incorrectos.');            
         _logging = false;
       }
     }
 
   } 
 
+  void showNotification(String text){
+    Notify.show(
+      context: this.context,
+      text: text,
+      actionText: 'Ok',
+      backgroundColor: Colors.red[200],
+      textColor: Colors.black,
+      actionColor: Colors.black,
+      onPressed: (){
+        
+      }
+    );    
+  }
   Widget _registerForm(){
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -285,36 +261,26 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 fillColor: Theme.of(context).primaryColor,
                 onTap: (){
                   if(!_logging){
-                    if(_passwordRepeatController.text == _passwordController.text){
-                      if(_nameController.text == null || _nameController.text == ""){
-                        Notify.show(
-                          context: this.context,
-                          text: 'Debe ingresar el nombre de usuario.',
-                          actionText: 'Ok',
-                          backgroundColor: Colors.red[200],
-                          textColor: Colors.black,
-                          actionColor: Colors.black,
-                          onPressed: (){
-                            
+                    isConnected().then((internet){
+                      if(internet){
+                        if(_passwordRepeatController.text == _passwordController.text){
+                          if((_passwordController.text).length >= 6){
+                            if(_nameController.text == null || _nameController.text == ""){
+                              showNotification('La contraseña debe ser de al menos 6 caracteres.');
+                            }else{
+                              _logging = true;
+                              validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);                        
+                            }
+                          }else{
+                            showNotification('La contraseña debe ser de al menos 6 caracteres.');
                           }
-                        );                        
-                      }else{
-                        _logging = true;
-                        validateAndSubmit(_usernameController.text, _passwordController.text, _nameController.text);                        
-                      }
-                    }else{
-                      Notify.show(
-                        context: this.context,
-                        text: 'Las contraseñas no coinciden.',
-                        actionText: 'Ok',
-                        backgroundColor: Colors.red[200],
-                        textColor: Colors.black,
-                        actionColor: Colors.black,
-                        onPressed: (){
-                          
+                        }else{
+                          showNotification('Las contraseñas no coinciden.');
                         }
-                      );
-                    }
+                      }else{
+                        showNotification('El dispositivo no tiene conección a internet');
+                      }
+                    });
                   }
                 },
               ),
@@ -383,8 +349,14 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           },
           onSubmitted: (String value){
             if(!_logging){
-              _logging = true;
-                validateAndSubmit(_usernameController.text, _passwordController.text,"");
+              isConnected().then((internet){
+                if(internet){
+                  _logging = true;
+                  validateAndSubmit(_usernameController.text, _passwordController.text,"");
+                }else{
+                  showNotification('El dispositivo no tiene conección a internet');
+                }
+              });              
             }
           },
           controller: _passwordController,

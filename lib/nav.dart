@@ -773,10 +773,14 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   //TODO: Cerrar la sesión del usuario.
                   Auth.signOut().then((_)
                   {
-                    prefs.setInt('logged', 0);
-                    Navigator.of(context).pop();
-                    Navigator.of(context).pop();
-                    if(widget.section == 'lessons') Navigator.of(context).pop();
+                    Auth.currentUser("").then((user){
+                      if(user == null){
+                        prefs.setInt('logged', 0);
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        if(widget.section == 'lessons') Navigator.of(context).pop();
+                      }
+                    });
                   });
                 },
               ),

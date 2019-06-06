@@ -253,16 +253,6 @@ class DatabaseManager{
     print(ref);
     List<int> bytes = await ref.getData(1024*500); 
     File file;
-    if(ref != null){
-      Directory tempDir = Directory.systemTemp;
-      // file = File('${tempDir.path}/$lessonId.pdf');
-      // if(true || !(await file.exists())){
-        // StorageFileDownloadTask downloadTask = ref.writeToFile(file);
-        // int byteNumber = (await downloadTask.future).totalByteCount;
-      // }
-    }
-
-
     var directory = await getApplicationDocumentsDirectory();
     file = new File('${directory.path}/$lessonId.pdf');
     await file.writeAsBytes(bytes);
