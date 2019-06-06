@@ -360,14 +360,14 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                         print('CURSO: ${widget.courseId}');
                         if(widget.section == 'interact'){
                           print('LECCION: ${widget.lessonId}');
-                          if(this.mounted) setState(() {
-                            _navTitle = val;
-                          });
+                          // if(this.mounted) setState(() {
+                          //   _navTitle = val;
+                          // });
                           DatabaseManager.updateLesson(widget.lessonId, val,"name");
                         }else if(widget.section == 'lessons'){
-                          if(this.mounted) setState(() {
-                            _navSubtitle = val;
-                          });
+                          // if(this.mounted) setState(() {
+                          //   _navSubtitle = val;
+                          // });
                           DatabaseManager.updateCourse(widget.courseId, val,"name");
                         }
                         _addBarController.reverse().then((val){
@@ -668,7 +668,6 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
           onSelected: (choice){
             if(choice.title == 'Eliminar'){
               print('ELIMINAR CURSO: ${widget.courseId}');
-              //TODO: Eliminar el curso de firebase.
               DatabaseManager.deleteCourse(widget.courseId, Auth.uid);
             }else if(choice.title == 'Nombre'){
               print('SELECCION DE NOMBRE');
@@ -870,7 +869,6 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   ],
                 ),
                 onTap: () {
-                  //TODO: Cerrar la sesión del usuario.
                   Auth.signOut().then((_)
                   {
                     prefs.setInt('logged', 0);
