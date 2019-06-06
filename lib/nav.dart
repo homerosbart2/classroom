@@ -688,15 +688,15 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                             ],
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.only(top: 2),
-                          child: Text(
-                            'Ver más',
-                            style: TextStyle(
-                              color: Theme.of(context).primaryColor,
-                            ),
-                          ),
-                        ),
+                        // Container(
+                        //   margin: EdgeInsets.only(top: 2),
+                        //   child: Text(
+                        //     'Ver más',
+                        //     style: TextStyle(
+                        //       color: Colors.transparent
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     ),
                   ),

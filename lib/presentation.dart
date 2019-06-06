@@ -161,7 +161,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 SpinKitRing(
-                  color: Theme.of(context).accentColor,
+                  color: Colors.red,
                   size: 30.0,
                   lineWidth: 4,
                 ),
