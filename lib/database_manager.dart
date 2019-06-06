@@ -251,7 +251,7 @@ class DatabaseManager{
 
   static Future<String> getFiles(String type, String lessonId) async{
     StorageReference ref =  storageRef.child(type).child(lessonId);
-    List<int> bytes = await ref.getData(1024*100); 
+    List<int> bytes = await ref.getData(1024*1024*10); 
     File file;
     var directory = await getApplicationDocumentsDirectory();
     file = new File('${directory.path}/$lessonId.pdf');

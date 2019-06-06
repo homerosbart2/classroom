@@ -34,7 +34,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   ScrollController _scrollController;
   AnimationController _qrHeightController;
   Animation<Offset> _qrOffsetFloat;
-  String _participants;
+  String _participants, _name;
   bool _disabled;
 
   List<Lesson> _lessons;
@@ -62,6 +62,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
     _lessonPasser = Nav.lessonPasser;
     _participants = '${widget.participants}';
+    _name = '${widget.name}';
     _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
@@ -85,6 +86,31 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
         _disabled = true;
       });
     });
+
+   FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
+      var value = (data.snapshot.value);
+      String key = data.snapshot.key;
+      // print("key: $key");
+      // print("value: $value");
+      switch(key){
+        case "participants":{
+          if(this.mounted){
+            setState(() {
+              _participants = value.toString();
+            });
+          }
+          break;
+        }
+        case "name": {
+          if(this.mounted){
+            setState(() {
+              _name = value;
+            });
+          }              
+          break;
+        }           
+      }
+    });   
 
     FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.courseId).onChildAdded.listen((data) {
       if(this.mounted) setState(() {
@@ -148,23 +174,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
           );
         }
       }
-    });
-
- FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
-    var value = (data.snapshot.value);
-    String key = data.snapshot.key;
-    switch(key){
-      case "participants":{
-        if(this.mounted){
-          setState(() {
-            _participants = value.toString();
-          });
-        }
-        break;
-      }          
-    }
-  });    
-    
+    });    
   }
 
   @override
@@ -222,7 +232,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                     Row(
                       children: <Widget>[
                         Text(
-                          widget.name,
+                          _name,
                           style: TextStyle(
                             color: Theme.of(context).accentColor,
                             fontSize: 22,
