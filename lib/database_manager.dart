@@ -314,6 +314,12 @@ class DatabaseManager{
         }).then((_){/*nothing*/});    
         break;        
       }
+      case "name": {
+        await mDatabase.child("lessons").child(code).update({
+          'name': param,
+        }).then((_){/*nothing*/});       
+        break;
+      }       
       case "date": {
         await mDatabase.child("lessons").child(code).update({
           'date': param,
@@ -345,6 +351,12 @@ class DatabaseManager{
         }).then((_){/*nothing*/});       
         break;
       }
+      case "name": {
+         course = await mDatabase.child("courses").child(code).update({
+          'name': param,
+        }).then((_){/*nothing*/});       
+        break;
+      }      
       case "lessons": {
         await mDatabase.child("courses").child(code).once().then((DataSnapshot snapshot){
           Map<dynamic,dynamic> currentCourse = snapshot.value;
