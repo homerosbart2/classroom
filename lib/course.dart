@@ -33,7 +33,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
   Animation<double> _sizeFloat, _opacityFloat;
   Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
   bool _disabled;
-  String _lessons, _participants;
+  String _lessons, _participants, _name;
 
   @override
   bool get wantKeepAlive => true;
@@ -49,6 +49,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
 
     _participants = '${widget.participants}';
     _lessons = '${widget.lessons}';
+    _name = '${widget.name}';
 
     _disabled = false;
 
@@ -104,6 +105,14 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
           if(this.mounted){
             setState(() {
               _lessons = value.toString();
+            });
+          }              
+          break;
+        } 
+        case "name": {
+          if(this.mounted){
+            setState(() {
+              _name = value;
             });
           }              
           break;
@@ -245,7 +254,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
                           Container(
                             margin: EdgeInsets.only(bottom: 5),
                             child: Text(
-                              widget.name,
+                              _name,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 18,

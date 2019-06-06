@@ -34,7 +34,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
   AnimationController _boxResizeOpacityController, _lessonDeleteController;
   Animation<double> _opacityFloat;
   String _date, _description;
-  String _comments;
+  String _comments, _name;
   Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
   bool _disabled;
 
@@ -48,7 +48,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
     _comments = '${widget.comments}';
 
     _date = '${widget.date}';
-
+    _name = '${widget.name}';
     _disabled = false;
 
     _lessonDeleteController = AnimationController(
@@ -100,6 +100,14 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
           }              
           break;
         }
+        case "name": {
+          if(this.mounted){
+            setState(() {
+              _name = value;
+            });
+          }              
+          break;
+        }         
         case "date": {
           if(this.mounted){
             setState(() {
@@ -183,7 +191,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[
                             Text(
-                              widget.name,
+                              _name,
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
