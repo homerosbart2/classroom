@@ -42,8 +42,8 @@ android {
         applicationId "dhca.mobile.classroom"
         minSdkVersion 21   
         targetSdkVersion 28
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionCode 3
+        versionName "0.1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         multiDexEnabled true
     }
@@ -85,7 +85,7 @@ dependencies {
     implementation 'com.android.support:multidex:1.0.3'
     implementation "com.android.support:appcompat-v7:27.1.0"
     // implementation 'androidx.appcompat:appcompat:1.0.0'
-    // implementation 'androidx.legacy:legacy-support-v4:1.0.0'   
+    // implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.android.gms:play-services-gcm:9.2.0'

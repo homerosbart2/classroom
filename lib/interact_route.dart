@@ -119,12 +119,21 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           });
           DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
             print("ARCHIVO:  $path");
-            if(this.mounted) setState(() {
-              _presentation = Presentation(
-                file: path,
-              );
-              _presentationLoaded = true;
-            });
+            if(path != 'EXCEPTION'){
+              if(this.mounted) setState(() {
+                _presentation = Presentation(
+                  file: path,
+                );
+                _presentationLoaded = true;
+              });
+            }else{
+              if(this.mounted) setState(() {
+                _presentation = Text(
+                  'EXCEPCION :c',
+                );
+                _presentationLoaded = true;
+              });
+            }
           });
         }else{
           setState(() {
@@ -442,7 +451,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SpinKitRing(
-              color: Theme.of(context).accentColor,
+              color: Colors.green,
               size: 30.0,
               lineWidth: 4,
             ),

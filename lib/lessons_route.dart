@@ -8,6 +8,9 @@ import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:flutter/services.dart';
+import 'package:classroom/notify.dart';
+import 'package:vibration/vibration.dart';
 
 class LessonsRoute extends StatefulWidget{
   final String author, name, courseId, authorId;
@@ -306,13 +309,30 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                                     color: Theme.of(context).accentColor,
                                   ),
                                 ),
-                                Text(
-                                  widget.courseId,
-                                  style: TextStyle(
-                                    color: Theme.of(context).accentColor,
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
+                                GestureDetector(
+                                  child: Text(
+                                    widget.courseId,
+                                    style: TextStyle(
+                                      color: Theme.of(context).accentColor,
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
+                                  onLongPress: () {
+                                    Clipboard.setData(new ClipboardData(text: widget.courseId));
+                                    Vibration.vibrate(duration: 40);
+                                    Notify.show(
+                                      context: context,
+                                      text: 'El código ha sido copiado.',
+                                      actionText: 'Ok',
+                                      backgroundColor: Theme.of(context).accentColor,
+                                      textColor: Colors.white,
+                                      actionColor: Colors.white,
+                                      onPressed: (){
+                                        
+                                      }
+                                    ); 
+                                  },
                                 ),
                                 Expanded(
                                   child: Column(

@@ -211,7 +211,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           weight: FontWeight.bold,
           suffix: '',
           color: Colors.redAccent[100],
-          helper: 'correo electrónico.',
+          helper: 'Correo electrónico.',
           label: 'Email',
           type: TextInputType.text,
           onChangedFunction: (String value){
@@ -355,8 +355,8 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           weight: FontWeight.bold,
           suffix: '',
           color: Colors.redAccent[100],
-          helper: 'Nombre de usuario.',
-          label: 'Usuario',
+          helper: 'Correo electrónico.',
+          label: 'Email',
           type: TextInputType.text,
           onChangedFunction: (String value){
             this.setState(() {   
