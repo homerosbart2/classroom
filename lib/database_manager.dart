@@ -28,7 +28,9 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
+      print("snapshot: ${snapshot.data}");
+      print("snapshot: ${snapshot.exists}");
+      if (snapshot.data.length > 0 && snapshot.exists) {
         list = List<String>.from(snapshot.data['courses']);
         list.add(course);
         await transaction.update(reference, <String, dynamic>{'courses': list});
@@ -46,7 +48,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('lessonsPerCourse/' + course);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
+      if (snapshot.data.length > 0) {
         list = List<String>.from(snapshot.data['lessons']);
         list.add(lesson);
         await transaction.update(reference, <String, dynamic>{'lessons': list});
@@ -64,7 +66,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
+      if (snapshot.data.length > 0) {
         list = List<String>.from(snapshot.data['users']);
         list.add(uid);
         await transaction.update(reference, <String, dynamic>{'users': list});
@@ -208,17 +210,28 @@ class DatabaseManager{
     mDatabase.child("questionPerUser").child(uid).equalTo(questionId);        
   } 
 
-  static void deleteDocumentInCollection(String collection,document){
-    Firestore.instance.collection(collection).document(document).delete();
+  static Future<void> deleteDocumentInCollection(String collection,document) async{
+    await Firestore.instance.collection(collection).document(document).delete();
+  }
+
+  static Future<void> deleteFromArray(collection,document,field,val) async{
+    List<dynamic> list = new List<dynamic>();
+    DocumentReference reference = Firestore.instance.document(collection + '/' + document);
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(reference);
+      list = List<String>.from(snapshot.data[field]);
+      list.remove(val);
+      await transaction.update(reference, <String, dynamic>{field: list});
+    });  
   }
 
   static Future<bool> searchInArray(collection,document,field,compare) async{
     List<dynamic> lista = new List<dynamic>();
     DocumentReference reference = Firestore.instance.collection(collection).document(document);
     await reference.get().then((snapshot){
-      lista = List<String>.from(snapshot.data[field]);
+      if(snapshot.data.length > 0) lista = List<String>.from(snapshot.data[field]);
     });
-    print("contains ${lista.contains(compare)}");
+    print("lista: $lista");
     return lista.contains(compare);
   }
 
@@ -232,14 +245,17 @@ class DatabaseManager{
     });
   }
 
-  static void searchField(collection,document,field,compare) async{
+  static Future<bool> searchField(collection,document,field,compare) async{
+    List<DocumentSnapshot> docs = new List<DocumentSnapshot>();
     CollectionReference reference = Firestore.instance.collection(collection);
-    reference.where(field, isEqualTo: compare).getDocuments().then((snapshot){
-      List<DocumentSnapshot> docs = snapshot.documents;
+    await reference.where(field, isEqualTo: compare).getDocuments().then((snapshot){
+      docs = snapshot.documents;
       for(var doc in docs){
         print("DOC: ${doc.data}");
       }
     });
+    if(docs.isNotEmpty) return true;
+    else return false;
   }
 
   static Future<void> deleteQuestion(String questionId, String lessonId, String uid) async{
@@ -253,10 +269,10 @@ class DatabaseManager{
 
 
   static Future<void> deleteLesson(String lessonId,String courseId, String uid) async{
-    await mDatabase.child("lessons").child(lessonId).remove().then((_){
+    await deleteDocumentInCollection("lessons", "lessonId").then((_){
       updateCourse(courseId, "-1", "lessons");
-      actionOnFieldFrom("questionsPerLesson", lessonId, "", "", "", "", "d", "delete");
-      actionOnFieldFrom("lessonsPerCourse", courseId, lessonId, "lesson", "lesson", "", "i", "delete");
+      deleteDocumentInCollection("questionsPerLesson", lessonId);
+      deleteFromArray("lessonsPerCourse", courseId, "lessons", lessonId);
     });
   } 
 
@@ -440,7 +456,7 @@ class DatabaseManager{
     Map course;
     DocumentReference reference = Firestore.instance.collection('courses').document(code);
     await reference.get().then((snapshot){
-      if(snapshot.data != null){
+      if(snapshot.data.length > 0){
         print("snap: ${snapshot.data}");
         int participants = snapshot.data['participants'];
         updateCourse(code,"1","participants");

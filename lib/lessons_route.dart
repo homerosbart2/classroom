@@ -44,8 +44,6 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   void initState() {
     super.initState();
 
-    DatabaseManager.searchInArray("usersPerCourse","-Lkm_Y93pGY_AWFvR_Fc","users","6CKJ1RqJpkhvIJPmsgvl3ApU5CJ2");
-
     _disabled = false;
 
     _qrHeightController = AnimationController(

@@ -1,4 +1,5 @@
 import 'package:classroom/courses_route.dart';
+import 'package:classroom/database_manager.dart' as prefix0;
 import 'package:classroom/interact_route.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -297,24 +298,24 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           }
                         });
                       }else if(Nav.addBarMode == 1){
-                        DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, val, "course", "course", "", "i", "get").then((valid){
-                          if(valid == ""){
+                        DatabaseManager.searchInArray("coursesPerUser",Auth.uid,"courses",val).then((valid){
+                          if(!valid){
                             DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
                               if(text == null){  
-                                setState(() {
-                                  Notify.show(
-                                    context: this.context,
-                                    text: 'El curso no existe.',
-                                    actionText: 'Ok',
-                                    backgroundColor: Colors.red[200],
-                                    textColor: Colors.black,
-                                    actionColor: Colors.black,
-                                    onPressed: (){
+                                // setState(() {
+                                //   Notify.show(
+                                //     context: this.context,
+                                //     text: 'El curso no existe.',
+                                //     actionText: 'Ok',
+                                //     backgroundColor: Colors.red[200],
+                                //     textColor: Colors.black,
+                                //     actionColor: Colors.black,
+                                //     onPressed: (){
                                       
-                                    }
-                                  );   
-                                  print("NO EXISTE");                               
-                                });            
+                                //     }
+                                //   );                              
+                                // });
+                                print("NO EXISTE");            
                               }else{
                                 String textCourse = json.encode(text);
                                 print(textCourse);
@@ -329,24 +330,21 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                               }              
                             }); 
                           }else{
-                            Notify.show(
-                              context: this.context,
-                              text: 'El curso ya ha sido agregado.',
-                              actionText: 'Ok',
-                              backgroundColor: Colors.red[200],
-                              textColor: Colors.black,
-                              actionColor: Colors.black,
-                              onPressed: (){
+                            // Notify.show(
+                            //   context: this.context,
+                            //   text: 'El curso ya ha sido agregado.',
+                            //   actionText: 'Ok',
+                            //   backgroundColor: Colors.red[200],
+                            //   textColor: Colors.black,
+                            //   actionColor: Colors.black,
+                            //   onPressed: (){
                                 
-                              } 
-                            );                           
+                            //   } 
+                            // );                           
                             print("DUPLICADO"); 
                           }
                         });                                                                      
                       }else if(Nav.addBarMode == 2){
-                        print('DESCRIPCION: $val');
-                        print('CURSO: ${widget.courseId}');
-                        print('LECCION: ${widget.lessonId}');
                         DatabaseManager.updateLesson(widget.lessonId, val,"description");
                         _addBarController.reverse().then((val){
                           _addBarTextfieldController.text = '';
@@ -561,8 +559,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               ),
               tooltip: 'Salir del curso',
               onPressed: (){
-                Course.deactivateListener.sendWidget.add('deactivate');               
-                DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, widget.courseId, "course", "course", "course", "i", "delete").then((_){
+                Course.deactivateListener.sendWidget.add('deactivate');    
+                DatabaseManager.deleteFromArray("coursesPerUser",Auth.uid,"courses",widget.courseId).then((_){
+                  DatabaseManager.deleteFromArray("usersPerCourse", widget.courseId,"users", Auth.uid);
                   DatabaseManager.updateCourse(widget.courseId, "-1", "participants");
                 });
                 Navigator.of(context).pop();
