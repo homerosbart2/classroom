@@ -23,57 +23,17 @@ class DatabaseManager{
     }).then((_) { });
   }
 
-  static void addCoursesPerUser(String uid, String course){
-    List<String> list = new List<String>();  
-    DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
-        list = List<String>.from(snapshot.data['courses']);
-        list.add(course);
-        await transaction.update(reference, <String, dynamic>{'courses': list});
-      }else{
-        list.add(course);
-        reference.setData({
-          'courses': list,
-        });          
-      }
-    });        
+  static void addCoursePerUser(String uid, String course){
+    DocumentReference reference = Firestore.instance.collection('coursesPerUser').document(uid);
+    reference.setData({
+      'course': course,
+    });      
   }
 
   static void addLessonPerCourse(String lesson, String course){
-    List<String> list = new List<String>();  
-    DocumentReference reference = Firestore.instance.document('lessonsPerCourse/' + course);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
-        list = List<String>.from(snapshot.data['lessons']);
-        list.add(lesson);
-        await transaction.update(reference, <String, dynamic>{'lessons': list});
-      }else{
-        list.add(lesson);
-        reference.setData({
-          'lessons': list,
-        });          
-      }
-    });     
-  }  
-
-  static void addUsersPerCourse(String course, String uid){
-    List<String> list = new List<String>();  
-    DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data != null) {
-        list = List<String>.from(snapshot.data['users']);
-        list.add(uid);
-        await transaction.update(reference, <String, dynamic>{'users': list});
-      }else{
-        list.add(uid);
-        reference.setData({
-          'users': list,
-        });          
-      }
+    DocumentReference reference = Firestore.instance.collection('lessonsPerCourse').document(course);
+    reference.setData({
+      'lesson': lesson,
     });     
   }  
 
@@ -212,27 +172,7 @@ class DatabaseManager{
     Firestore.instance.collection(collection).document(document).delete();
   }
 
-  static Future<bool> searchInArray(collection,document,field,compare) async{
-    List<dynamic> lista = new List<dynamic>();
-    DocumentReference reference = Firestore.instance.collection(collection).document(document);
-    await reference.get().then((snapshot){
-      lista = List<String>.from(snapshot.data[field]);
-    });
-    print("contains ${lista.contains(compare)}");
-    return lista.contains(compare);
-  }
-
-  static void searchArray(collection,document,field,compare) async{
-    CollectionReference reference = Firestore.instance.collection(collection);
-    reference.where(field, arrayContains: compare).getDocuments().then((snapshot){
-      List<DocumentSnapshot> docs = snapshot.documents;
-      for(var doc in docs){
-        print("DOC: ${doc.data}");  
-      }
-    });
-  }
-
-  static void searchField(collection,document,field,compare) async{
+  static void searchField(String collection,document,field,compare) async{
     CollectionReference reference = Firestore.instance.collection(collection);
     reference.where(field, isEqualTo: compare).getDocuments().then((snapshot){
       List<DocumentSnapshot> docs = snapshot.documents;
@@ -298,8 +238,7 @@ class DatabaseManager{
       'participants': 1,
       'lessons' : 0,
     }).then((_){
-      addCoursesPerUser(authorId,course.documentID);
-      addUsersPerCourse(course.documentID,authorId);
+      addCoursePerUser(authorId,course.documentID);
       updateCourse(course.documentID,course.documentID,"accessCode");
     });
     return course.documentID;
@@ -437,27 +376,26 @@ class DatabaseManager{
   }
 
   static Future<Map> addCourseByAccessCode(String code, String uid) async{
-    Map course;
-    DocumentReference reference = Firestore.instance.collection('courses').document(code);
-    await reference.get().then((snapshot){
-      if(snapshot.data != null){
-        print("snap: ${snapshot.data}");
-        int participants = snapshot.data['participants'];
+    Map _course;
+    await mDatabase.child("courses").child(code).once().then((DataSnapshot snapshot){
+      Map<dynamic,dynamic> course = snapshot.value;
+      if(course != null){
+        int participants = course['participants'];
         updateCourse(code,"1","participants");
-        addUsersPerCourse(code,uid);
-        addCoursesPerUser(uid,code);
-        course = {
-          'accessCode': snapshot.data['accessCode'],
+        // addUserPerCourse(uid,code);
+        addCoursePerUser(uid,code);
+        _course = {
+          'accessCode': course['accessCode'],
           'participants': participants + 1,
-          'lessons': snapshot.data['lessons'],
-          'name': snapshot.data['name'],
-          'author': snapshot.data['author'],
-          'authorId': snapshot.data['authorId'],
+          'lessons': course['lessons'],
+          'name': course['name'],
+          'author': course['author'],
+          'authorId': course['authorId'],
           'owner': false
         };
       }
     });
-    return course;
+    return _course;
   }
 
 
@@ -701,22 +639,18 @@ class DatabaseManager{
   } 
 
   static Future<List<String>> getQuestionsPerLesson(String lesson) async{
-    List<String> _questionsList = List<String>();
+    List<String> questionsList = List<String>();
     try{
-      await mDatabase.child("questionsPerLesson").child(lesson).orderByChild("votes").once().then((DataSnapshot snapshot) {
-        Map<dynamic,dynamic> map = snapshot.value;
-        if(map != null){
-          map.forEach((key, question) {
-            if(map != null){
-              _questionsList.add(question['question']);  
-            }      
-          });
-        }
-      }); 
+      DocumentReference reference = Firestore.instance.collection('questionsPerLesson').document(lesson);
+      await reference.get().then((snapshot){
+        snapshot.data.forEach((key,value){
+          questionsList.add(value);
+        });
+      });
     }catch(e){
       print("error getQuestionsPerUser: $e");
-    } 
-    return _questionsList;
+    }     
+    return questionsList;
   } 
 
   static Future<List<String>> getLessonsPerCourse(String course) async{
@@ -739,11 +673,13 @@ class DatabaseManager{
     try{
       DocumentReference reference = Firestore.instance.collection('coursesPerUser').document(Auth.uid);
       await reference.get().then((snapshot){
-        coursesList = List<String>.from(snapshot.data['courses']);
+        snapshot.data.forEach((key,value){
+          coursesList.add(value);
+        });
       });
     }catch(e){
       print("error getCoursesPerUser: $e");
     }
     return coursesList;
-  }    
+  }  
 }

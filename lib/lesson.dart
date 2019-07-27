@@ -5,6 +5,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/interact_route.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:classroom/database_manager.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notify.dart';
 
 class Lesson extends StatefulWidget{
@@ -74,47 +76,22 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
 
     _boxResizeOpacityController.forward();
 
-    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data){
-      _deleteLesson();
-    });
-    
-    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-      var value = (data.snapshot.value);
-      var key = data.snapshot.key;
-      switch(key){
-        case "comments":{
-          if(this.mounted){
-            setState(() {
-              print(value);
-              _comments = value.toString();
-            });
-          }
-          break;
-        }
-        case "description": {
-          if(this.mounted){
-            setState(() {
-              _description = value;
-            });
-          }              
-          break;
-        }
-        case "name": {
-          if(this.mounted){
-            setState(() {
-              _name = value;
-            });
-          }              
-          break;
-        }         
-        case "date": {
-          if(this.mounted){
-            setState(() {
-              _date = value;
-            });
-          }              
-          break;
-        }            
+    Firestore.instance.collection("lessons").document(widget.lessonId).snapshots().listen((snapshot){
+      var value = snapshot.data;
+      if(value == null) {
+        if(this.mounted) setState(() {
+          _deleteLesson();
+        });         
+        DatabaseManager.deleteDocumentInCollection("questionsPerLesson",widget.lessonId);
+      }else{
+        if(this.mounted){
+          setState(() {
+            _comments = value['comments'].toString();
+            _description = value['description'];
+            _name = value['name'];
+            _date = value['date'];
+          });
+        } 
       }
     });
     super.initState();

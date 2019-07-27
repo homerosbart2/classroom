@@ -86,6 +86,7 @@ dependencies {
     implementation "com.android.support:appcompat-v7:27.1.0"
     // implementation 'androidx.appcompat:appcompat:1.0.0'
     // implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'com.google.firebase:firebase-firestore'
     implementation 'com.google.firebase:firebase-core'
     implementation 'com.google.firebase:firebase-database'
     implementation 'com.google.android.gms:play-services-gcm:9.2.0'

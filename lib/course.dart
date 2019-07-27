@@ -1,3 +1,4 @@
+import 'package:classroom/database_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/cupertino.dart';
@@ -7,6 +8,7 @@ import 'package:vibration/vibration.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:classroom/widget_passer.dart';
 import 'notify.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Course extends StatefulWidget{
   static WidgetPasser deactivateListener = WidgetPasser();
@@ -96,40 +98,21 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
       ),
     );
 
-    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data){
-      _deleteCourse();
-    });
-    
-    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
-      var value = (data.snapshot.value);
-      String key = data.snapshot.key;
-      // print("key: $key");
-      // print("value: $value");
-      switch(key){
-        case "participants":{
-          if(this.mounted){
-            setState(() {
-              _participants = value.toString();
-            });
-          }
-          break;
-        }
-        case "lessons": {
-          if(this.mounted){
-            setState(() {
-              _lessons = value.toString();
-            });
-          }              
-          break;
+    Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
+      var value = snapshot.data;
+      if(value == null) {
+        if(this.mounted) setState(() {
+          _deleteCourse();;
+        });         
+        DatabaseManager.deleteDocumentInCollection("lessonsPerCourse",widget.courseId);
+      }else{
+        if(this.mounted){
+          setState(() {
+            _name = value['name'];
+            _lessons = value['lessons'].toString();
+            _participants = value['participants'].toString();
+          });
         } 
-        case "name": {
-          if(this.mounted){
-            setState(() {
-              _name = value;
-            });
-          }              
-          break;
-        }           
       }
     });
 

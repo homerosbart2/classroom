@@ -11,6 +11,7 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:classroom/notify.dart';
 import 'package:vibration/vibration.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LessonsRoute extends StatefulWidget{
   final String author, name, courseId, authorId;
@@ -42,6 +43,8 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
   @override
   void initState() {
     super.initState();
+
+    DatabaseManager.searchInArray("usersPerCourse","-Lkm_Y93pGY_AWFvR_Fc","users","6CKJ1RqJpkhvIJPmsgvl3ApU5CJ2");
 
     _disabled = false;
 
@@ -81,51 +84,37 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     //   })
     // );
 
-    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
-      if(this.mounted) setState(() {
-        _disabled = true;
-      });
-    });
 
-   FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
-      var value = (data.snapshot.value);
-      String key = data.snapshot.key;
-      // print("key: $key");
-      // print("value: $value");
-      switch(key){
-        case "participants":{
-          if(this.mounted){
-            setState(() {
-              _participants = value.toString();
-            });
-          }
-          break;
-        }
-        case "name": {
-          if(this.mounted){
-            setState(() {
-              _name = value;
-            });
-          }              
-          break;
-        }           
+    Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
+      var value = snapshot.data;
+      if(value == null) {
+        if(this.mounted) setState(() {
+          _disabled = true;
+        });
+      }else{
+        if(this.mounted){
+          setState(() {
+            _name = value['name'];
+            _participants = value['participants'].toString();
+          });
+        } 
       }
-    });   
-
-    FirebaseDatabase.instance.reference().child("lessonsPerCourse").child(widget.courseId).onChildAdded.listen((data) {
-      if(this.mounted) setState(() {
-        List<String> lista = new List<String>();
-        String newCourse = data.snapshot.value["lesson"];
-        print("lesson: $newCourse");
-        lista.add(newCourse);
-        DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid, widget.courseId).then(
-          (List<Lesson> lc){
+    });
+     
+    Firestore.instance.collection("lessonsPerCourse").document(widget.courseId).snapshots().listen((snapshot){
+      if(snapshot.data != null){
+        if(this.mounted) setState(() {
+          List<String> lista = new List<String>();
+          if(_lessons.isEmpty) lista = List<String>.from(snapshot.data['lessons']);
+          else{
+            lista.add((snapshot.data['lessons']).last);
+          }
+          DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid, widget.courseId).then((List<Lesson> lc){
             if(this.mounted){
               setState(() {
                 for(var lesson in lc){
                   lesson.authorId = widget.authorId;
                   Map text = {
-                    //TODO: obtener los comentarios de la lección.
                     'lessonId': lesson.lessonId,
                     'name' : lesson.name,
                     'date' : lesson.date,
@@ -135,14 +124,14 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                     'courseId': widget.courseId,
                     'description': lesson.description,
                   };
-                  String textLesson = json.encode(text);
+                  String textLesson = json.encode(text); 
                   Nav.lessonPasser.sendWidget.add(textLesson);
                 }
               });
             }
-          }
-        );        
-      });
+          });    
+        }); 
+      }   
     });
 
 
