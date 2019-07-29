@@ -28,8 +28,6 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      print("snapshot: ${snapshot.data}");
-      print("snapshot: ${snapshot.exists}");
       if (snapshot.data.length > 0 && snapshot.exists) {
         list = List<String>.from(snapshot.data['courses']);
         list.add(course);
@@ -79,80 +77,45 @@ class DatabaseManager{
     });     
   }  
 
-  static void addQuestionsPerLesson(String question, String lesson, var val) async{
-    await mDatabase.child("questionsPerLesson").child(lesson).push().set({
-      'question': question,
-      'votes': val,
-    }).then((_) { });
-  }  
-
-  static void addQuestionsPerUser(String uid, String question) async{
-    mDatabase.child("questionsPerUser").child(uid).push().set({
-      'question': question,
-    }).then((_) { });
+  static void removeVoteToQuestion(String lessonId, String authorId, String question, String val){
+    CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("votes");
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
+        updateQuestion(lessonId,question, val, "votes");
+      });
+    });  
   }
 
-  static void addAnswersPerQuestion(String answer, String question, int votes) async{
-    await mDatabase.child("answersPerQuestion").child(question).push().set({
-      'answer': answer,
-      'votes': votes,
-    }).then((_) { });
+  static void addVoteToQuestion(String lessonId, String authorId, String question, String val){   
+    CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("votes");
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
+        updateQuestion(lessonId,question, val, "votes");
+      });
+    });    
   }
 
-  static void addAnswersPerUser(String uid, String answer) async{
-    await mDatabase.child("answersPerUser").child(uid).push().set({
-      'answer': answer,
-    }).then((_) { });
+  static void removeVoteToAnswer(String lessonId, String authorId, String question, String answer, String val){
+    CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("answers").document(answer).collection("votes");
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
+        updateAnswer(lessonId,question,answer,val,"votes");
+      });
+    });
   }
 
-  static void removeVotesToParamPerUser(String uid, String question, String param) async{
-    mDatabase.child(param).child(uid).child(question).remove();  
-  }
-
-  static void removeVotesToUserPerParam(String uid, String val, String param) async {
-    mDatabase.child(param).child(val).child(uid).remove();
-  }
-  
-  static void addVotesToUserPerQuestion(String uid, String val, String param) async {
-    mDatabase.child(param).child(uid).child(val).push().set({
-          'voted': true,
-    }).then((_) {/*nothing*/});        
-  }
-
-  static void addVotesToParamPerUser(String uid, String question, String param){
-      mDatabase.child(param).child(question).child(uid).push().set({
-        'voted': true,
-      }).then((_) {/*nothing*/});
-  }  
-
-  static void addVoteToQuestion(String lessonId, String authorId, String question, String val){
-
-    updateQuestion(lessonId,question, val, "votes");
-    if(val == "1"){
-      addVotesToUserPerQuestion(authorId, question, "votesToUserPerQuestion");
-      addVotesToParamPerUser(authorId, question, "votesToQuestionPerUser");
-    }else{
-      removeVotesToUserPerParam(authorId, question, "votesToQuestionPerUser");
-      removeVotesToParamPerUser(authorId, question, "votesToUserPerQuestion");
-    }
-  }
-
-  static void addVoteToAnswer(String questionId, String authorId, String answer, String val){
-    print("answer here: $answer");
-    updateAnswer(questionId, answer, val, "votes");
-    if(val == "1"){
-      addVotesToUserPerQuestion(authorId, answer, "votesToUserPerAnswer");
-      addVotesToParamPerUser(authorId, answer, "votesToAnswerPerUser");
-    }else{
-      removeVotesToUserPerParam(authorId, answer, "votesToAnswerPerUser");
-      removeVotesToParamPerUser(authorId, answer, "votesToUserPerAnswer");
-    }
+  static void addVoteToAnswer(String lessonId, String authorId, String question, String answer, String val){
+    CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("answers").document(answer).collection("votes");
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
+        updateAnswer(lessonId,question,answer,val,"votes");
+      });
+    });
   }
 
   static Future<String> addAnswers(String question, String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes) async{
-    DatabaseReference answer;
-    answer = mDatabase.child("answers").push();
-    await answer.set({
+    DocumentReference reference = Firestore.instance.collection('lessons').document(lesson);
+    await reference.collection("questions").document(question).collection("answers").document().setData({
       'text': text,
       'author': author,
       'authorId': authorId,
@@ -162,18 +125,15 @@ class DatabaseManager{
       'hours': hours,
       'minutes': minutes,
       'votes': 0,
-    }).then((_) {
-      addAnswersPerQuestion(answer.key, question,0);
-      addAnswersPerUser(authorId, answer.key);
-      updateQuestion(lesson, question, "", "comments");
+    }).then((_){
+      updateQuestion(lesson, question, "1", "comments");
     });
-    return answer.key;
+    return reference.documentID;
   }
 
   static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes) async{
-    DatabaseReference question;
-    question = mDatabase.child("questions").push();
-    await question.set({
+    DocumentReference reference = Firestore.instance.collection('lessons').document(lesson);
+    reference.collection("questions").document().setData({
       'text': text,
       'author': author,
       'authorId': authorId,
@@ -183,12 +143,10 @@ class DatabaseManager{
       'hours': hours,
       'minutes': minutes,
       'votes': 0,
-    }).then((_) {
+    }).then((_){
       updateLesson(lesson,"1","comments");
-      addQuestionsPerLesson(question.key, lesson, 0);
-      addQuestionsPerUser(authorId, question.key);
     });
-    return question.key;
+    return reference.documentID;
   }
 
   static Future<void> removeAnswersPerQuestion(String questionId) async{
@@ -231,7 +189,6 @@ class DatabaseManager{
     await reference.get().then((snapshot){
       if(snapshot.data.length > 0) lista = List<String>.from(snapshot.data[field]);
     });
-    print("lista: $lista");
     return lista.contains(compare);
   }
 
@@ -245,17 +202,38 @@ class DatabaseManager{
     });
   }
 
-  static Future<bool> searchField(collection,document,field,compare) async{
+  static Future<dynamic> getDocumentIDInSearchFieldInCollection(location,collection,field,compare) async{
+    var documentId = null;
+    DocumentSnapshot doc;
+    CollectionReference reference = Firestore.instance.document(location).collection(collection);
+    await reference.where(field, isEqualTo: compare).getDocuments().then((snapshot){
+      doc = snapshot.documents.first;  
+    }).then((_){
+      if(doc.exists) documentId = doc.documentID;       
+    });
+    return documentId;
+  }
+
+  static Future<bool> getFieldInDocument(location,document,field) async{
+    var val;
+    DocumentReference reference = Firestore.instance.collection(location).document(document);
+    await reference.get().then((snapshot){
+      if(snapshot.exists) val = snapshot[field];     
+    });
+    if(val == null) val = false;
+    return val;
+  }
+
+  static Future<bool> searchFieldInCollection(location,collection,field,compare) async{
+    bool find = false;
     List<DocumentSnapshot> docs = new List<DocumentSnapshot>();
-    CollectionReference reference = Firestore.instance.collection(collection);
+    CollectionReference reference = Firestore.instance.document(location).collection(collection);
     await reference.where(field, isEqualTo: compare).getDocuments().then((snapshot){
       docs = snapshot.documents;
-      for(var doc in docs){
-        print("DOC: ${doc.data}");
-      }
+    }).then((_){
+      if(docs.isNotEmpty) find = true;       
     });
-    if(docs.isNotEmpty) return true;
-    else return false;
+    return find;
   }
 
   static Future<void> deleteQuestion(String questionId, String lessonId, String uid) async{
@@ -321,23 +299,23 @@ class DatabaseManager{
     return course.documentID;
   }
 
-  static Future<void> updateAnswer(String questionId, String code, String param, String column) async{
-    DatabaseReference answer;
-    int newVotes;
-    switch(column){
-      case "votes": {
-        await mDatabase.child("answers").child(code).once().then((DataSnapshot snapshot){
-          Map<dynamic,dynamic> currentAnswer = snapshot.value;
-          newVotes = currentAnswer['votes'] + int.parse(param);
-          mDatabase.child("answers").child(code).update({
-            'votes': newVotes,
-          }).then((_){
-            actionOnFieldFrom("answersPerQuestion",questionId,code,"answer","votes",newVotes,"i","update");
-          });
-        });         
-        break;        
-      }      
-    }    
+  static Future<void> updateAnswer(String lesson, String question, String answer, String param, String column) async{
+    DocumentReference reference = Firestore.instance.document('lessons/' + lesson + "/questions/" + question + "/answers/" + answer);
+    await Firestore.instance.runTransaction((Transaction transaction) async {
+      DocumentSnapshot snapshot = await transaction.get(reference);
+      if (snapshot.exists) {
+        switch(column){
+          case "votes": {
+            await transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
+            break;
+          }
+          default: {
+            await transaction.update(reference, <String, dynamic>{column: param});       
+            break;
+          }
+        }           
+      }
+    });  
   }
 
   static Future<String> getFiles(String type, String lessonId) async{
@@ -366,73 +344,52 @@ class DatabaseManager{
     return filePath;
   }
 
-  static Future<void> updateQuestion(String lesson, String code, String param, String column) async{
-    DatabaseReference question;
-    int newVotes;
-    switch(column){
-      case "votes": {
-        await mDatabase.child("questions").child(code).once().then((DataSnapshot snapshot){
-          Map<dynamic,dynamic> currentQuestion = snapshot.value;
-          newVotes = currentQuestion['votes'] + int.parse(param);
-          mDatabase.child("questions").child(code).update({
-          'votes': newVotes,
-          }).then((_){
-            actionOnFieldFrom("questionsPerLesson",lesson,code,"question","votes",newVotes,"i","update");  
-          });
-        });       
-        break;        
-      }
-    }    
+  static Future<void> updateQuestion(String lesson, String question, String param, String column) async{
+    DocumentReference reference = Firestore.instance.document('lessons/' + lesson + "/questions/" + question);
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      // if (snapshot.exists) {
+        switch(column){
+          case "votes": {
+            await transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
+            break;
+          }
+          default: {
+            await transaction.update(reference, <String, dynamic>{column: param});       
+            break;
+          }
+        }           
+      // }
+    });       
   }
 
   static Future<void> updateLesson(String code, String param, String column) async{
-    DatabaseReference lesson;
-    print("param: $param");
-    switch(column){
-      case "comments": {
-        await mDatabase.child("lessons").child(code).once().then((DataSnapshot snapshot){
-          Map<dynamic,dynamic> currentLesson = snapshot.value;
-          mDatabase.child("lessons").child(code).update({
-          'comments': currentLesson['comments'] + int.parse(param),
-          }).then((_){/*nothing*/});
-        });       
-        break;        
-      }
-      case "presentation": {
-        await mDatabase.child("lessons").child(code).update({
-          'presentation': true,
-        }).then((_){/*nothing*/});    
-        break;        
-      }
-      case "name": {
-        await mDatabase.child("lessons").child(code).update({
-          'name': param,
-        }).then((_){/*nothing*/});       
-        break;
-      }       
-      case "date": {
-        await mDatabase.child("lessons").child(code).update({
-          'date': param,
-        }).then((_){/*nothing*/});
-        break;        
-      }      
-      case "description": {
-        await mDatabase.child("lessons").child(code).update({
-          'description': param,
-        }).then((_){/*nothing*/});    
-        break;        
-      }       
-    }    
+    DocumentReference reference = Firestore.instance.document('lessons/' + code);
+    Firestore.instance.runTransaction((Transaction transaction) async {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      // if (snapshot.exists) {
+        switch(column){
+          case "comments": {
+            await transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
+            break;
+          }
+          default: {
+            await transaction.update(reference, <String, dynamic>{column: param});       
+            break;
+          }
+        }           
+      // }
+    });     
   }
 
   static Future<void> updateCourse(String code, var param, String column) async{
     DocumentReference reference = Firestore.instance.document('courses/' + code);
     Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.exists) {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      // if (snapshot.exists) {
         switch(column){
           case "participants": {
-            await transaction.update(reference, <String, dynamic>{'participants': snapshot.data['participants'] + int.parse(param)});      
+            await transaction.update(reference, <String, dynamic>{'participants': FieldValue.increment(int.parse(param))});      
             break;
           }
           case "accessCode": {
@@ -444,11 +401,11 @@ class DatabaseManager{
             break;
           }      
           case "lessons": {
-            await transaction.update(reference, <String, dynamic>{'lessons': snapshot.data['lessons'] + int.parse(param)});     
+            await transaction.update(reference, <String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});     
             break;        
           }
         }           
-      }
+      // }
     }); 
   }
 
@@ -529,14 +486,12 @@ class DatabaseManager{
     return data;
   }
 
-  static Future<dynamic> getFieldFrom(String parent, String child, String column) async{
-    var field;
-    await mDatabase.child(parent).child(child).once().then((DataSnapshot snapshot){
-      Map<dynamic, dynamic> map = snapshot.value;
-      if(map != null){
-        field = map[column]; 
-      }
-    });    
+  static Future<dynamic> getFieldFrom(String collection, String document, String field) async{
+    var val;
+    DocumentReference reference = Firestore.instance.collection(collection).document(document);
+    await reference.get().then((snapshot){
+      val = snapshot.data[field];
+    });        
     return field;
   }
 
@@ -574,54 +529,34 @@ class DatabaseManager{
     } 
     return voted;
   } 
-
-   static Future<bool> getVotesToUserPerAnswer(String uid, String answer) async{
-    bool voted = false;
-    try{
-      await mDatabase.child("votesToUserPerAnswer").child(uid).child(answer).once().then((DataSnapshot snapshot) {
-        Map<dynamic, dynamic> map = snapshot.value;
-        if(map != null){
-          map.forEach((key, val) {
-            voted = val['voted'];
-          });
-        }
-      }); 
-    }catch(e){
-      print("error getVotesToUserPerAnswer: $e");
-    } 
-    return voted;
-  }  
-
-  static Future<List<Answer>> getAnswersPerQuestionByList(List<String> listString, String questionId) async{
-    List<Answer> _answersList = List<Answer>();
-    try{
-      for (var eachAnswer in listString) {
-        await mDatabase.child("answers").child(eachAnswer).once().then((DataSnapshot snapshot) {
-          Map<dynamic,dynamic> answer = snapshot.value;
-          if(answer != null){
-            _answersList.add(
-              Answer( 
-                answerId: snapshot.key,
-                questionId: questionId,
-                text: answer['text'],
-                author: answer['author'],
-                authorId: answer['authorId'],
-                // day: answer['day'],
-                // month: answer['month'],
-                // year: answer['year'],
-                // hours: answer['hours'],
-                // minutes: answer['minutes'],                
-                votes: answer['votes'],
-              )
-            );  
-          }    
-        }); 
+ 
+  static Future<List<Answer>> getAnswersPerQuestionByList(String lessonId, String questionId) async{
+    List<Answer> answersList = new List<Answer>(); 
+    CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(questionId).collection("answers");
+    await reference.orderBy("votes", descending: true).getDocuments().then((snapshot){
+      List<DocumentSnapshot> docs = snapshot.documents;
+      for(var doc in docs){
+        answersList.add(
+          Answer( 
+            answerId: doc.documentID,
+            questionId: questionId,
+            text: doc['text'],
+            author: doc['author'],
+            authorId: doc['authorId'],
+            lessonId: lessonId,
+            // day: doc['day'],
+            // month: doc['month'],
+            // year: doc['year'],
+            // hours: doc['hours'],
+            // minutes: doc['minutes'],                
+            votes: doc['votes'],
+          )
+        );  
       }
-    }catch(e){
-      print("error getAnswersPerLessonByList: $e");
-    } 
-    return _answersList;
+    });  
+    return answersList;
   } 
+
 
   static Future<List<Question>> getQuestionsPerLessonByList(List<String> listString, String lesson) async{
     List<Question> _questionsList = List<Question>();

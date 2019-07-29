@@ -4,7 +4,7 @@ import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 
 class Answer extends StatefulWidget{
-  final String author, text, questionId, answerId, authorId;
+  final String author, text, questionId, answerId, authorId, lessonId;
   bool voted, mine, owner;
   final int votes;
 
@@ -13,6 +13,7 @@ class Answer extends StatefulWidget{
     @required this.answerId,
     @required this.author,
     @required this.authorId,
+    @required this.lessonId,
     @required this.text,
     this.voted: false,
     this.mine: false,
@@ -55,10 +56,10 @@ class _AnswerState extends State<Answer>{
               showVotes: false,
               small: true,
               onVote: (){
-                DatabaseManager.addVoteToAnswer(widget.questionId, Auth.uid, widget.answerId, "1");
+                DatabaseManager.addVoteToAnswer(widget.lessonId, Auth.uid, widget.questionId, widget.answerId, "1");
               },
               onUnvote: (){
-                DatabaseManager.addVoteToAnswer(widget.questionId, Auth.uid, widget.answerId, "-1");
+                DatabaseManager.removeVoteToAnswer(widget.lessonId, Auth.uid, widget.questionId, widget.answerId, "-1");
               },              
             ),
           ),

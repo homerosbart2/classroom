@@ -11,7 +11,7 @@ import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Question extends StatefulWidget {
   static WidgetPasser answerPasser, answeredPasser;
@@ -204,38 +204,111 @@ class _QuestionState extends State<Question>
     _boxResizeOpacityController2.forward();
     if (widget.answered) _boxResizeOpacityController.forward();
 
+    // Firestore.instance.collection("lessons").document(widget.lessonId).collection("questions").document(widget.questionId).collection("answers").orderBy("votes", descending: true).snapshots().listen((snapshot) async{
+    //   InteractRoute.index = 0;
+    //   InteractRoute.questions.clear();
+    //   List<DocumentSnapshot> docs = snapshot.documents;
+    //   Answer answer;
+    //   if(docs.isNotEmpty) {  
+    //     if(this.mounted) setState(() {
+    //       _hasAnswers = true;
+    //     });
+    //   }
+    //   for(var doc in docs){
+    //     DatabaseManager.searchFieldInCollection("lessons/" + widget.lessonId + "/questions" + widget.questionId + "/answers" + doc.documentID, "votes", "author", Auth.uid).then((voted){
+    //       answer = new Answer( 
+    //         answerId: doc.documentID,
+    //         questionId: widget.questionId,
+    //         text: doc['text'],
+    //         author: doc['author'],
+    //         authorId: doc['authorId'],
+    //         // day: answer['day'],
+    //         // month: answer['month'],
+    //         // year: answer['year'],
+    //         // hours: answer['hours'],
+    //         // minutes: answer['minutes'],                
+    //         votes: doc['votes'],
+    //       );
+    //       if(answer.authorId == Auth.uid) answer.mine = true;
+    //       if(answer.authorId == widget.courseAuthorId){
+    //         if(this.mounted){
+    //           setState(() {
+    //             _boxResizeOpacityController.forward();                  
+    //           });
+    //         }
+    //         answer.owner = true;
+    //       }
+    //       if (voted) answer.voted = true;
+    //       if(this.mounted){
+    //         setState(() {
+    //           print("answer: ${answer.text}");
+    //           _answers.add(answer);
+    //         });
+    //       }
+    //     });
+    //   }      
+    // });
+
     if (_answers.isEmpty) {
-      DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls){
+      DatabaseManager.getAnswersPerQuestionByList(widget.lessonId, widget.questionId).then((List<Answer> la) async{
         if(this.mounted) setState(() {
-          List<String> _answersListString = List<String>();
-          _answersListString = ls;
-          DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la){
+          if(la.isNotEmpty) {
             if(this.mounted) setState(() {
-              if(la.isNotEmpty) {
-                if(this.mounted) setState(() {
-                  _hasAnswers = true;
-                });
-              }
-              for (var answer in la) {
-                DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
-                  if(answer.authorId == Auth.uid) answer.mine = true;
-                  if(answer.authorId == widget.courseAuthorId){
-                    setState(() {
-                      _boxResizeOpacityController.forward();                  
-                    });
-                    answer.owner = true;
-                  }
-                  if (voted) answer.voted = true;
-                  setState(() {
-                    _answers.add(answer);
-                  });
-                });
-              }
+              _hasAnswers = true;
             });
-          });
+          }
+          for (var answer in la) {
+            DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + widget.questionId + "/votes", Auth.uid,"voted").then((voted){
+              print(voted==true);
+              if(answer.authorId == Auth.uid) answer.mine = true;
+              if(answer.authorId == widget.courseAuthorId){
+                setState(() {
+                  _boxResizeOpacityController.forward();                  
+                });
+                answer.owner = true;
+              }
+              answer.voted = true;
+              setState(() {
+                _answers.add(answer);
+              });
+            });
+          }
         });
       });
     }
+
+    // if (_answers.isEmpty) {
+    //   DatabaseManager.getAnswersPerQuestion(Auth.uid, widget.questionId).then((List<String> ls){
+    //     if(this.mounted) setState(() {
+    //       List<String> _answersListString = List<String>();
+    //       _answersListString = ls;
+    //       DatabaseManager.getAnswersPerQuestionByList(_answersListString, widget.questionId).then((List<Answer> la){
+    //         if(this.mounted) setState(() {
+    //           if(la.isNotEmpty) {
+    //             if(this.mounted) setState(() {
+    //               _hasAnswers = true;
+    //             });
+    //           }
+    //           for (var answer in la) {
+    //             DatabaseManager.getVotesToUserPerAnswer(Auth.uid, answer.answerId).then((voted) {
+    //               if(answer.authorId == Auth.uid) answer.mine = true;
+    //               if(answer.authorId == widget.courseAuthorId){
+    //                 setState(() {
+    //                   _boxResizeOpacityController.forward();                  
+    //                 });
+    //                 answer.owner = true;
+    //               }
+    //               if (voted) answer.voted = true;
+    //               setState(() {
+    //                 _answers.add(answer);
+    //               });
+    //             });
+    //           }
+    //         });
+    //       });
+    //     });
+    //   });
+    // }
 
     FirebaseDatabase.instance.reference().child("questions").child(widget.questionId).onChildRemoved.listen((data) {
       _deleteQuestion();
@@ -684,7 +757,7 @@ class _QuestionState extends State<Question>
                     //widget.votesController.add(1);
                   },
                   onUnvote: (){
-                    DatabaseManager.addVoteToQuestion(widget.lessonId, Auth.uid, widget.questionId, "-1");
+                    DatabaseManager.removeVoteToQuestion(widget.lessonId, Auth.uid, widget.questionId, "-1");
                     InteractRoute.questions.replaceRange(widget.index, widget.index + 1, [Question(
                       lessonId: widget.lessonId,
                       authorId: widget.authorId,

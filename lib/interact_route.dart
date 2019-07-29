@@ -15,6 +15,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InteractRoute extends StatefulWidget{
   
@@ -22,7 +23,7 @@ class InteractRoute extends StatefulWidget{
   static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
-  static WidgetPasser updateQuestions = WidgetPasser();
+  static WidgetPasser updateQuestions = WidgetPasser(); 
   static int index = 0;
   final bool owner;
   
@@ -113,7 +114,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
     DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
       if(this.mounted){
-        if(presentation){
+        if(presentation == true){
           if(this.mounted) setState(() {
             _presentationExist = true;
           });
@@ -240,51 +241,85 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       ),
     );
 
-    FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).orderByChild("votes").onChildAdded.listen((data) {
-      if(this.mounted){
-        setState(() {
-          List<String> lista = new List<String>();
-          String newQuestion = data.snapshot.value["question"];
-          print("pregunta: $newQuestion");
-          lista.add(newQuestion); 
-          DatabaseManager.getQuestionsPerLessonByList(lista,widget.lessonId).then(
-            (List<Question> lc) => setState(() {
-              for(var question in lc){
-                DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
-                  if(question.authorId == Auth.uid) question.mine = true;
-                  print("voted: $voted");
-                  if(voted) question.voted = true;
-                  // if(question.votes > 0) question.answered = true;
-                  question.courseAuthorId = widget.authorId;
-                  setState(() {
-                    // Map text = {
-                    //   'text': question.text,
-                    //   'author': question.author,
-                    //   'authorId': question.authorId,
-                    //   'owner': question.owner,
-                    //   'day': question.day,
-                    //   'month': question.month,
-                    //   'year': question.year,
-                    //   'hours': question.hours,
-                    //   'minutes': question.minutes,
-                    //   'questionId': question.questionId,
-                    //   'mine': question.mine,
-                    //   'voted' : question.voted,
-                    //   'answered' : question.answered,
-                    //   'courseAuthorId': widget.authorId,
-                    //   'votes': question.votes,
-                    // };
-                    // String textQuestion = json.encode(text);
-                    // _questionPasser.sendWidget.add(textQuestion); 
-                    InteractRoute.questions.add(question);
-                  });              
-                });
-              }
-            })
-          );     
+    Firestore.instance.collection("lessons").document(widget.lessonId).collection("questions").orderBy("votes", descending: true).snapshots().listen((snapshot) async{
+      // InteractRoute.index = 0;
+      // InteractRoute.questions.clear();
+      List<DocumentSnapshot> docs = snapshot.documents;
+      Question question;
+      for(var doc in docs){
+        await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.documentID + "/votes",Auth.uid,"voted").then((voted){
+          question = new Question(
+            lessonId: widget.lessonId,
+            questionId: doc.documentID,
+            text: doc['text'],
+            author: doc['author'],
+            authorId: doc['authorId'],
+            day: doc['day'],
+            month: doc['month'],
+            year: doc['year'],
+            hours: doc['hours'],
+            minutes: doc['minutes'],                
+            votes: doc['votes'],
+            index: InteractRoute.index++,
+          );
+          if(question.authorId == Auth.uid) question.mine = true;
+          if(voted) question.voted = true;
+          // if(question.votes > 0) question.answered = true;
+          question.courseAuthorId = widget.authorId;
+          if(this.mounted){
+            setState(() {
+              InteractRoute.questions.add(question);
+            });
+          }
         });
-      }
+      }      
     });
+
+    // FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).orderByChild("votes").onChildAdded.listen((data) {
+    //   if(this.mounted){
+    //     setState(() {
+    //       List<String> lista = new List<String>();
+    //       String newQuestion = data.snapshot.value["question"];
+    //       print("pregunta: $newQuestion");
+    //       lista.add(newQuestion); 
+    //       DatabaseManager.getQuestionsPerLessonByList(lista,widget.lessonId).then(
+    //         (List<Question> lc) => setState(() {
+    //           for(var question in lc){
+    //             DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
+    //               if(question.authorId == Auth.uid) question.mine = true;
+    //               print("voted: $voted");
+    //               if(voted) question.voted = true;
+    //               // if(question.votes > 0) question.answered = true;
+    //               question.courseAuthorId = widget.authorId;
+    //               setState(() {
+    //                 // Map text = {
+    //                 //   'text': question.text,
+    //                 //   'author': question.author,
+    //                 //   'authorId': question.authorId,
+    //                 //   'owner': question.owner,
+    //                 //   'day': question.day,
+    //                 //   'month': question.month,
+    //                 //   'year': question.year,
+    //                 //   'hours': question.hours,
+    //                 //   'minutes': question.minutes,
+    //                 //   'questionId': question.questionId,
+    //                 //   'mine': question.mine,
+    //                 //   'voted' : question.voted,
+    //                 //   'answered' : question.answered,
+    //                 //   'courseAuthorId': widget.authorId,
+    //                 //   'votes': question.votes,
+    //                 // };
+    //                 // String textQuestion = json.encode(text);
+    //                 // _questionPasser.sendWidget.add(textQuestion); 
+    //                 InteractRoute.questions.add(question);
+    //               });              
+    //             });
+    //           }
+    //         })
+    //       );     
+    //     });
+    //   }
+    // });
 
 
     // DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
