@@ -112,7 +112,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     //   print('not connected');
     // }
 
-    DatabaseManager.getFieldFrom("lessons",widget.lessonId,"presentation").then((presentation){
+    DatabaseManager.getFieldInDocument("lessons",widget.lessonId,"presentation").then((presentation){
       if(this.mounted){
         if(presentation == true){
           if(this.mounted) setState(() {

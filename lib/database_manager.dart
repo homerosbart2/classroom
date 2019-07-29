@@ -28,7 +28,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data.length > 0 && snapshot.exists) {
+      if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['courses']);
         list.add(course);
         await transaction.update(reference, <String, dynamic>{'courses': list});
@@ -46,7 +46,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('lessonsPerCourse/' + course);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data.length > 0) {
+      if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['lessons']);
         list.add(lesson);
         await transaction.update(reference, <String, dynamic>{'lessons': list});
@@ -64,7 +64,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data.length > 0) {
+      if (snapshot.data.isNotEmpty) {
         list = List<String>.from(snapshot.data['users']);
         list.add(uid);
         await transaction.update(reference, <String, dynamic>{'users': list});
@@ -218,7 +218,7 @@ class DatabaseManager{
     var val;
     DocumentReference reference = Firestore.instance.collection(location).document(document);
     await reference.get().then((snapshot){
-      if(snapshot.exists) val = snapshot[field];     
+      if(snapshot.data != null)val = snapshot[field];     
     });
     if(val == null) val = false;
     return val;
@@ -236,30 +236,20 @@ class DatabaseManager{
     return find;
   }
 
-  static Future<void> deleteQuestion(String questionId, String lessonId, String uid) async{
-    await mDatabase.child("questions").child(questionId).remove().then((_){
-      updateLesson(lessonId,"-1","comments");
-      actionOnFieldFrom("questionsPerLesson", lessonId, questionId, "question", "question", "", "i", "delete");
-      actionOnFieldFrom("answersPerQuestion", questionId, "", "", "", "", "d", "delete");
-      actionOnFieldFrom("questionsPerUser", uid, questionId, "question", "question", "", "i", "delete");
-    });
-  }
-
-
-  static Future<void> deleteLesson(String lessonId,String courseId, String uid) async{
-    await deleteDocumentInCollection("lessons", "lessonId").then((_){
+  static Future<void> deleteLesson(String lessonId,String courseId) async{
+    await deleteDocumentInCollection("lessons", lessonId).then((_){
       updateCourse(courseId, "-1", "lessons");
-      deleteDocumentInCollection("questionsPerLesson", lessonId);
       deleteFromArray("lessonsPerCourse", courseId, "lessons", lessonId);
     });
   } 
 
   static Future<void> deleteCourse(String courseId, String uid) async{
-    await mDatabase.child("courses").child(courseId).remove().then((_){
-      actionOnFieldFrom("lessonsPerCourse", courseId, "", "", "", "", "d", "delete");
-      actionOnFieldFrom("coursesPerUser", uid, courseId, "course", "course", "", "i", "delete");
+    await deleteDocumentInCollection("courses", courseId).then((_){
+      deleteFromArray("coursesPerUser", uid, "courses", courseId);
+      // deleteFromArray("coursesPerUser", uid, "courses", courseId);
     });
-  }  
+} 
+
 
   static String addZero(int param){
     String paramString = param.toString();
@@ -302,8 +292,8 @@ class DatabaseManager{
   static Future<void> updateAnswer(String lesson, String question, String answer, String param, String column) async{
     DocumentReference reference = Firestore.instance.document('lessons/' + lesson + "/questions/" + question + "/answers/" + answer);
     await Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.exists) {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      // if (snapshot.exists) {
         switch(column){
           case "votes": {
             await transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
@@ -314,7 +304,7 @@ class DatabaseManager{
             break;
           }
         }           
-      }
+      // }
     });  
   }
 
@@ -413,7 +403,7 @@ class DatabaseManager{
     Map course;
     DocumentReference reference = Firestore.instance.collection('courses').document(code);
     await reference.get().then((snapshot){
-      if(snapshot.data.length > 0){
+      if(snapshot.data != null){
         print("snap: ${snapshot.data}");
         int participants = snapshot.data['participants'];
         updateCourse(code,"1","participants");

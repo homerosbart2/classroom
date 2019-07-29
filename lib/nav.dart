@@ -577,7 +577,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
             if(choice.title == 'Eliminar'){
               print('ELIMINAR LECCION: ${widget.lessonId}');
               print('DEL CURSO: ${widget.courseId}');
-              DatabaseManager.deleteLesson(widget.lessonId,widget.courseId, Auth.uid);
+              DatabaseManager.deleteLesson("lessons",widget.lessonId);
               //TODO: Eliminar la leccion de firebase.
             }else if(choice.title == 'Fecha'){
               _selectDate(context);

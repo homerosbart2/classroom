@@ -267,7 +267,7 @@ class _QuestionState extends State<Question>
                 });
                 answer.owner = true;
               }
-              answer.voted = true;
+              if (voted) answer.voted = true;
               setState(() {
                 _answers.add(answer);
               });
@@ -371,7 +371,6 @@ class _QuestionState extends State<Question>
     super.dispose();
   }
 
-  //TODO: Método para eliminar pregunta.
   void _deleteQuestion(){
     _boxColorController.forward();
     if(this.mounted) setState(() {
@@ -426,15 +425,11 @@ class _QuestionState extends State<Question>
                   child: GestureDetector(
                     onTap: (){
                       if(!_disabled){
-                        //print(widget.index);
-                        //_boxResizeOpacityController2.reverse();
-                        DatabaseManager.deleteQuestion(widget.questionId, widget.lessonId, Auth.uid);
-                        print("id: ${widget.questionId}");
+                        DatabaseManager.deleteDocumentInCollection("lessons/" + widget.lessonId + "/questions/", widget.questionId);
                         _deleteHeightController.reverse();
                         _boxColorController.forward();
                         _expandAnswersController.reverse();
                         _disabled = true;
-                        //TODO: Eliminar pregunta de la base de datos.
                       }
                     },
                     child: Container(
