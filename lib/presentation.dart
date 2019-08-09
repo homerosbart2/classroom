@@ -7,12 +7,14 @@ import 'package:native_pdf_renderer/native_pdf_renderer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pinch_zoom_image/pinch_zoom_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:classroom/widget_passer.dart';
 
 class Presentation extends StatefulWidget{
+  static final WidgetPasser slidePasser = WidgetPasser();
   final String file;
 
   const Presentation({
-    @required this.file
+    @required this.file,
   });
 
   _PresentationState createState() => _PresentationState();
@@ -24,7 +26,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
   PDFPageImage _pageImage;
   int _actualPage;
   List<PDFPageImage> _pageImages;
-  bool _loading, _firstPageLoaded;
+  bool _loading;
 
   @override
   void initState(){
@@ -39,11 +41,21 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
     _actualPage = 0;
 
     _loading = false;
-    _firstPageLoaded = false;
+
+    Presentation.slidePasser.recieveWidget.listen((newSlide) {
+      if (newSlide != null) {
+        if (this.mounted) {
+          setState(() {
+            _actualPage = int.parse(newSlide) - 1;
+          });
+        }
+      }
+    });
   }
 
   @override
   void dispose() {
+    Presentation.slidePasser.sendWidget.add(null);
     super.dispose();
   }
 
@@ -53,6 +65,20 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
 
   @override
   bool get wantKeepAlive => true;
+
+  void _changeToSlide(int page){
+    if(!_loading) setState(() {
+      _actualPage = page;
+    });
+  }
+
+  void _changeToNextSlide(){
+    _changeToSlide((_actualPage + 1) % _document.pagesCount);
+  }
+
+  void _changeToPreviousSlide(){
+    _changeToSlide((_actualPage - 1) % _document.pagesCount);
+  }
 
   Future<Widget> _construc(BuildContext context) async{
     _loading = true;
@@ -67,7 +93,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
       _pageImage = _pageImages[_actualPage];
       _loading = false;
     }
-    _firstPageLoaded = true;
+    
     return Future.delayed(const Duration(milliseconds: 0), () => 
       Container(
         child: Stack(
@@ -91,11 +117,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   GestureDetector(
-                    onTap: (){
-                      if(!_loading) setState(() {
-                       _actualPage = (_actualPage - 1) % _document.pagesCount; 
-                      });
-                    },
+                    onTap: _changeToPreviousSlide,
                     child: Container(
                       width: 50,
                       height: 50,
@@ -115,13 +137,13 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
                   ),
                   Text(
                     '${_actualPage + 1}/${_document.pagesCount}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      // fontWeight: FontWeight.bold
+                    ),
                   ),
                   GestureDetector(
-                    onTap: (){
-                      if(!_loading) setState(() {
-                       _actualPage = (_actualPage + 1) % _document.pagesCount; 
-                      });
-                    },
+                    onTap: _changeToNextSlide,
                     child: Container(
                       width: 50,
                       height: 50,

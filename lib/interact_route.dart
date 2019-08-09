@@ -1,18 +1,16 @@
+import 'package:classroom/youtube_video.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:classroom/question.dart';
 import 'package:classroom/chatbar.dart';
 import 'package:classroom/presentation.dart';
 import 'package:classroom/widget_passer.dart';
-import 'package:classroom/nav.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'stateful_button.dart';
-import 'package:vibration/vibration.dart';
 import 'package:classroom/auth.dart';
 import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
@@ -24,12 +22,13 @@ class InteractRoute extends StatefulWidget{
   static StreamController<String> questionController;
   static WidgetPasser updateQuestions = WidgetPasser();
   static int index = 0;
-  final bool owner;
+  final bool owner, isVideo;
   
   InteractRoute({
     @required this.lessonId,
     @required this.authorId,
     @required this.courseId,
+    @required this.isVideo,
     this.presentationPath: '',
     this.owner: false,
   });
@@ -45,7 +44,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   Animation<double> _opacityFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser, _updateQuestions, _pathPasser, _presentationSignal;
+  WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
   ScrollController _scrollController;
   bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled;
 
@@ -80,7 +79,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
     _questionPasser = ChatBar.questionPasser;
     _pathPasser = WidgetPasser();
-    _presentationSignal = WidgetPasser();
     _updateQuestions = InteractRoute.updateQuestions;
 
     InteractRoute.questionOpacityController = AnimationController(
@@ -183,30 +181,62 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     // });
 
     if(widget.owner){
-      _uploadPresentation = StatefulButton(
-        text: 'CARGAR PRESENTACIÓN',
-        fontSize: 13,
-        color: Colors.grey,
-        borderColor: Colors.transparent,
-        icon: FontAwesomeIcons.arrowAltCircleUp,
-        onTap: (){
-          getFilePath().then((filePath){
-            setState((){
-              if(filePath != null){
-                DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
-                  setState(() {
-                    _presentationExist = true; 
-                    print('PATH: $path');
-                    _presentation = Presentation(
-                      file: path,
-                    );
+      _uploadPresentation = Column(
+        children: <Widget>[
+          Container(
+            margin: EdgeInsets.only(bottom: 24),
+            child: StatefulButton(
+              text: 'CARGAR\nPRESENTACIÓN',
+              fontSize: 13,
+              color: Colors.grey,
+              borderColor: Colors.transparent,
+              icon: FontAwesomeIcons.arrowAltCircleUp,
+              onTap: (){
+                getFilePath().then((filePath){
+                  setState((){
+                    if(filePath != null){
+                      DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
+                        setState(() {
+                          _presentationExist = true; 
+                          print('PATH: $path');
+                          _presentation = Presentation(
+                            file: path,
+                          );
+                        });
+                      });
+                    }
                   });
                 });
-              }
-            });
-          });
-          //TODO: Hay que subir el archivo a FireBase y guardarlo en nuestra organizacion de archivos locales.
-        },
+              },
+            ),
+          ),
+          Container(
+            child: StatefulButton(
+              text: 'CARGAR VIDEO',
+              fontSize: 13,
+              color: Colors.grey,
+              borderColor: Colors.transparent,
+              icon: FontAwesomeIcons.youtube,
+              onTap: (){
+                getFilePath().then((filePath){
+                  setState((){
+                    if(filePath != null){
+                      DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
+                        setState(() {
+                          _presentationExist = true; 
+                          print('PATH: $path');
+                          _presentation = Presentation(
+                            file: path,
+                          );
+                        });
+                      });
+                    }
+                  });
+                });
+              },
+            ),
+          ),
+        ],
       );
     }else{
       _uploadPresentation = Text(
@@ -311,34 +341,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     //     })
     // );
 
-
-    // InteractRoute.questions.add(
-    //   Question(
-    //     text: '¿Qué significa que sea una presentación de ejemplo?',
-    //     author: 'Diego Alay',
-    //     authorId: "123123",
-    //     questionId: "12313123",
-    //     voted: true,
-    //     votes: 69,
-    //     index: InteractRoute.index++,
-    //     votesController: _votesController,
-    //     answered: true,
-    //   )
-    // );
-
-    // InteractRoute.questions.add(
-    //   Question(
-    //     authorId: "123123",
-    //     questionId: "12313123",
-    //     text: '¿Qué día es hoy?',
-    //     author: 'Henry Campos',
-    //     mine: true,
-    //     index: InteractRoute.index++,
-    //     votesController: _votesController,
-    //     owner: widget.owner,
-    //   )
-    // );
-
     _votesStream.listen((val) {
       if(val != null){
         setState(() {
@@ -387,6 +389,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
                 mine: jsonQuestion['mine'],
                 index: InteractRoute.index++,
                 votesController: _votesController,
+                isVideo: widget.isVideo,
               )
             );
             _scrollController.animateTo(
@@ -410,7 +413,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
         });
       }
     });
-
   }
 
   @override
@@ -423,7 +425,9 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   }
 
   Widget _getPresentation(BuildContext context){
-    if(!_presentationExist && _presentationLoaded){
+    if(widget.isVideo){
+      return YouTubeVideo();
+    }if(!_presentationExist && _presentationLoaded){
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
@@ -471,16 +475,22 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       // physics: ScrollPhysics(
       //   parent: BouncingScrollPhysics(),
       // ),
-      padding: EdgeInsets.only(top: 12, bottom: 12),
+      padding: EdgeInsets.only(top: 0, bottom: 12),
       itemCount: _actualQuestions.length + 1,
       itemBuilder: (context, index){
         if(index == 0){
-          return Container(
-            padding: EdgeInsets.symmetric(horizontal: 12),
-            width: width,
-            height: height + 68,
-            child: _getPresentation(context),
-          );
+          if(widget.isVideo){
+            return Container(
+                  child: _getPresentation(context),
+                );
+          }else{
+            return Container(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              width: width,
+              height: height + 68,
+              child: _getPresentation(context),
+            );
+          }
         }else{
           return _actualQuestions.elementAt(index - 1);
         }

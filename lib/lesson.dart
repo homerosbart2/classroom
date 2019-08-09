@@ -283,6 +283,8 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                         courseId: widget.courseId,
                                         presentationPath: '/data/user/0/dhca.mobile.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
                                         owner: widget.owner,
+                                        //TODO: Obtener de la base de datos si es video o no.
+                                        isVideo: false,
                                       ),
                                     ); 
                                   })

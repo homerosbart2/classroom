@@ -13,7 +13,7 @@ environment:
   sdk: ">=2.0.0-dev.68.0 <3.0.0"
 
 dependencies:  
-  vibration: ^1.0.2
+  vibration: ^1.1.0
   rxdart: ^0.22.0
   flutter:
     sdk: flutter
@@ -34,6 +34,7 @@ dependencies:
   qr_flutter: ^2.0.0
   qr_utils : ^0.1.4
   flutter_spinkit: ^3.1.0
+  youtube_player: ^3.4.1
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

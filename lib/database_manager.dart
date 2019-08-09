@@ -559,6 +559,8 @@ class DatabaseManager{
                 hours: question['hours'],
                 minutes: question['minutes'],                
                 votes: question['votes'],
+                //TODO: decir si es video para que cambie el ícono a un cuadro o a un círculo del attach.
+                isVideo: false,
               )
             );  
           }    
