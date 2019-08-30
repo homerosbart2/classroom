@@ -10,22 +10,21 @@ class Auth{
   // static boolean emailVerified;
 
   static Future<String> signInWithEmailAndPassword(String email, String password) async{
-    FirebaseUser user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
+    FirebaseUser user = (await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password)).user;
+    print(user.uid);
     return user?.uid;
   }
 
   static Future<String> createUserWithEmailAndPassword(String email, String password, String name) async{
-    FirebaseUser user;
+    FirebaseAuth user;
     try{
       await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password).then((user){
         UserUpdateInfo profileUpdate = new UserUpdateInfo();
         profileUpdate.displayName = name;
-        user.updateProfile(profileUpdate);
-        user.reload().then((_){
-          Auth.signInWithEmailAndPassword(email, password).then((_){
-            return user?.uid;
-          });
-        });
+        // user.updateProfile(profileUpdate);
+        // user.reload().then((_){
+          return Auth.signInWithEmailAndPassword(email, password);
+        // });
       });
     }catch(e){
       return null;

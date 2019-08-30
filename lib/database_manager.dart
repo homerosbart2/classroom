@@ -23,7 +23,9 @@ class DatabaseManager{
     }).then((_) { });
   }
 
-  static void addCoursesPerUser(String uid, String course){
+  static Future<void> addCoursesPerUser(String uid, String course) async{
+    print("course: $course");
+    print("uid: $uid");
     List<String> list = new List<String>();  
     DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
     Firestore.instance.runTransaction((Transaction transaction) async {
@@ -31,7 +33,7 @@ class DatabaseManager{
       if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['courses']);
         list.add(course);
-        await transaction.update(reference, <String, dynamic>{'courses': list});
+        transaction.update(reference, <String, dynamic>{'courses': list});
       }else{
         list.add(course);
         reference.setData({
@@ -49,7 +51,7 @@ class DatabaseManager{
       if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['lessons']);
         list.add(lesson);
-        await transaction.update(reference, <String, dynamic>{'lessons': list});
+        transaction.update(reference, <String, dynamic>{'lessons': list});
       }else{
         list.add(lesson);
         reference.setData({
@@ -59,6 +61,7 @@ class DatabaseManager{
     });     
   }  
 
+
   static void addUsersPerCourse(String course, String uid){
     List<String> list = new List<String>();  
     DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
@@ -67,7 +70,7 @@ class DatabaseManager{
       if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['users']);
         list.add(uid);
-        await transaction.update(reference, <String, dynamic>{'users': list});
+        transaction.update(reference, <String, dynamic>{'users': list});
       }else{
         list.add(uid);
         reference.setData({
@@ -77,10 +80,11 @@ class DatabaseManager{
     });     
   }  
 
+
   static void removeVoteToQuestion(String lessonId, String authorId, String question, String val){
     CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("votes");
     Firestore.instance.runTransaction((Transaction transaction) async {
-      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
+      transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
         updateQuestion(lessonId,question, val, "votes");
       });
     });  
@@ -89,7 +93,7 @@ class DatabaseManager{
   static void addVoteToQuestion(String lessonId, String authorId, String question, String val){   
     CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("votes");
     Firestore.instance.runTransaction((Transaction transaction) async {
-      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
+      transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
         updateQuestion(lessonId,question, val, "votes");
       });
     });    
@@ -98,7 +102,7 @@ class DatabaseManager{
   static void removeVoteToAnswer(String lessonId, String authorId, String question, String answer, String val){
     CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("answers").document(answer).collection("votes");
     Firestore.instance.runTransaction((Transaction transaction) async {
-      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
+      transaction.set(reference.document(authorId), <String, dynamic>{"voted": false}).then((_){
         updateAnswer(lessonId,question,answer,val,"votes");
       });
     });
@@ -107,7 +111,7 @@ class DatabaseManager{
   static void addVoteToAnswer(String lessonId, String authorId, String question, String answer, String val){
     CollectionReference reference = Firestore.instance.collection('lessons').document(lessonId).collection("questions").document(question).collection("answers").document(answer).collection("votes");
     Firestore.instance.runTransaction((Transaction transaction) async {
-      await transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
+      transaction.set(reference.document(authorId), <String, dynamic>{"voted": true}).then((_){
         updateAnswer(lessonId,question,answer,val,"votes");
       });
     });
@@ -179,7 +183,7 @@ class DatabaseManager{
       DocumentSnapshot snapshot = await transaction.get(reference);
       list = List<String>.from(snapshot.data[field]);
       list.remove(val);
-      await transaction.update(reference, <String, dynamic>{field: list});
+      transaction.update(reference, <String, dynamic>{field: list});
     });  
   }
 
@@ -296,11 +300,11 @@ class DatabaseManager{
       // if (snapshot.exists) {
         switch(column){
           case "votes": {
-            await transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
+            transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
             break;
           }
           default: {
-            await transaction.update(reference, <String, dynamic>{column: param});       
+            transaction.update(reference, <String, dynamic>{column: param});       
             break;
           }
         }           
@@ -341,11 +345,11 @@ class DatabaseManager{
       // if (snapshot.exists) {
         switch(column){
           case "votes": {
-            await transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
+            transaction.update(reference, <String, dynamic>{'votes': FieldValue.increment(int.parse(param))});      
             break;
           }
           default: {
-            await transaction.update(reference, <String, dynamic>{column: param});       
+            transaction.update(reference, <String, dynamic>{column: param});       
             break;
           }
         }           
@@ -360,11 +364,11 @@ class DatabaseManager{
       // if (snapshot.exists) {
         switch(column){
           case "comments": {
-            await transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
+            transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
             break;
           }
           default: {
-            await transaction.update(reference, <String, dynamic>{column: param});       
+            transaction.update(reference, <String, dynamic>{column: param});       
             break;
           }
         }           
@@ -379,19 +383,19 @@ class DatabaseManager{
       // if (snapshot.exists) {
         switch(column){
           case "participants": {
-            await transaction.update(reference, <String, dynamic>{'participants': FieldValue.increment(int.parse(param))});      
+            transaction.update(reference, <String, dynamic>{'participants': FieldValue.increment(int.parse(param))});      
             break;
           }
           case "accessCode": {
-            await transaction.update(reference, <String, dynamic>{'accessCode': param});       
+            transaction.update(reference, <String, dynamic>{'accessCode': param});       
             break;
           }
           case "name": {
-            await transaction.update(reference, <String, dynamic>{'name': param});       
+            transaction.update(reference, <String, dynamic>{'name': param});       
             break;
           }      
           case "lessons": {
-            await transaction.update(reference, <String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});     
+            transaction.update(reference, <String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});     
             break;        
           }
         }           
@@ -593,6 +597,7 @@ class DatabaseManager{
             lessonsList.add(
               Lesson(
                 presentation: lesson['presentation'],
+                fileType: lesson['fileType'],
                 lessonId: eachLesson,
                 courseId: courseId,
                 comments: lesson['comments'],

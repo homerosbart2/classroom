@@ -19,7 +19,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InteractRoute extends StatefulWidget{
   
-  final String lessonId, presentationPath, authorId, courseId;
+  final String lessonId, presentationPath, authorId, courseId, fileType;
   static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
@@ -32,6 +32,7 @@ class InteractRoute extends StatefulWidget{
     @required this.authorId,
     @required this.courseId,
     this.presentationPath: '',
+    this.fileType: '',
     this.owner: false,
   });
 
@@ -246,31 +247,37 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       List<DocumentChange> docs = snapshot.documentChanges;
       Question question;
       for(var doc in docs){
-        await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.document.documentID + "/votes",Auth.uid,"voted").then((voted){
-          question = new Question(
-            lessonId: widget.lessonId,
-            questionId: doc.document.documentID,
-            text: doc.document.data['text'],
-            author: doc.document.data['author'],
-            authorId: doc.document.data['authorId'],
-            day: doc.document.data['day'],
-            month: doc.document.data['month'],
-            year: doc.document.data['year'],
-            hours: doc.document.data['hours'],
-            minutes: doc.document.data['minutes'],                
-            votes: doc.document.data['votes'],
-            index: InteractRoute.index++,
-          );
-          if(question.authorId == Auth.uid) question.mine = true;
-          if(voted) question.voted = true;
-          // if(question.votes > 0) question.answered = true;
-          question.courseAuthorId = widget.authorId;
-          if(this.mounted){
-            setState(() {
-              InteractRoute.questions.add(question);
-            });
-          }
-        });
+        if (doc.type == DocumentChangeType.added){
+          print("doc: $doc");
+          print("doc: ${doc.type}");
+          await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.document.documentID + "/votes",Auth.uid,"voted").then((voted){
+            question = new Question(
+              lessonId: widget.lessonId,
+              questionId: doc.document.documentID,
+              text: doc.document.data['text'],
+              author: doc.document.data['author'],
+              authorId: doc.document.data['authorId'],
+              day: doc.document.data['day'],
+              month: doc.document.data['month'],
+              year: doc.document.data['year'],
+              hours: doc.document.data['hours'],
+              minutes: doc.document.data['minutes'],                
+              votes: doc.document.data['votes'],
+              index: InteractRoute.index++,
+            );
+            if(question.authorId == Auth.uid) question.mine = true;
+            if(voted) question.voted = true;
+            // if(question.votes > 0) question.answered = true;
+            question.courseAuthorId = widget.authorId;
+            if(this.mounted){
+              setState(() {
+                InteractRoute.questions.add(question);
+              });
+            }
+          });
+        }else if (doc.type == DocumentChangeType.modified){
+          print("document change");
+        }
       }      
     });
 

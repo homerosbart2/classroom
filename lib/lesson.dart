@@ -10,7 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notify.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description, lessonId, date, courseId;
+  final String name, description, lessonId, date, courseId, fileType;
   String authorId;
   int comments;
   final bool owner, presentation;
@@ -21,6 +21,7 @@ class Lesson extends StatefulWidget{
     @required this.courseId,
     @required this.name,
     @required this.presentation,
+    this.fileType: 'pdf',
     this.authorId,
     this.description: '',
     this.date: '',
@@ -258,6 +259,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                         authorId: widget.authorId,
                                         lessonId: widget.lessonId,
                                         courseId: widget.courseId,
+                                        fileType: widget.fileType,
                                         presentationPath: '/data/user/0/dhca.mobile.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
                                         owner: widget.owner,
                                       ),

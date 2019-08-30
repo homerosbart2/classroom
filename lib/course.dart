@@ -98,6 +98,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
       ),
     );
 
+
     Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
       var value = snapshot.data;
       if(value == null) {
