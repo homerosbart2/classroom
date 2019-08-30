@@ -242,24 +242,23 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     );
 
     Firestore.instance.collection("lessons").document(widget.lessonId).collection("questions").orderBy("votes", descending: true).snapshots().listen((snapshot) async{
-      // InteractRoute.index = 0;
-      // InteractRoute.questions.clear();
-      List<DocumentSnapshot> docs = snapshot.documents;
+      InteractRoute.index = 0;
+      List<DocumentChange> docs = snapshot.documentChanges;
       Question question;
       for(var doc in docs){
-        await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.documentID + "/votes",Auth.uid,"voted").then((voted){
+        await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.document.documentID + "/votes",Auth.uid,"voted").then((voted){
           question = new Question(
             lessonId: widget.lessonId,
-            questionId: doc.documentID,
-            text: doc['text'],
-            author: doc['author'],
-            authorId: doc['authorId'],
-            day: doc['day'],
-            month: doc['month'],
-            year: doc['year'],
-            hours: doc['hours'],
-            minutes: doc['minutes'],                
-            votes: doc['votes'],
+            questionId: doc.document.documentID,
+            text: doc.document.data['text'],
+            author: doc.document.data['author'],
+            authorId: doc.document.data['authorId'],
+            day: doc.document.data['day'],
+            month: doc.document.data['month'],
+            year: doc.document.data['year'],
+            hours: doc.document.data['hours'],
+            minutes: doc.document.data['minutes'],                
+            votes: doc.document.data['votes'],
             index: InteractRoute.index++,
           );
           if(question.authorId == Auth.uid) question.mine = true;

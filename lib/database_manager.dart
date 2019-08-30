@@ -64,7 +64,7 @@ class DatabaseManager{
     DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
     Firestore.instance.runTransaction((Transaction transaction) async {
       DocumentSnapshot snapshot = await transaction.get(reference);
-      if (snapshot.data.isNotEmpty) {
+      if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['users']);
         list.add(uid);
         await transaction.update(reference, <String, dynamic>{'users': list});
@@ -187,7 +187,7 @@ class DatabaseManager{
     List<dynamic> lista = new List<dynamic>();
     DocumentReference reference = Firestore.instance.collection(collection).document(document);
     await reference.get().then((snapshot){
-      if(snapshot.data.length > 0) lista = List<String>.from(snapshot.data[field]);
+      if(snapshot.data != null) lista = List<String>.from(snapshot.data[field]);
     });
     return lista.contains(compare);
   }

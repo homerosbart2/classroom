@@ -337,6 +337,7 @@ class _QuestionState extends State<Question>
         if (this.mounted) {
           setState(() {
             _answers.add(Answer(
+              lessonId: widget.lessonId,
               author: jsonAnswer['author'],
               authorId: jsonAnswer['authorId'],
               answerId: jsonAnswer['answerId'],
