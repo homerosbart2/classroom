@@ -248,8 +248,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       Question question;
       for(var doc in docs){
         if (doc.type == DocumentChangeType.added){
-          print("doc: $doc");
-          print("doc: ${doc.type}");
           await DatabaseManager.getFieldInDocument("lessons/" + widget.lessonId + "/questions/" + doc.document.documentID + "/votes",Auth.uid,"voted").then((voted){
             question = new Question(
               lessonId: widget.lessonId,
