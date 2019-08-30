@@ -101,7 +101,6 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
      
     Firestore.instance.collection("lessonsPerCourse").document(widget.courseId).snapshots().listen((snapshot){
       if(snapshot.data != null){
-        print(snapshot.data);
         if(this.mounted) setState(() {
           List<String> lista = new List<String>();
           if(_lessons.isEmpty) lista = List<String>.from(snapshot.data['lessons']);
@@ -115,13 +114,15 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                   lesson.authorId = widget.authorId;
                   Map text = {
                     'lessonId': lesson.lessonId,
-                    'fileType': lesson.fileType,
                     'name' : lesson.name,
                     'date' : lesson.date,
                     'comments': lesson.comments,
                     'owner': widget.owner,
                     'authorId': widget.authorId,
                     'courseId': widget.courseId,
+                    'fileType': lesson.fileType,
+                    'fileExists': lesson.fileExists,
+                    'filePath': lesson.filePath,                    
                     'description': lesson.description,
                   };
                   String textLesson = json.encode(text); 
@@ -142,7 +143,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
           setState(() {
             _lessons.add(
               Lesson(
-                presentation: jsonLesson['presentation'],
+                fileExists: jsonLesson['fileExists'],
                 lessonId: jsonLesson['lessonId'],
                 courseId: jsonLesson['courseId'],
                 name: jsonLesson['name'],

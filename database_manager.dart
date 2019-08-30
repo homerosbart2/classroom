@@ -589,16 +589,16 @@ class DatabaseManager{
           if(lesson != null){
             if(lesson['authorId'] == uid) userOwner = true;
             else userOwner = false;
-            String date = (lesson['date']).toString();
             lessonsList.add(
               Lesson(
-                presentation: lesson['presentation'],
                 lessonId: eachLesson,
+                authorId: lesson['authorId'],
                 courseId: courseId,
                 comments: lesson['comments'],
                 date: lesson['date'],
                 description: lesson['description'],
                 name: lesson['name'],
+                fileExists: lesson['fileExist'],
                 owner: userOwner,
               )
             );       

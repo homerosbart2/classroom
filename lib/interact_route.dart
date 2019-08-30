@@ -17,13 +17,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InteractRoute extends StatefulWidget{
   
-  final String lessonId, presentationPath, authorId, courseId, fileType;
+  final String lessonId, presentationPath, authorId, courseId;
   static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
   static WidgetPasser updateQuestions = WidgetPasser(); 
   static int index = 0;
-  final bool owner, isVideo;
+  final bool owner, isVideo, fileExists;
   
   InteractRoute({
     @required this.lessonId,
@@ -31,7 +31,7 @@ class InteractRoute extends StatefulWidget{
     @required this.courseId,
     @required this.isVideo,
     this.presentationPath: '',
-    this.fileType: '',
+    this.fileExists: false,
     this.owner: false,
   });
 
@@ -69,7 +69,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
-
     _presentationExist = false;
     _presentationLoaded = false;
     _lessonDisabled = false;
@@ -143,17 +142,17 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       }
     }); 
 
-    FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
-      if(this.mounted) setState(() {
-        _lessonDisabled = true;
-      });
-    });
+    // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildRemoved.listen((data) {
+    //   if(this.mounted) setState(() {
+    //     _lessonDisabled = true;
+    //   });
+    // });
     
-    FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
-      if(this.mounted) setState(() {
-        _courseDisabled = true;
-      });
-    });
+    // FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildRemoved.listen((data) {
+    //   if(this.mounted) setState(() {
+    //     _courseDisabled = trufe;
+    //   });
+    // });
 
     // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
     //   var value = (data.snapshot.value);
@@ -220,21 +219,22 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               borderColor: Colors.transparent,
               icon: FontAwesomeIcons.youtube,
               onTap: (){
-                getFilePath().then((filePath){
+                // getFilePath().then((filePath){
                   setState((){
-                    if(filePath != null){
-                      DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
+                    if(true != null){
+                      //TODO send URL to this method 
+                      DatabaseManager.uploadFiles("url", widget.lessonId, "https://youtu.be/Bydc-zhfdgM").then((path){
                         setState(() {
                           _presentationExist = true; 
-                          print('PATH: $path');
-                          _presentation = Presentation(
-                            file: path,
-                          );
+                          print('PATH VIDEO: $path');
+                          // _presentation = Presentation(
+                            // file: path,
+                          // );
                         });
                       });
                     }
                   });
-                });
+                // });
               },
             ),
           ),
@@ -291,6 +291,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               hours: doc.document.data['hours'],
               minutes: doc.document.data['minutes'],                
               votes: doc.document.data['votes'],
+              isVideo: widget.isVideo,
               index: InteractRoute.index++,
             );
             if(question.authorId == Auth.uid) question.mine = true;
@@ -308,77 +309,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
         }
       }      
     });
-
-    // FirebaseDatabase.instance.reference().child("questionsPerLesson").child(widget.lessonId).orderByChild("votes").onChildAdded.listen((data) {
-    //   if(this.mounted){
-    //     setState(() {
-    //       List<String> lista = new List<String>();
-    //       String newQuestion = data.snapshot.value["question"];
-    //       print("pregunta: $newQuestion");
-    //       lista.add(newQuestion); 
-    //       DatabaseManager.getQuestionsPerLessonByList(lista,widget.lessonId).then(
-    //         (List<Question> lc) => setState(() {
-    //           for(var question in lc){
-    //             DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
-    //               if(question.authorId == Auth.uid) question.mine = true;
-    //               print("voted: $voted");
-    //               if(voted) question.voted = true;
-    //               // if(question.votes > 0) question.answered = true;
-    //               question.courseAuthorId = widget.authorId;
-    //               setState(() {
-    //                 // Map text = {
-    //                 //   'text': question.text,
-    //                 //   'author': question.author,
-    //                 //   'authorId': question.authorId,
-    //                 //   'owner': question.owner,
-    //                 //   'day': question.day,
-    //                 //   'month': question.month,
-    //                 //   'year': question.year,
-    //                 //   'hours': question.hours,
-    //                 //   'minutes': question.minutes,
-    //                 //   'questionId': question.questionId,
-    //                 //   'mine': question.mine,
-    //                 //   'voted' : question.voted,
-    //                 //   'answered' : question.answered,
-    //                 //   'courseAuthorId': widget.authorId,
-    //                 //   'votes': question.votes,
-    //                 // };
-    //                 // String textQuestion = json.encode(text);
-    //                 // _questionPasser.sendWidget.add(textQuestion); 
-    //                 InteractRoute.questions.add(question);
-    //               });              
-    //             });
-    //           }
-    //         })
-    //       );     
-    //     });
-    //   }
-    // });
-
-
-    // DatabaseManager.getQuestionsPerLesson(widget.lessonId).then(
-    //     (List<String> ls) => setState(() {
-    //       List<String> __questionsListString = List<String>();
-    //       __questionsListString = ls;
-    //       DatabaseManager.getQuestionsPerLessonByList(__questionsListString).then(
-    //         (List<Question> lc) => setState(() {
-    //           for(var question in lc){
-    //             DatabaseManager.getVotesToUserPerQuestion(Auth.uid, question.questionId).then((voted){
-    //               if(question.authorId == Auth.uid) question.mine = true;
-    //               question.votesController = _votesController;
-    //               if(voted) question.voted = true;
-    //               if(question.votes > 0) question.answered = true;
-    //               question.index = InteractRoute.index++;
-    //               question.courseAuthorId = widget.authorId;
-    //               setState(() {
-    //                 InteractRoute.questions.add(question);
-    //               });              
-    //             });
-    //           }
-    //         })
-    //       );         
-    //     })
-    // );
 
     _votesStream.listen((val) {
       if(val != null){

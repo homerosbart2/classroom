@@ -61,7 +61,6 @@ class DatabaseManager{
     });     
   }  
 
-
   static void addUsersPerCourse(String course, String uid){
     List<String> list = new List<String>();  
     DocumentReference reference = Firestore.instance.document('usersPerCourse/' + course);
@@ -148,7 +147,7 @@ class DatabaseManager{
       'minutes': minutes,
       'votes': 0,
     }).then((_){
-      updateLesson(lesson,"1","comments");
+      updateLesson(lesson,"1","comments","","");
     });
     return reference.documentID;
   }
@@ -266,7 +265,9 @@ class DatabaseManager{
     DocumentReference lesson = Firestore.instance.collection('lessons').document();
     lesson.setData({
       'name': name,
-      'presentation' : false,
+      'fileExists' : false,
+      'filePath' : '',
+      'fileType' : '',
       'description': description,
       'date': date,
       'comments' : 0
@@ -331,8 +332,11 @@ class DatabaseManager{
             contentType: type,
           ),
         );
-        await updateLesson(lessonId, "", "presentation");
+        await updateLesson(lessonId, true, "fileExists", type, filePath);
         break;        
+      }
+      case "url": {
+        await updateLesson(lessonId, true, "fileExists", type, filePath);
       }
     }    
     return filePath;
@@ -357,7 +361,7 @@ class DatabaseManager{
     });       
   }
 
-  static Future<void> updateLesson(String code, String param, String column) async{
+  static Future<void> updateLesson(String code, var param, String column, String type, String filePath) async{
     DocumentReference reference = Firestore.instance.document('lessons/' + code);
     Firestore.instance.runTransaction((Transaction transaction) async {
       // DocumentSnapshot snapshot = await transaction.get(reference);
@@ -367,6 +371,10 @@ class DatabaseManager{
             transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
             break;
           }
+          case "fileExists": {
+            transaction.update(reference, <String, dynamic>{'fileExists': param, 'fileType': type, 'filePath': filePath});      
+            break;
+          }          
           default: {
             transaction.update(reference, <String, dynamic>{column: param});       
             break;
@@ -572,8 +580,7 @@ class DatabaseManager{
                 hours: question['hours'],
                 minutes: question['minutes'],                
                 votes: question['votes'],
-                //TODO: decir si es video para que cambie el ícono a un cuadro o a un círculo del attach.
-                isVideo: false,
+                isVideo: question['isVideo'],
               )
             );  
           }    
@@ -598,14 +605,15 @@ class DatabaseManager{
             String date = (lesson['date']).toString();
             lessonsList.add(
               Lesson(
-                presentation: lesson['presentation'],
-                fileType: lesson['fileType'],
                 lessonId: eachLesson,
                 courseId: courseId,
                 comments: lesson['comments'],
                 date: lesson['date'],
                 description: lesson['description'],
                 name: lesson['name'],
+                fileExists: lesson['fileExists'],
+                fileType: lesson['fileType'],
+                filePath: lesson['filePath'],
                 owner: userOwner,
               )
             );       

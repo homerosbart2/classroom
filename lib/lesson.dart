@@ -10,19 +10,20 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'notify.dart';
 
 class Lesson extends StatefulWidget{
-  final String name, description, lessonId, date, courseId, fileType;
+  final String name, description, lessonId, date, courseId, fileType, filePath;
   String authorId;
   int comments;
-  final bool owner, presentation;
+  final bool owner, fileExists;
   
 
   Lesson({
     @required this.lessonId,
     @required this.courseId,
+    @required this.authorId,
     @required this.name,
-    @required this.presentation,
+    @required this.fileExists,
+    this.filePath: '',
     this.fileType: 'pdf',
-    this.authorId,
     this.description: '',
     this.date: '',
     this.comments: 0,
@@ -259,11 +260,11 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                         authorId: widget.authorId,
                                         lessonId: widget.lessonId,
                                         courseId: widget.courseId,
-                                        fileType: widget.fileType,
-                                        presentationPath: '/data/user/0/dhca.mobile.classroom/cache/71197f9fec304ff5bca9104c0e29cd77.pdf',
+                                        fileExists: widget.fileExists,
+                                        presentationPath: widget.filePath,
                                         owner: widget.owner,
                                         //TODO: Obtener de la base de datos si es video o no.
-                                        isVideo: false,
+                                        isVideo: (widget.fileType == "url"),
                                       ),
                                     ); 
                                   })

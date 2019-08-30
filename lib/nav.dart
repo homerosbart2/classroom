@@ -345,7 +345,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           }
                         });                                                                      
                       }else if(Nav.addBarMode == 2){
-                        DatabaseManager.updateLesson(widget.lessonId, val,"description");
+                        DatabaseManager.updateLesson(widget.lessonId, val,"description","","");
                         _addBarController.reverse().then((val){
                           _addBarTextfieldController.text = '';
                           if(_addBarAlertController.status != AnimationStatus.dismissed){
@@ -377,7 +377,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                           if(this.mounted) setState(() {
                             _navTitle = val;
                           });
-                          DatabaseManager.updateLesson(widget.lessonId, val,"name");
+                          DatabaseManager.updateLesson(widget.lessonId, val,"name","","");
                         }else if(widget.section == 'lessons'){
                           if(this.mounted) setState(() {
                             FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
@@ -449,7 +449,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
       });
       print(picked.day);
       String date = addZero(picked.day)+"/"+addZero(picked.month)+"/"+addZero(picked.year);
-      DatabaseManager.updateLesson(widget.lessonId, date,"date");
+      DatabaseManager.updateLesson(widget.lessonId, date,"date","","");
       print('FECHA: $date');
       print('LECCION: ${widget.lessonId}');
     }
