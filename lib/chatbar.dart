@@ -99,7 +99,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
           // String textQuestion = json.encode(text);
           // ChatBar.questionPasser.sendWidget.add(textQuestion);          
         });
-      }else{
+      }else if(ChatBar.mode == 1){
         String questionId = Question.globalQuestionId;
         DatabaseManager.addAnswers(questionId, author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
           Map text = {
@@ -122,6 +122,9 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
           ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
           ChatBar.mode = 0;          
         });        
+      }else if(ChatBar.mode == 2){
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){       
+        });
       }
         _chatBarTextfieldController.text = '';
     }

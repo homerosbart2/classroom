@@ -17,6 +17,10 @@ class Classroom extends StatelessWidget {
         primaryColorLight: Color.fromARGB(255, 255, 235, 231),
         accentColor: Color.fromARGB(255, 0, 11, 43),
         cardColor: Color.fromARGB(255, 233, 238, 255),
+        sliderTheme: SliderThemeData(
+          thumbShape: RoundSliderThumbShape(enabledThumbRadius: 10),
+          // overlayShape: SliderComponentShape.noOverlay
+        ),
       ),
       home: Scaffold(
         resizeToAvoidBottomPadding: false,

@@ -1,3 +1,4 @@
+import 'package:classroom/presentation.dart';
 import 'package:flutter/material.dart';
 import 'package:classroom/vote.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -16,7 +17,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Question extends StatefulWidget {
   static WidgetPasser answerPasser, answeredPasser;
   static String globalQuestionId;
-  final String text, author, authorId, questionId, lessonId;
+  final String text, author, authorId, questionId, lessonId, attachPosition;
+  final bool isVideo;
   String courseAuthorId;
   bool voted, mine, answered, owner;
   int votes, index, day, month, year, hours, minutes;
@@ -29,6 +31,7 @@ class Question extends StatefulWidget {
     @required this.authorId,
     @required this.questionId,
     @required this.lessonId,
+    @required this.isVideo,
     this.courseAuthorId,
     this.votesController,
     this.mine: false,
@@ -42,6 +45,7 @@ class Question extends StatefulWidget {
     this.year: 1998,
     this.hours: 11,
     this.minutes: 55,
+    this.attachPosition: '2',
   });
 
   
@@ -71,6 +75,8 @@ class _QuestionState extends State<Question>
   @override
   void initState() {
     super.initState();
+
+    widget.mine = false;
 
     _hasAnswers = false;
 
@@ -178,7 +184,7 @@ class _QuestionState extends State<Question>
     );
 
     _sizeFloat2 = Tween<double>(
-      begin: 0.75,
+      begin: 0.9,
       end: 1,
     ).animate(
       CurvedAnimation(
@@ -463,18 +469,120 @@ class _QuestionState extends State<Question>
     }
   }
 
+  Widget _getAttachIcon(){
+    if(widget.isVideo) return Icon(
+      FontAwesomeIcons.solidCircle,
+      color: Theme.of(context).primaryColor,
+      size: 12,
+    );
+    else return Row(
+      children: <Widget>[
+        Icon(
+          FontAwesomeIcons.solidSquare,
+          color: Theme.of(context).primaryColor,
+          size: 12,
+        ),
+        Text(
+          ' diapositiva',
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _seekToAttachPosition(){
+    Vibration.hasVibrator().then((val){
+      if(val){
+        Vibration.vibrate(duration: 30);
+      }
+    });
+
+    if(widget.isVideo){
+      //TODO: seek to minute.
+    }else{
+      if(Presentation.slidePasser != null) Presentation.slidePasser.sendWidget.add(widget.attachPosition);
+    }
+  }
+
+  Widget _getAttachPosition(){
+    if(!widget.mine){
+      if(widget.attachPosition != ''){
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            _getAttachIcon(),
+            Container(
+              margin: EdgeInsets.only(left: 3),
+              child: Text(
+                widget.attachPosition,
+                style: TextStyle(
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            ),
+          ],
+        );
+      }else return Container();
+    }else{
+      if(widget.attachPosition != ''){
+        return Row(
+          children: <Widget>[
+            Expanded(
+              child: Container(
+                padding: EdgeInsets.symmetric(vertical: 9, horizontal: 9),
+                decoration: BoxDecoration(
+                  // color: Color.fromARGB(255, 250, 250, 250),
+                  border: Border(
+                    bottom: BorderSide(
+                      width: 4,
+                      // color: _colorFloatText.value,
+                      color: Color.fromARGB(255, 249, 249, 249)
+                    ),
+                  ),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        _getAttachIcon(),
+                        Container(
+                          margin: EdgeInsets.only(left: 3),
+                          child: Text(
+                            widget.attachPosition,
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }else return Container();
+    }
+  }
+
   Widget _getHeader(){
     if(!widget.mine){
       return  Row(
         children: <Widget>[
           Expanded(
             child: Container(
-              padding: EdgeInsets.symmetric(vertical: 4, horizontal: 9),
+              padding: EdgeInsets.symmetric(vertical: 9, horizontal: 9),
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    width: 3,
-                    color: _colorFloatText.value,
+                    width: 4,
+                    // color: _colorFloatText.value,
+                    color: Color.fromARGB(255, 249, 249, 249)
                   ),
                 ),
               ),
@@ -489,11 +597,10 @@ class _QuestionState extends State<Question>
                       color: _colorFloatText.value,
                     ),
                   ),
-                  /* Icon(
-                    FontAwesomeIcons.solidCircle,
-                    color: Theme.of(context).primaryColor,
-                    size: 8,
-                  ), */
+                  GestureDetector(
+                    onTap: _seekToAttachPosition,
+                    child: _getAttachPosition()
+                  ),
                 ],
               ),
             ),
@@ -501,7 +608,10 @@ class _QuestionState extends State<Question>
         ],
       );
     }else{
-      return Container();
+      return GestureDetector(
+        onTap: _seekToAttachPosition,
+        child: _getAttachPosition()
+      );
     }
   }
 
@@ -612,116 +722,117 @@ class _QuestionState extends State<Question>
                       ),
                       child: GestureDetector(
                         onLongPress: (){
-                          if(!_disabled){
+                          if(!_disabled && (widget.mine || widget.owner) && _deleteHeightController.isDismissed){
                             Vibration.vibrate(duration: 20);
                             _deleteHeightController.forward();
-                            print('Sale boton de eliminar');
                           }
                         },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            _getHeader(),
-                            Container(
-                              padding: EdgeInsets.fromLTRB(9, 9, 9, 0),
-                              child: Text(
-                                widget.text,
-                                style: TextStyle(
-                                  color: _colorFloatText.value,
+                        child: Container(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              _getHeader(),
+                              Container(
+                                padding: EdgeInsets.fromLTRB(9, 9, 9, 0),
+                                child: Text(
+                                  widget.text,
+                                  style: TextStyle(
+                                    color: _colorFloatText.value,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical:6, horizontal: 9),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical:6, horizontal: 9),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    _getAnsweredTag(),
+                                    Text(
+                                      _timeDate,
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                      ),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              _getDeleteButton(context),
+                              Row(
                                 children: <Widget>[
-                                  _getAnsweredTag(),
-                                  Text(
-                                    _timeDate,
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-                            _getDeleteButton(context),
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: _getAnswersButton(),
-                                ),
-                                Expanded(
-                                  child: Tooltip(
-                                    message: 'Responder',
-                                    child: GestureDetector(
-                                      onTap: (){
-                                        if(!_disabled){
-                                          Vibration.vibrate(duration: 20);
-                                          if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
-                                            InteractRoute.questionController.add(widget.text);
-                                            InteractRoute.questionPositionController.forward();
-                                            _expandAnswersController.forward();
-                                            Question.answerPasser = _answerPasser;
-                                            Question.globalQuestionId = widget.questionId;
-                                            Question.answeredPasser = _answeredPasser;
-                                            ChatBar.mode = 1;
-                                            FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
-                                            ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
-                                          }else{
-                                            InteractRoute.questionPositionController.reverse();
-                                            ChatBar.mode = 0;
-                                            ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                                  Expanded(
+                                    child: _getAnswersButton(),
+                                  ),
+                                  Expanded(
+                                    child: Tooltip(
+                                      message: 'Responder',
+                                      child: GestureDetector(
+                                        onTap: (){
+                                          if(!_disabled){
+                                            Vibration.vibrate(duration: 20);
+                                            if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
+                                              InteractRoute.questionController.add(widget.text);
+                                              InteractRoute.questionPositionController.forward();
+                                              _expandAnswersController.forward();
+                                              Question.answerPasser = _answerPasser;
+                                              Question.globalQuestionId = widget.questionId;
+                                              Question.answeredPasser = _answeredPasser;
+                                              ChatBar.mode = 1;
+                                              FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
+                                              ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
+                                            }else{
+                                              InteractRoute.questionPositionController.reverse();
+                                              ChatBar.mode = 0;
+                                              ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                                            }
                                           }
-                                        }
-                                      },
-                                      child: Container(
-                                        margin: EdgeInsets.only(bottom: 3),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: <Widget>[
-                                            Container(
-                                              padding: EdgeInsets.fromLTRB(0, 6, 0, 12),
-                                              child: Row(
-                                                children: <Widget>[
-                                                  Container(
-                                                    margin: EdgeInsets.only(right: 6),
-                                                    child: Icon(
-                                                      FontAwesomeIcons.solidCommentAlt,
-                                                      size: 12,
-                                                      color: _colorFloatText.value,
+                                        },
+                                        child: Container(
+                                          margin: EdgeInsets.only(bottom: 3),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              Container(
+                                                padding: EdgeInsets.fromLTRB(0, 6, 0, 12),
+                                                child: Row(
+                                                  children: <Widget>[
+                                                    Container(
+                                                      margin: EdgeInsets.only(right: 6),
+                                                      child: Icon(
+                                                        FontAwesomeIcons.solidCommentAlt,
+                                                        size: 12,
+                                                        color: _colorFloatText.value,
+                                                      ),
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    'RESPONDER',
-                                                    style: TextStyle(
-                                                      color: _colorFloatText.value,
+                                                    Text(
+                                                      'RESPONDER',
+                                                      style: TextStyle(
+                                                        color: _colorFloatText.value,
+                                                      ),
                                                     ),
-                                                  ),
-                                                ],
+                                                  ],
+                                                ),
                                               ),
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            SizeTransition(
-                              axis: Axis.vertical,
-                              sizeFactor: _expandHeightFloat,
-                              child: Container(
-                                padding: EdgeInsets.only(bottom: 6),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: _answers,
+                                ],
+                              ),
+                              SizeTransition(
+                                axis: Axis.vertical,
+                                sizeFactor: _expandHeightFloat,
+                                child: Container(
+                                  padding: EdgeInsets.only(bottom: 6),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: _answers,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -749,6 +860,7 @@ class _QuestionState extends State<Question>
                       index: widget.index,
                       mine: widget.mine,
                       votesController: widget.votesController,
+                      isVideo: widget.isVideo,
                     )]);
                     //widget.votesController.add(1);
                   },
@@ -765,6 +877,7 @@ class _QuestionState extends State<Question>
                       index: widget.index,
                       mine: widget.mine,
                       votesController: widget.votesController,
+                      isVideo: widget.isVideo,
                     )]);
                     //widget.votesController.add(1);
                   },
