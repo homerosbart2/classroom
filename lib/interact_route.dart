@@ -227,9 +227,9 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
                         setState(() {
                           _presentationExist = true; 
                           print('PATH VIDEO: $path');
-                          // _presentation = Presentation(
-                            // file: path,
-                          // );
+                          _presentation = Presentation(
+                            file: path,
+                          );
                         });
                       });
                     }
@@ -396,7 +396,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   Widget _getPresentation(BuildContext context){
     if(widget.isVideo){
       return YouTubeVideo();
-    }if(!_presentationExist && _presentationLoaded){
+    }else if(!_presentationExist && _presentationLoaded){
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
         decoration: BoxDecoration(
