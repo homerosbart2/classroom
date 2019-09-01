@@ -124,7 +124,7 @@ class DatabaseManager{
     return answer.key;
   }
 
-  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes) async{
+  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes, {String attachPosition = ''}) async{
     DatabaseReference question;
     question = mDatabase.child("questions").push();
     await question.set({
@@ -137,6 +137,7 @@ class DatabaseManager{
       'hours': hours,
       'minutes': minutes,
       'votes': 0,
+      // TODO: Agregar attachPosition si el string no está vacío
     }).then((_) {
       updateLesson(lesson,"1","comments");
       addQuestionsPerLesson(question.key, lesson, 0);

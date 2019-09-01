@@ -979,7 +979,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         child: Scaffold(
               resizeToAvoidBottomPadding: _resizeScaffold,
               drawer: _construcDrawer(),
-              appBar: PreferredSize(
+              appBar: true ? PreferredSize(
                 preferredSize: Size.fromHeight(widget.preferredSize),
                 child: AppBar(
                   actions: _construcActions(),
@@ -994,6 +994,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                     color: widget.actionsColor,
                   ),
                 ),
+              ) : PreferredSize(
+                preferredSize: Size.fromHeight(0),
+                child: Container(),
               ),
               body: Stack(
                 children: <Widget>[

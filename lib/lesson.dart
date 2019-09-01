@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vibration/vibration.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/interact_route.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -9,8 +8,8 @@ import 'notify.dart';
 
 class Lesson extends StatefulWidget{
   final String name, description, lessonId, date, courseId;
-  String authorId;
-  int comments;
+  final String authorId;
+  final int comments;
   final bool owner, presentation;
   
 
@@ -263,7 +262,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                 Vibration.vibrate(duration: 20);
                                 print('funciona');
                                 Navigator.of(context).push(
-                                  CupertinoPageRoute(builder: (BuildContext context) {
+                                  MaterialPageRoute(builder: (BuildContext context) {
                                     return Nav(
                                       elevation: 0,
                                       color: Colors.transparent,

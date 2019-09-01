@@ -2,12 +2,16 @@
 // import 'package:native_pdf_view/native_pdf_view.dart';
 // import 'package:photo_view/photo_view.dart';
 import 'dart:async';
+import 'dart:math';
+import 'package:classroom/chatbar.dart';
+import 'package:classroom/interact_route.dart';
 import 'package:flutter/material.dart';
 import 'package:native_pdf_renderer/native_pdf_renderer.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pinch_zoom_image/pinch_zoom_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:classroom/widget_passer.dart';
+import 'package:vibration/vibration.dart';
 
 class Presentation extends StatefulWidget{
   static final WidgetPasser slidePasser = WidgetPasser();
@@ -43,12 +47,10 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
     _loading = false;
 
     Presentation.slidePasser.recieveWidget.listen((newSlide) {
-      if (newSlide != null) {
-        if (this.mounted) {
-          setState(() {
-            _actualPage = int.parse(newSlide) - 1;
-          });
-        }
+      if (newSlide != null && this.mounted) {
+        setState(() {
+          _actualPage = int.parse(newSlide) - 1;
+        });
       }
     });
   }
@@ -70,6 +72,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
     if(!_loading) setState(() {
       _actualPage = page;
     });
+    if(InteractRoute.questionPositionController.isCompleted) InteractRoute.questionController.add((_actualPage + 1).toString());
   }
 
   void _changeToNextSlide(){
@@ -135,11 +138,43 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
                       ),
                     ),
                   ),
-                  Text(
-                    '${_actualPage + 1}/${_document.pagesCount}',
-                    style: TextStyle(
-                      fontSize: 20,
-                      // fontWeight: FontWeight.bold
+                  GestureDetector(
+                    onTap: (){
+                      Vibration.hasVibrator().then((_){
+                        Vibration.vibrate(duration: 20);
+                      });
+                      if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
+                        InteractRoute.questionController.add((_actualPage + 1).toString());
+                        InteractRoute.questionPositionController.forward();
+                        ChatBar.mode = ChatBarMode.QUESTION_WITH_POSITION;
+                        FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
+                        // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                      }else{
+                        InteractRoute.questionPositionController.reverse();
+                        ChatBar.mode = ChatBarMode.QUESTION;
+                        // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                      }
+                    },
+                    child: Row(
+                      children: <Widget>[
+                        Container(
+                          margin: EdgeInsets.only(right: 4),
+                          child: Transform.rotate(
+                            angle: pi/4,
+                            child: Icon(
+                              FontAwesomeIcons.thumbtack,
+                              size: 14,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${_actualPage + 1}/${_document.pagesCount}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            // fontWeight: FontWeight.bold
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   GestureDetector(

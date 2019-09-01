@@ -123,7 +123,6 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
             if(this.mounted){
               setState(() {
                 for(var lesson in lc){
-                  lesson.authorId = widget.authorId;
                   Map text = {
                     //TODO: obtener los comentarios de la lección.
                     'lessonId': lesson.lessonId,
@@ -208,7 +207,6 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
     if(!_disabled) return Container(
       padding: EdgeInsets.only(top: 12),
       child: Column(

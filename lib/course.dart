@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/lessons_route.dart';
 import 'package:vibration/vibration.dart';
@@ -216,7 +215,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
           Course.deactivateListener = _deactivateListener;
           Vibration.vibrate(duration: 20);
           Navigator.of(context).push(
-            CupertinoPageRoute(builder: (BuildContext context) {
+            MaterialPageRoute(builder: (BuildContext context) {
               return Nav(
                 owner: widget.owner,
                 preferredSize: 65,

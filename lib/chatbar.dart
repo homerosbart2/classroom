@@ -8,17 +8,25 @@ import 'dart:convert';
 import 'package:classroom/database_manager.dart';
 import 'package:classroom/auth.dart';
 
+enum ChatBarMode {
+  QUESTION,
+  ANSWER,
+  QUESTION_WITH_POSITION,
+}
+
 class ChatBar extends StatefulWidget{
   static AnimationController chatBarOffsetController;
   static WidgetPasser questionPasser = WidgetPasser(), answerPasser = WidgetPasser(), labelPasser = WidgetPasser();
-  final bool owner;
-  final String lessonId;
-  
   static FocusNode chatBarFocusNode = FocusNode();
-  static int mode;
+  static ChatBarMode mode;
+
+  final bool owner;
+  final String lessonId, questionToAnswer;
+  
   const ChatBar({
     @required this.lessonId,
     this.owner: false,
+    this.questionToAnswer: '',
   });
 
   _ChatBarState createState() => _ChatBarState();
@@ -32,7 +40,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
   @override
   void initState() {
     super.initState();
-    ChatBar.mode = 0;
+    ChatBar.mode = ChatBarMode.QUESTION;
 
     ChatBar.chatBarOffsetController = AnimationController(
       vsync: this,
@@ -68,7 +76,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
 
     ChatBar.labelPasser.sendWidget.add(null);
 
-    ChatBar.mode = 0;
+    ChatBar.mode = ChatBarMode.QUESTION;
   }
 
   void _onSubmittedFunction(String val){
@@ -82,7 +90,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
       int minutes = nowDate.minute;
       String authorId = Auth.uid;
       String author = Auth.getName();
-      if(ChatBar.mode == 0){
+      if(ChatBar.mode == ChatBarMode.QUESTION){
         DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
           // Map text = {
           //   'text': val,
@@ -99,7 +107,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
           // String textQuestion = json.encode(text);
           // ChatBar.questionPasser.sendWidget.add(textQuestion);          
         });
-      }else if(ChatBar.mode == 1){
+      }else if(ChatBar.mode == ChatBarMode.ANSWER){
         String questionId = Question.globalQuestionId;
         DatabaseManager.addAnswers(questionId, author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
           Map text = {
@@ -120,10 +128,10 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
           if(widget.owner) Question.answeredPasser.sendWidget.add('1');
           InteractRoute.questionPositionController.reverse();
           ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
-          ChatBar.mode = 0;          
+          ChatBar.mode = ChatBarMode.QUESTION;          
         });        
-      }else if(ChatBar.mode == 2){
-        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){       
+      }else if(ChatBar.mode == ChatBarMode.QUESTION_WITH_POSITION){
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes, attachPosition: widget.questionToAnswer).then((id){       
         });
       }
         _chatBarTextfieldController.text = '';

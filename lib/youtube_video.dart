@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:classroom/widget_passer.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:youtube_player/youtube_player.dart';
@@ -7,6 +10,8 @@ import 'package:classroom/interact_route.dart';
 import 'chatbar.dart';
 
 class YouTubeVideo extends StatefulWidget {
+  static final WidgetPasser videoSeekToPasser = new WidgetPasser();
+
   @override
   _YouTubeVideoState createState() => _YouTubeVideoState();
 }
@@ -82,14 +87,20 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
         parent: _videoSeekUIOpacityController,
       ),
     );
+
+    YouTubeVideo.videoSeekToPasser.recieveWidget.listen((position) {
+      if (position != null && _videoController.value.duration != null) {
+        List<String> splittedPosition = position.split(':');
+        Duration newPosition = Duration(seconds: int.parse(splittedPosition[0]) * 60 + int.parse(splittedPosition[1]));
+        _videoController.seekTo(newPosition);
+      }
+    });
   }
 
   
 
   void _updateVideoUI(){
-    double width = MediaQuery.of(context).size.width;
-
-    print('VIDEO VALUE: ${_videoController.value}');
+    // double width = MediaQuery.of(context).size.width;
     VideoPlayerValue value = _videoController.value;
     if(!_videoInitialized && value.duration != null){
       _videoUIOpacityController.forward();
@@ -135,6 +146,12 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
         _videoUIOpacityController.forward();
       }
     }
+  }
+
+  @override
+  void dispose() {
+    YouTubeVideo.videoSeekToPasser.sendWidget.add(null);
+    super.dispose();
   }
 
   @override
@@ -254,16 +271,18 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
                             child: GestureDetector(
                               onTap: (){
                                 if(_videoUIOpacityController.isCompleted){
-                                  Vibration.vibrate(duration: 20);
+                                  Vibration.hasVibrator().then((_){
+                                    Vibration.vibrate(duration: 20);
+                                  });
                                   if(InteractRoute.questionPositionController.status == AnimationStatus.dismissed || InteractRoute.questionPositionController.status == AnimationStatus.reverse){
                                     InteractRoute.questionController.add(_videoPosition);
                                     InteractRoute.questionPositionController.forward();
-                                    ChatBar.mode = 2;
+                                    ChatBar.mode = ChatBarMode.QUESTION_WITH_POSITION;
                                     FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
                                     // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                                   }else{
                                     InteractRoute.questionPositionController.reverse();
-                                    ChatBar.mode = 0;
+                                    ChatBar.mode = ChatBarMode.QUESTION;
                                     // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                                   }
                                 }else{
@@ -275,10 +294,13 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
                                 height: 45,
                                 width: 45,
                                 color: Colors.white.withAlpha(0),
-                                child: Icon(
-                                  FontAwesomeIcons.thumbtack,
-                                  size: 18,
-                                  color: Colors.white,
+                                child: Transform.rotate(
+                                  angle: pi/4,
+                                  child: Icon(
+                                    FontAwesomeIcons.thumbtack,
+                                    size: 18,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ),

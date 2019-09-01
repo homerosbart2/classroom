@@ -550,6 +550,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           ChatBar(
             lessonId: widget.lessonId,
             owner: widget.owner,
+            questionToAnswer: _questionToAnswer,
           ),   
         ],
       ),
