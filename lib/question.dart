@@ -263,7 +263,7 @@ class _QuestionState extends State<Question>
     //   )
     // );
 
-    _answerPasser.recieveWidget.listen((newAnswer) {
+    _answerPasser.receiver.listen((newAnswer) {
       if (newAnswer != null) {
         Map jsonAnswer = json.decode(newAnswer);
         if (this.mounted) {
@@ -283,7 +283,7 @@ class _QuestionState extends State<Question>
       }
     });
 
-    _answeredPasser.recieveWidget.listen((newAction) {
+    _answeredPasser.receiver.listen((newAction) {
       if (newAction != null) {
         if (this.mounted) {
           _boxResizeOpacityController.forward();
@@ -299,7 +299,7 @@ class _QuestionState extends State<Question>
     //_boxColorController.dispose();
     _boxResizeOpacityController.dispose();
     _expandAnswersController.dispose();
-    _answerPasser.sendWidget.add(null);
+    _answerPasser.sender.add(null);
     super.dispose();
   }
 
@@ -445,9 +445,9 @@ class _QuestionState extends State<Question>
       }
     });
 
-    if(widget.isVideo && YouTubeVideo.videoSeekToPasser != null) YouTubeVideo.videoSeekToPasser.sendWidget.add(widget.attachPosition);
+    if(widget.isVideo && YouTubeVideo.videoSeekToPasser != null) YouTubeVideo.videoSeekToPasser.sender.add(widget.attachPosition);
     else if(Presentation.slidePasser != null) {
-      Presentation.slidePasser.sendWidget.add(widget.attachPosition);
+      Presentation.slidePasser.sender.add(widget.attachPosition);
     }
   }
 
@@ -723,11 +723,11 @@ class _QuestionState extends State<Question>
                                               Question.answeredPasser = _answeredPasser;
                                               ChatBar.mode = ChatBarMode.ANSWER;
                                               FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
-                                              ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
+                                              ChatBar.labelPasser.sender.add('Escriba una respuesta');
                                             }else{
                                               InteractRoute.questionPositionController.reverse();
                                               ChatBar.mode = ChatBarMode.QUESTION;
-                                              ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                                              ChatBar.labelPasser.sender.add('Escriba una pregunta');
                                             }
                                           }
                                         },

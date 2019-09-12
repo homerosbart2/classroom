@@ -1,3 +1,4 @@
+import 'package:classroom/widget_passer.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:vibration/vibration.dart';
@@ -35,6 +36,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
   String _comments, _name;
   Animation<Color> _deleteBackgroundColorFloat, _deleteTextColorFloat;
   bool _disabled;
+  WidgetPasser _addBarModePasser;
 
   @override
   bool get wantKeepAlive => true;
@@ -55,6 +57,8 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
     );
 
     _description = widget.description;
+
+    _addBarModePasser = WidgetPasser();
 
     _boxResizeOpacityController = AnimationController(
       vsync: this,
@@ -135,6 +139,8 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     _deleteBackgroundColorFloat = ColorTween(
       begin: Theme.of(context).cardColor,
       end: Colors.grey[200],
@@ -260,10 +266,10 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                             onTap: (){
                               if(!_disabled){
                                 Vibration.vibrate(duration: 20);
-                                print('funciona');
                                 Navigator.of(context).push(
                                   MaterialPageRoute(builder: (BuildContext context) {
                                     return Nav(
+                                      addBarModePasser: _addBarModePasser,
                                       elevation: 0,
                                       color: Colors.transparent,
                                       actionsColor: Theme.of(context).accentColor,
@@ -277,6 +283,7 @@ class _LessonState extends State<Lesson> with TickerProviderStateMixin, Automati
                                       courseId: widget.courseId,
                                       lessonId: widget.lessonId,
                                       body: InteractRoute(
+                                        addBarModePasser: _addBarModePasser,
                                         authorId: widget.authorId,
                                         lessonId: widget.lessonId,
                                         courseId: widget.courseId,

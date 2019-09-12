@@ -61,7 +61,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
 
     _chatBarTextfieldController = TextEditingController();
 
-    ChatBar.labelPasser.recieveWidget.listen((label){
+    ChatBar.labelPasser.receiver.listen((label){
       if(label != null && this.mounted){
         setState(() {
           _chatBarLabel = label;
@@ -74,7 +74,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
   void dispose() {
     super.dispose();
 
-    ChatBar.labelPasser.sendWidget.add(null);
+    ChatBar.labelPasser.sender.add(null);
 
     ChatBar.mode = ChatBarMode.QUESTION;
   }
@@ -124,14 +124,15 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
             'minutes': minutes,
           };
           String textAnswer = json.encode(text);
-          Question.answerPasser.sendWidget.add(textAnswer);
-          if(widget.owner) Question.answeredPasser.sendWidget.add('1');
+          Question.answerPasser.sender.add(textAnswer);
+          if(widget.owner) Question.answeredPasser.sender.add('1');
           InteractRoute.questionPositionController.reverse();
-          ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+          ChatBar.labelPasser.sender.add('Escriba una pregunta');
           ChatBar.mode = ChatBarMode.QUESTION;          
         });        
       }else if(ChatBar.mode == ChatBarMode.QUESTION_WITH_POSITION){
-        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes, attachPosition: widget.questionToAnswer).then((id){       
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes, attachPosition: widget.questionToAnswer).then((id){ 
+          InteractRoute.questionPositionController.reverse();      
         });
       }
         _chatBarTextfieldController.text = '';

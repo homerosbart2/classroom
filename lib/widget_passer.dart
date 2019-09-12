@@ -2,11 +2,15 @@ import 'package:rxdart/rxdart.dart';
 import 'dart:async';
 
 class WidgetPasser{
-  Sink<String> get sendWidget => _sendWidgetController.sink;
+  Sink<String> get sender => _sendWidgetController.sink;
   final _sendWidgetController = StreamController<String>();
 
-  Stream<String> get recieveWidget => _recieveWidgetSubject.stream;
+  Stream<String> get receiver => _recieveWidgetSubject.stream;
   final _recieveWidgetSubject = BehaviorSubject<String>();
+
+  void closeSender() => _sendWidgetController.close();
+
+  void closeReceiver() => _recieveWidgetSubject.close();
 
   WidgetPasser(){
     _sendWidgetController.stream.listen(_handle);

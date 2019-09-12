@@ -80,10 +80,6 @@ class _AddBarState extends State<AddBar>{
           onSubmitted: (val){
             widget.onSubmitted();
           },
-          onChangedFunction: (val){
-            this.setState(() {   
-            });
-          },
         ),
         _postAlertInAddBar(),
       ],

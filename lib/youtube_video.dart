@@ -12,6 +12,12 @@ import 'chatbar.dart';
 class YouTubeVideo extends StatefulWidget {
   static final WidgetPasser videoSeekToPasser = new WidgetPasser();
 
+  final String videoId;
+
+  const YouTubeVideo({
+    @required this.videoId
+  });
+
   @override
   _YouTubeVideoState createState() => _YouTubeVideoState();
 }
@@ -19,7 +25,7 @@ class YouTubeVideo extends StatefulWidget {
 class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMixin, AutomaticKeepAliveClientMixin{
   Animation<double> _videoPlayButtonFloat, _videoUIOpacityFloat, _videoSeekUIOpacityFloat;
   AnimationController _videoPlayButtonController, _videoUIOpacityController, _videoSeekUIOpacityController;
-  String _videoPosition, _videoDuration, _videoSeekTo;
+  String _videoPosition, _videoDuration;
   bool _videoInitialized, _activeSlider;
   VideoPlayerController _videoController;
   double _videoDurationBarWidth, _videoForwardOpacity, _videoBackwardOpacity, _sliderValue;
@@ -41,7 +47,6 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
 
     _videoDuration = '';
     _videoPosition = '';
-    _videoSeekTo = '';
 
     _videoPlayButtonController = AnimationController(
       vsync: this,
@@ -88,7 +93,7 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
       ),
     );
 
-    YouTubeVideo.videoSeekToPasser.recieveWidget.listen((position) {
+    YouTubeVideo.videoSeekToPasser.receiver.listen((position) {
       if (position != null && _videoController.value.duration != null) {
         List<String> splittedPosition = position.split(':');
         Duration newPosition = Duration(seconds: int.parse(splittedPosition[0]) * 60 + int.parse(splittedPosition[1]));
@@ -150,12 +155,13 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
 
   @override
   void dispose() {
-    YouTubeVideo.videoSeekToPasser.sendWidget.add(null);
+    YouTubeVideo.videoSeekToPasser.sender.add(null);
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Container(
       margin: EdgeInsets.only(bottom: 18),
       child: Stack(
@@ -167,7 +173,7 @@ class _YouTubeVideoState extends State<YouTubeVideo> with TickerProviderStateMix
             autoPlay: false,
             context: context,
             playerMode: YoutubePlayerMode.NO_CONTROLS,
-            source: 'fq4N0hgOWzU',
+            source: widget.videoId,
             quality: YoutubeQuality.LOW,
             callbackController: (controller){
               _videoController = controller;

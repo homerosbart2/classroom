@@ -36,7 +36,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
           DatabaseManager.addCourseByAccessCode(_contentQR,Auth.uid).then((dynamic text){
             if(text == null){  
               setState(() {
-              Notify.show(
+                Notify.show(
                   context: context,
                   text: 'El curso no existe.',
                   actionText: 'Ok',
@@ -51,7 +51,7 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
             }else{
               String textCourse = json.encode(text);
               print(textCourse);
-              _coursePasser.sendWidget.add(textCourse);                              
+              _coursePasser.sender.add(textCourse);                              
             }              
           }); 
         }else{
@@ -94,13 +94,13 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
       getCourses();
     }
 
-    CoursesRoute.activateQRPasser.recieveWidget.listen((value){
+    CoursesRoute.activateQRPasser.receiver.listen((value){
       if(value == 'QR'){
         _scanQR();
       }
     });
 
-    _coursePasser.recieveWidget.listen((newCourse){
+    _coursePasser.receiver.listen((newCourse){
       if(newCourse != null){
         Map jsonCourse = json.decode(newCourse);
         if (this.mounted){
@@ -148,8 +148,8 @@ class _CoursesRouteState extends State<CoursesRoute> with TickerProviderStateMix
 
   @override
   void dispose() {
-    CoursesRoute.activateQRPasser.sendWidget.add(null);
-    _coursePasser.sendWidget.add(null);
+    CoursesRoute.activateQRPasser.sender.add(null);
+    _coursePasser.sender.add(null);
     super.dispose();
   }
 

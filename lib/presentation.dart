@@ -46,7 +46,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
 
     _loading = false;
 
-    Presentation.slidePasser.recieveWidget.listen((newSlide) {
+    Presentation.slidePasser.receiver.listen((newSlide) {
       if (newSlide != null && this.mounted) {
         setState(() {
           _actualPage = int.parse(newSlide) - 1;
@@ -57,7 +57,7 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
 
   @override
   void dispose() {
-    Presentation.slidePasser.sendWidget.add(null);
+    Presentation.slidePasser.sender.add(null);
     super.dispose();
   }
 
@@ -148,12 +148,11 @@ class _PresentationState extends State<Presentation> with AutomaticKeepAliveClie
                         InteractRoute.questionPositionController.forward();
                         ChatBar.mode = ChatBarMode.QUESTION_WITH_POSITION;
                         FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
-                        // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                       }else{
                         InteractRoute.questionPositionController.reverse();
                         ChatBar.mode = ChatBarMode.QUESTION;
-                        // ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
                       }
+                      ChatBar.labelPasser.sender.add('Escriba una pregunta');
                     },
                     child: Row(
                       children: <Widget>[

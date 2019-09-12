@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:classroom/courses_route.dart';
+import 'package:classroom/interact_questions/interact_questions.dart';
 import 'package:classroom/interact_route.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -16,20 +19,30 @@ import 'package:classroom/choice.dart';
 import 'dart:convert';
 import 'package:classroom/notify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:classroom/database_manager.dart';
+
+
+enum AddBarMode {
+  CREATE,
+  LINK_COURSE,
+  CHANGE_DESCRIPTION,
+  CHANGE_NAME,
+  YOUTUBE_PATH,
+}
 
 class Nav extends StatefulWidget{
   static String addBarTitle;
-  static int addBarMode;
+  static AddBarMode addBarMode; 
   static WidgetPasser coursePasser = WidgetPasser();
   static WidgetPasser lessonPasser = WidgetPasser();
   static WidgetPasser popPasser = WidgetPasser();
+  
   final Widget body;
   final String title, section, subtitle, courseId, lessonId;
   final double preferredSize, elevation;
   final bool drawerActive, addBarActive, notificationsActive, owner;
   final Color color, titleColor, actionsColor;
   final String acessCode;
+  final WidgetPasser addBarModePasser;
 
   const Nav({
     @required this.body,
@@ -48,6 +61,7 @@ class Nav extends StatefulWidget{
     this.lessonId: 'NA',
     this.preferredSize: 60.0,
     this.acessCode,
+    this.addBarModePasser,
   });
 
   @override
@@ -67,7 +81,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   Color _titleColor, _color, _actionsColor;
   FocusNode _focusAddBarNodeLessons, _focusAddBarNodeCourses;
   SharedPreferences prefs;
-  bool _resizeScaffold;
+  bool _resizeScaffold, _showInteractQuestions;
 
   DateTime selectedDate = DateTime.now();
   //WidgetPasser courseBloc = WidgetPasser();
@@ -85,7 +99,10 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
 
     _initSharedPreferences();
 
-    Nav.popPasser.recieveWidget.listen((newPop) {
+    //TODO: Poner esto en true cuando se quiere mostrar las preguntas.
+    _showInteractQuestions = true;
+
+    Nav.popPasser.receiver.listen((newPop) {
       if (newPop != null) {
         if (this.mounted) {
           Navigator.pop(context, true);
@@ -99,7 +116,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     _resizeScaffold = widget.section == 'interact';
   
     Nav.addBarTitle = ''; 
-    Nav.addBarMode = 0;
+    Nav.addBarMode = AddBarMode.CREATE;
 
     _alertMessage = '';
 
@@ -159,12 +176,59 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         curve: Curves.easeInOut,
       ),
     );
-    //_addButtonController.forward();
+
+    if (widget.addBarModePasser != null) widget.addBarModePasser.receiver.listen((mode) {
+      if (mode != null) {
+        switch (mode) {
+          case '0':
+            if (this.mounted) this.setState(() {
+              Nav.addBarMode = AddBarMode.CREATE;
+              if(widget.section == 'courses') Nav.addBarTitle = 'Ingrese el nombre del curso';
+              else if(widget.section == 'lessons') Nav.addBarTitle = 'Ingrese el nombre de la lección';
+            });
+            break;
+          case '1':
+            if (this.mounted) this.setState(() {
+              Nav.addBarMode = AddBarMode.LINK_COURSE;
+              Nav.addBarTitle = 'Ingrese el código del curso';
+            });
+            break;
+          case '2':
+            if (this.mounted) this.setState(() {
+              Nav.addBarMode = AddBarMode.CHANGE_DESCRIPTION;
+              Nav.addBarTitle = 'Ingrese el nuevo nombre';
+            });
+            break;
+          case '3':
+            if (this.mounted) this.setState(() {
+              Nav.addBarMode = AddBarMode.CHANGE_NAME;
+              Nav.addBarTitle = 'Ingrese la nueva descripción';
+            });
+            break;
+          case '4':
+            if (this.mounted) this.setState(() {
+              Nav.addBarMode = AddBarMode.YOUTUBE_PATH;
+              Nav.addBarTitle = 'Ingrese el link del video';
+            });
+            break;
+        }
+        if (_addBarController.isDismissed) {
+          _addBarController.forward();
+          InteractRoute.questionOpacityController.forward();
+          ChatBar.chatBarOffsetController.forward();
+        } else {
+          _addBarController.reverse();
+          ChatBar.chatBarOffsetController.reverse().then((_) {
+            InteractRoute.questionOpacityController.reverse();
+          });
+        }
+      }
+    });
   }
 
   @override
   void dispose(){
-    Nav.popPasser.sendWidget.add(null);
+    Nav.popPasser.sender.add(null);
     super.dispose();
   }
 
@@ -218,6 +282,177 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     else return _focusAddBarNodeCourses;
   }
 
+  void _handleAddBarSubmit(String val){
+    String authorId = Auth.uid;
+    String author = Auth.getName();
+    String code = this.getRandom().toString();
+    if(val.trim() != ''){
+      if(Nav.addBarMode == AddBarMode.CREATE){
+        if(widget.section == 'courses'){
+          DatabaseManager.addCourse(authorId,author,val).then((accessCode){
+            Map text = {
+              //TODO: Generar un nuevo código y agregar el curso a la base de datos.
+              'name' : val,
+              'authorId': authorId,
+              'author' : author,
+              'lessons' : 0,
+              'participants' : 1, 
+              'accessCode': accessCode,
+              'owner': true,
+            };
+            String textCourse = json.encode(text);
+            print(textCourse);
+            Nav.coursePasser.sender.add(textCourse);
+          });
+        }else if(widget.section == 'lessons'){
+          var nowDate = DateTime.now();
+          int day = nowDate.day;
+          int month = nowDate.month;
+          int year = nowDate.year;
+          DatabaseManager.addLesson(Auth.uid, val, '', day, month, year, widget.acessCode);
+          // Map text = {
+          //   //TODO: obtener los comentarios de la lección.
+          //   'name' : val,
+          //   'day' : nowDate.day,
+          //   'month' : nowDate.month, 
+          //   'year': nowDate.year,
+          //   'comments': 0,
+          // };
+          // String textLesson = json.encode(text);
+          // Nav.lessonPasser.sendWidget.add(textLesson);
+        }
+          _addButtonController.reverse();
+        _addBarController.reverse().then((val){
+          _addBarTextfieldController.text = '';
+          if(_addBarAlertController.status != AnimationStatus.dismissed){
+            _addBarAlertController.reverse();
+          }
+        });
+      }else if(Nav.addBarMode == AddBarMode.LINK_COURSE){
+        DatabaseManager.actionOnFieldFrom('coursesPerUser', Auth.uid, val, 'course', 'course', '', 'i', 'get').then((valid){
+          if(valid == ''){
+            DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
+              if(text == null){  
+                setState(() {
+                  Notify.show(
+                    context: this.context,
+                    text: 'El curso no existe.',
+                    actionText: 'Ok',
+                    backgroundColor: Colors.red[200],
+                    textColor: Colors.black,
+                    actionColor: Colors.black,
+                    onPressed: (){
+                      
+                    }
+                  );   
+                  print('NO EXISTE');                               
+                });            
+              }else{
+                String textCourse = json.encode(text);
+                print(textCourse);
+                Nav.coursePasser.sender.add(textCourse);
+                _addButtonController.reverse();
+                _addBarController.reverse().then((val){
+                  _addBarTextfieldController.text = '';
+                  if(_addBarAlertController.status != AnimationStatus.dismissed){
+                    _addBarAlertController.reverse();
+                  }
+                });                            
+              }              
+            }); 
+          }else{
+            Notify.show(
+              context: this.context,
+              text: 'El curso ya ha sido agregado.',
+              actionText: 'Ok',
+              backgroundColor: Colors.red[200],
+              textColor: Colors.black,
+              actionColor: Colors.black,
+              onPressed: (){
+                
+              } 
+            );                           
+            print('DUPLICADO'); 
+          }
+        });                                                                      
+      }else if(Nav.addBarMode == AddBarMode.CHANGE_DESCRIPTION){
+        print('DESCRIPCION: $val');
+        print('CURSO: ${widget.courseId}');
+        print('LECCION: ${widget.lessonId}');
+        DatabaseManager.updateLesson(widget.lessonId, val,'description');
+        _addBarController.reverse().then((val){
+          _addBarTextfieldController.text = '';
+          if(_addBarAlertController.status != AnimationStatus.dismissed){
+            _addBarAlertController.reverse();
+          }
+        }); 
+        ChatBar.chatBarOffsetController.reverse().then((val){
+          InteractRoute.questionOpacityController.reverse();
+        }); 
+      }else if(Nav.addBarMode == AddBarMode.CHANGE_NAME){
+        print('NOMBRE: $val');
+        print('CURSO: ${widget.courseId}');
+        if(widget.section == 'interact'){
+          print('LECCION: ${widget.lessonId}');
+          FirebaseDatabase.instance.reference().child('lessons').child(widget.lessonId).onChildChanged.listen((data) {
+            var value = (data.snapshot.value);
+            String key = data.snapshot.key;
+            switch(key){
+              case 'name':{
+                if(this.mounted){
+                  setState(() {
+                    _navTitle = value.toString();
+                  });
+                }
+                break;
+              }
+            }
+          });                          
+          if(this.mounted) setState(() {
+            _navTitle = val;
+          });
+          DatabaseManager.updateLesson(widget.lessonId, val,'name');
+        }else if(widget.section == 'lessons'){
+          if(this.mounted) setState(() {
+            FirebaseDatabase.instance.reference().child('courses').child(widget.courseId).onChildChanged.listen((data) {
+              var value = (data.snapshot.value);
+              String key = data.snapshot.key;
+              switch(key){
+                case 'name':{
+                  if(this.mounted){
+                    setState(() {
+                      _navSubtitle = value.toString();
+                    });
+                  }
+                  break;
+                }
+              }
+            }); 
+          });
+          DatabaseManager.updateCourse(widget.courseId, val,'name');
+        }
+        _addBarController.reverse().then((val){
+          _addBarTextfieldController.text = '';
+          if(_addBarAlertController.status != AnimationStatus.dismissed){
+            _addBarAlertController.reverse();
+          }
+        }); 
+        ChatBar.chatBarOffsetController.reverse().then((val){
+          InteractRoute.questionOpacityController.reverse();
+        }); 
+      } else if (Nav.addBarMode == AddBarMode.YOUTUBE_PATH) {
+        String videoId = val.split('?v=')[1];
+        //TODO: Almacenar videoId y que es un video.
+      }
+    }else{
+      FocusScope.of(context).requestFocus(_getFocusNode());
+      setState(() {
+        _alertMessage = 'El nombre contiene solo espacios en blanco.'; 
+      });
+      _addBarAlertController.forward();
+    }
+  }
+
   Widget _construcAddBar(double width){
     if(widget.addBarActive){
       return Positioned(
@@ -250,173 +485,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   helper: null,
                   hint: Nav.addBarTitle,
                   type: TextInputType.text,
-                  onSubmitted: (val){
-                    String authorId = Auth.uid;
-                    String author = Auth.getName();
-                    String code = this.getRandom().toString();
-                    if(val.trim() != ''){
-                      if(Nav.addBarMode == 0){
-                        if(widget.section == 'courses'){
-                          DatabaseManager.addCourse(authorId,author,val).then((accessCode){
-                            Map text = {
-                              //TODO: Generar un nuevo código y agregar el curso a la base de datos.
-                              'name' : val,
-                              'authorId': authorId,
-                              'author' : author,
-                              'lessons' : 0,
-                              'participants' : 1, 
-                              'accessCode': accessCode,
-                              'owner': true,
-                            };
-                            String textCourse = json.encode(text);
-                            print(textCourse);
-                            Nav.coursePasser.sendWidget.add(textCourse);
-                          });
-                        }else if(widget.section == 'lessons'){
-                          var nowDate = DateTime.now();
-                          int day = nowDate.day;
-                          int month = nowDate.month;
-                          int year = nowDate.year;
-                          DatabaseManager.addLesson(Auth.uid, val, "", day, month, year, widget.acessCode);
-                          // Map text = {
-                          //   //TODO: obtener los comentarios de la lección.
-                          //   'name' : val,
-                          //   'day' : nowDate.day,
-                          //   'month' : nowDate.month, 
-                          //   'year': nowDate.year,
-                          //   'comments': 0,
-                          // };
-                          // String textLesson = json.encode(text);
-                          // Nav.lessonPasser.sendWidget.add(textLesson);
-                        }
-                         _addButtonController.reverse();
-                        _addBarController.reverse().then((val){
-                          _addBarTextfieldController.text = '';
-                          if(_addBarAlertController.status != AnimationStatus.dismissed){
-                            _addBarAlertController.reverse();
-                          }
-                        });
-                      }else if(Nav.addBarMode == 1){
-                        DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, val, "course", "course", "", "i", "get").then((valid){
-                          if(valid == ""){
-                            DatabaseManager.addCourseByAccessCode(val,Auth.uid).then((dynamic text){
-                              if(text == null){  
-                                setState(() {
-                                  Notify.show(
-                                    context: this.context,
-                                    text: 'El curso no existe.',
-                                    actionText: 'Ok',
-                                    backgroundColor: Colors.red[200],
-                                    textColor: Colors.black,
-                                    actionColor: Colors.black,
-                                    onPressed: (){
-                                      
-                                    }
-                                  );   
-                                  print("NO EXISTE");                               
-                                });            
-                              }else{
-                                String textCourse = json.encode(text);
-                                print(textCourse);
-                                Nav.coursePasser.sendWidget.add(textCourse);
-                                _addButtonController.reverse();
-                                _addBarController.reverse().then((val){
-                                  _addBarTextfieldController.text = '';
-                                  if(_addBarAlertController.status != AnimationStatus.dismissed){
-                                    _addBarAlertController.reverse();
-                                  }
-                                });                            
-                              }              
-                            }); 
-                          }else{
-                            Notify.show(
-                              context: this.context,
-                              text: 'El curso ya ha sido agregado.',
-                              actionText: 'Ok',
-                              backgroundColor: Colors.red[200],
-                              textColor: Colors.black,
-                              actionColor: Colors.black,
-                              onPressed: (){
-                                
-                              } 
-                            );                           
-                            print("DUPLICADO"); 
-                          }
-                        });                                                                      
-                      }else if(Nav.addBarMode == 2){
-                        print('DESCRIPCION: $val');
-                        print('CURSO: ${widget.courseId}');
-                        print('LECCION: ${widget.lessonId}');
-                        DatabaseManager.updateLesson(widget.lessonId, val,"description");
-                        _addBarController.reverse().then((val){
-                          _addBarTextfieldController.text = '';
-                          if(_addBarAlertController.status != AnimationStatus.dismissed){
-                            _addBarAlertController.reverse();
-                          }
-                        }); 
-                        ChatBar.chatBarOffsetController.reverse().then((val){
-                          InteractRoute.questionOpacityController.reverse();
-                        }); 
-                      }else if(Nav.addBarMode == 3){
-                        print('NOMBRE: $val');
-                        print('CURSO: ${widget.courseId}');
-                        if(widget.section == 'interact'){
-                          print('LECCION: ${widget.lessonId}');
-                          FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-                            var value = (data.snapshot.value);
-                            String key = data.snapshot.key;
-                            switch(key){
-                              case "name":{
-                                if(this.mounted){
-                                  setState(() {
-                                    _navTitle = value.toString();
-                                  });
-                                }
-                                break;
-                              }
-                            }
-                          });                          
-                          if(this.mounted) setState(() {
-                            _navTitle = val;
-                          });
-                          DatabaseManager.updateLesson(widget.lessonId, val,"name");
-                        }else if(widget.section == 'lessons'){
-                          if(this.mounted) setState(() {
-                            FirebaseDatabase.instance.reference().child("courses").child(widget.courseId).onChildChanged.listen((data) {
-                              var value = (data.snapshot.value);
-                              String key = data.snapshot.key;
-                              switch(key){
-                                case "name":{
-                                  if(this.mounted){
-                                    setState(() {
-                                      _navSubtitle = value.toString();
-                                    });
-                                  }
-                                  break;
-                                }
-                              }
-                            }); 
-                          });
-                          DatabaseManager.updateCourse(widget.courseId, val,"name");
-                        }
-                        _addBarController.reverse().then((val){
-                          _addBarTextfieldController.text = '';
-                          if(_addBarAlertController.status != AnimationStatus.dismissed){
-                            _addBarAlertController.reverse();
-                          }
-                        }); 
-                        ChatBar.chatBarOffsetController.reverse().then((val){
-                          InteractRoute.questionOpacityController.reverse();
-                        }); 
-                      }
-                    }else{
-                      FocusScope.of(context).requestFocus(_getFocusNode());
-                      setState(() {
-                        _alertMessage = 'El nombre contiene solo espacios en blanco.'; 
-                      });
-                      _addBarAlertController.forward();
-                    }
-                  },
+                  onSubmitted: _handleAddBarSubmit,
                   // /* onChangedFunction: (val){
                   //   this.setState(() {   
                   //   });
@@ -436,7 +505,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
   String addZero(int param){
     String paramString = param.toString();
     if(paramString.length > 1) return paramString;
-    else return "0"+paramString;
+    else return '0'+paramString;
   }
 
   Future<Null> _selectDate(BuildContext context) async {
@@ -450,8 +519,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         selectedDate = picked;
       });
       print(picked.day);
-      String date = addZero(picked.day)+"/"+addZero(picked.month)+"/"+addZero(picked.year);
-      DatabaseManager.updateLesson(widget.lessonId, date,"date");
+      String date = addZero(picked.day)+'/'+addZero(picked.month)+'/'+addZero(picked.year);
+      DatabaseManager.updateLesson(widget.lessonId, date,'date');
       print('FECHA: $date');
       print('LECCION: ${widget.lessonId}');
     }
@@ -469,7 +538,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
             ),
             tooltip: 'Unirse por QR',
             onPressed: (){
-              CoursesRoute.activateQRPasser.sendWidget.add('QR');
+              CoursesRoute.activateQRPasser.sender.add('QR');
             },
           )
         );
@@ -494,8 +563,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 _addButtonController.reverse();
                 FocusScope.of(context).requestFocus(new FocusNode());
               }else if(status == AnimationStatus.dismissed){
-                Nav.addBarTitle = "Ingrese el código del curso";
-                Nav.addBarMode = 1;
+                Nav.addBarTitle = 'Ingrese el código del curso';
+                Nav.addBarMode = AddBarMode.LINK_COURSE;
 
                 _addBarController.forward(
                   from: 0
@@ -533,9 +602,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                   FocusScope.of(context).requestFocus(new FocusNode());
                 }else if(status == AnimationStatus.dismissed){
                   setState(() {
-                    if(widget.section == 'courses') Nav.addBarTitle = "Ingrese el nombre del curso";
-                    else if(widget.section == 'lessons') Nav.addBarTitle = "Ingrese el nombre de la lección";
-                    Nav.addBarMode = 0;
+                    if(widget.section == 'courses') Nav.addBarTitle = 'Ingrese el nombre del curso';
+                    else if(widget.section == 'lessons') Nav.addBarTitle = 'Ingrese el nombre de la lección';
+                    Nav.addBarMode = AddBarMode.CREATE;
                   });
                   _addBarController.forward(
                     from: 0
@@ -561,9 +630,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
               ),
               tooltip: 'Salir del curso',
               onPressed: (){
-                Course.deactivateListener.sendWidget.add('deactivate');               
-                DatabaseManager.actionOnFieldFrom("coursesPerUser", Auth.uid, widget.courseId, "course", "course", "course", "i", "delete").then((_){
-                  DatabaseManager.updateCourse(widget.courseId, "-1", "participants");
+                Course.deactivateListener.sender.add('deactivate');               
+                DatabaseManager.actionOnFieldFrom('coursesPerUser', Auth.uid, widget.courseId, 'course', 'course', 'course', 'i', 'delete').then((_){
+                  DatabaseManager.updateCourse(widget.courseId, '-1', 'participants');
                 });
                 Navigator.of(context).pop();
               },
@@ -598,8 +667,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 FocusScope.of(context).requestFocus(new FocusNode());
               }else if(status == AnimationStatus.dismissed){
                   setState(() {
-                    Nav.addBarTitle = "Ingrese la nueva descripción";
-                    Nav.addBarMode = 2;
+                    Nav.addBarTitle = 'Ingrese la nueva descripción';
+                    Nav.addBarMode = AddBarMode.CHANGE_DESCRIPTION;
                   });
                   _addBarController.forward(
                     from: 0
@@ -624,8 +693,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 FocusScope.of(context).requestFocus(new FocusNode());
               }else if(status == AnimationStatus.dismissed){
                   setState(() {
-                    Nav.addBarTitle = "Ingrese el nuevo nombre";
-                    Nav.addBarMode = 3;
+                    Nav.addBarTitle = 'Ingrese el nuevo nombre';
+                    Nav.addBarMode = AddBarMode.CHANGE_NAME;
                   });
                   _addBarController.forward(
                     from: 0
@@ -657,40 +726,40 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         )
       );
     }
-    if(false && widget.notificationsActive){
-      actions.add(
-        Container(
-          padding: EdgeInsets.fromLTRB(0, 4, 5, 0),
-          child: Stack(
-            children: <Widget>[
-              IconButton(
-                icon: Icon(
-                  FontAwesomeIcons.solidBell,
-                  size: 20,
-                ),
-                tooltip: 'Notificaciones',
-                onPressed: (){
-                  print("Sigue funcionando");
-                  _notificationHubPositionController.forward();
-                },
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Theme.of(context).primaryColor,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )
-      );
-    }
+    // if(false && widget.notificationsActive){
+    //   actions.add(
+    //     Container(
+    //       padding: EdgeInsets.fromLTRB(0, 4, 5, 0),
+    //       child: Stack(
+    //         children: <Widget>[
+    //           IconButton(
+    //             icon: Icon(
+    //               FontAwesomeIcons.solidBell,
+    //               size: 20,
+    //             ),
+    //             tooltip: 'Notificaciones',
+    //             onPressed: (){
+    //               print('Sigue funcionando');
+    //               _notificationHubPositionController.forward();
+    //             },
+    //           ),
+    //           Positioned(
+    //             top: 10,
+    //             right: 10,
+    //             child: Container(
+    //               width: 8,
+    //               height: 8,
+    //               decoration: BoxDecoration(
+    //                 shape: BoxShape.circle,
+    //                 color: Theme.of(context).primaryColor,
+    //               ),
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     )
+    //   );
+    // }
     if(widget.section == 'lessons' && widget.owner){
       actions.add(
         PopupMenuButton<Choice>(
@@ -715,8 +784,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 FocusScope.of(context).requestFocus(new FocusNode());
               }else if(status == AnimationStatus.dismissed){
                   setState(() {
-                    Nav.addBarTitle = "Ingrese el nuevo nombre";
-                    Nav.addBarMode = 3;
+                    Nav.addBarTitle = 'Ingrese el nuevo nombre';
+                    Nav.addBarMode = AddBarMode.CHANGE_NAME;
                   });
                   _addBarController.forward(
                     from: 0
@@ -958,6 +1027,12 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }
   }
 
+  void _handleQuestionsReject() {
+    setState(() {
+      _showInteractQuestions = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     double _width = MediaQuery.of(context).size.width;
@@ -967,6 +1042,7 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
     }else{
       _color = widget.color;
     }
+
 
     return Container(
       color: Theme.of(context).accentColor,
@@ -979,7 +1055,8 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
         child: Scaffold(
               resizeToAvoidBottomPadding: _resizeScaffold,
               drawer: _construcDrawer(),
-              appBar: true ? PreferredSize(
+              // TODO: Preparado para las preguntas
+              appBar: widget.section != 'lessons' || (widget.section == 'lessons' && !_showInteractQuestions) ? PreferredSize(
                 preferredSize: Size.fromHeight(widget.preferredSize),
                 child: AppBar(
                   actions: _construcActions(),
@@ -996,7 +1073,9 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                 ),
               ) : PreferredSize(
                 preferredSize: Size.fromHeight(0),
-                child: Container(),
+                child: Container(
+                  color: _color,
+                ),
               ),
               body: Stack(
                 children: <Widget>[
@@ -1013,7 +1092,17 @@ class _NavState extends State<Nav> with TickerProviderStateMixin{
                       height: 20,
                       color: Colors.red,
                     ),
-                  )
+                  ),
+                  widget.section == 'lessons' && _showInteractQuestions
+                    ? Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: InteractQuestions(
+                        onReject: _handleQuestionsReject,
+                      ),
+                    ) : Container()
                 ],
               ),
             ),

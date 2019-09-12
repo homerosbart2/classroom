@@ -135,7 +135,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
                     'description': lesson.description,
                   };
                   String textLesson = json.encode(text);
-                  Nav.lessonPasser.sendWidget.add(textLesson);
+                  Nav.lessonPasser.sender.add(textLesson);
                 }
               });
             }
@@ -145,7 +145,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     });
 
 
-    _lessonPasser.recieveWidget.listen((newLesson){
+    _lessonPasser.receiver.listen((newLesson){
       if(newLesson != null){
         Map jsonLesson = json.decode(newLesson);
         if(this.mounted){
@@ -178,7 +178,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _lessonPasser.sendWidget.add(null);
+    _lessonPasser.sender.add(null);
     super.dispose();
   }
 

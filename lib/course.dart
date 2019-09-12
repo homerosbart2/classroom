@@ -52,7 +52,7 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
     }
 
     _deactivateListener = WidgetPasser();
-    _deactivateListener.recieveWidget.listen((msg){
+    _deactivateListener.receiver.listen((msg){
       if(msg != null){
         _disabled = true;
         _courseDeleteController.forward();
