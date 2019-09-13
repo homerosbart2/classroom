@@ -48,7 +48,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   Widget _presentation, _uploadPresentation;
   WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
   ScrollController _scrollController;
-  bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled;
+  bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled, _fileExists;
 
   Future<String> getFilePath() async {
     String filePath = null;
@@ -69,6 +69,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
   @override
   void initState() {
     super.initState();
+    _fileExists = widget.fileExists;
     _presentationExist = false;
     _presentationLoaded = false;
     _lessonDisabled = false;
@@ -110,7 +111,10 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     //   print('not connected');
     // }
 
-    DatabaseManager.getFieldInDocument("lessons",widget.lessonId,"presentation").then((presentation){
+    DatabaseManager.getFieldInDocument("lessons",widget.lessonId,"fileType").then((fileType){
+      print("fileType is: $fileType");
+      bool presentation = false;
+      if(fileType == "pdf") presentation = true;
       if(this.mounted){
         if(presentation == true){
           if(this.mounted) setState(() {
@@ -418,7 +422,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           ],
         ),
       );
-    }else if(!_presentationExist || !_presentationLoaded){
+    }else if(!_fileExists){
       return Container(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

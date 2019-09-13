@@ -99,23 +99,23 @@ class _CourseState extends State<Course> with TickerProviderStateMixin, Automati
     );
 
 
-    Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
-      var value = snapshot.data;
-      if(value == null) {
-        if(this.mounted) setState(() {
-          _deleteCourse();;
-        });         
-        DatabaseManager.deleteDocumentInCollection("lessonsPerCourse",widget.courseId);
-      }else{
-        if(this.mounted){
-          setState(() {
-            _name = value['name'];
-            _lessons = value['lessons'].toString();
-            _participants = value['participants'].toString();
-          });
-        } 
-      }
-    });
+    // Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
+    //   var value = snapshot.data;
+    //   if(value == null) {
+    //     if(this.mounted) setState(() {
+    //       _deleteCourse();;
+    //     });         
+    //     DatabaseManager.deleteDocumentInCollection("lessonsPerCourse",widget.courseId);
+    //   }else{
+    //     if(this.mounted){
+    //       setState(() {
+    //         _name = value['name'];
+    //         _lessons = value['lessons'].toString();
+    //         _participants = value['participants'].toString();
+    //       });
+    //     } 
+    //   }
+    // });
 
     _boxResizeOpacityController.forward();
   }

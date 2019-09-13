@@ -24,41 +24,43 @@ class DatabaseManager{
   }
 
   static Future<void> addCoursesPerUser(String uid, String course) async{
-    print("course: $course");
-    print("uid: $uid");
     List<String> list = new List<String>();  
     DocumentReference reference = Firestore.instance.document('coursesPerUser/' + uid);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
+    // Firestore.instance.runTransaction((Transaction transaction) async {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      DocumentSnapshot snapshot = await reference.get();
       if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['courses']);
         list.add(course);
-        transaction.update(reference, <String, dynamic>{'courses': list});
+        reference.updateData(<String, dynamic>{'courses': list});
+        // reference.update(reference, <String, dynamic>{'courses': list});
       }else{
         list.add(course);
         reference.setData({
           'courses': list,
         });          
       }
-    });        
+    // });        
   }
 
-  static void addLessonPerCourse(String lesson, String course){
+  static Future<void> addLessonPerCourse(String lesson, String course) async{
     List<String> list = new List<String>();  
     DocumentReference reference = Firestore.instance.document('lessonsPerCourse/' + course);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
+    // await Firestore.instance.runTransaction((Transaction transaction) async {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      DocumentSnapshot snapshot = await reference.get();
       if (snapshot.data != null) {
         list = List<String>.from(snapshot.data['lessons']);
         list.add(lesson);
-        transaction.update(reference, <String, dynamic>{'lessons': list});
+        reference.updateData(<String, dynamic>{'lessons': list});
+        // transaction.update(reference, <String, dynamic>{'lessons': list});
       }else{
         list.add(lesson);
         reference.setData({
           'lessons': list,
         });          
       }
-    });     
+    // });     
   }  
 
   static void addUsersPerCourse(String course, String uid){
@@ -217,13 +219,13 @@ class DatabaseManager{
     return documentId;
   }
 
-  static Future<bool> getFieldInDocument(location,document,field) async{
+  static Future<dynamic> getFieldInDocument(location,document,field) async{
     var val;
     DocumentReference reference = Firestore.instance.collection(location).document(document);
     await reference.get().then((snapshot){
-      if(snapshot.data != null)val = snapshot[field];     
+      if(snapshot.data != null) val = snapshot[field];     
     });
-    if(val == null) val = false;
+    if(val == null) return false;
     return val;
   }
 
@@ -264,6 +266,7 @@ class DatabaseManager{
     String date = (addZero(day)+"/"+addZero(month)+"/"+addZero(year));
     DocumentReference lesson = Firestore.instance.collection('lessons').document();
     lesson.setData({
+      'authorId': uid,
       'name': name,
       'fileExists' : false,
       'filePath' : '',
@@ -363,52 +366,53 @@ class DatabaseManager{
 
   static Future<void> updateLesson(String code, var param, String column, String type, String filePath) async{
     DocumentReference reference = Firestore.instance.document('lessons/' + code);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      // DocumentSnapshot snapshot = await transaction.get(reference);
-      // if (snapshot.exists) {
+    // Firestore.instance.runTransaction((Transaction transaction) async {
         switch(column){
           case "comments": {
-            transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
+            reference.updateData(<String, dynamic>{'comments': FieldValue.increment(int.parse(param))});
+            // transaction.update(reference, <String, dynamic>{'comments': FieldValue.increment(int.parse(param))});      
             break;
           }
           case "fileExists": {
-            transaction.update(reference, <String, dynamic>{'fileExists': param, 'fileType': type, 'filePath': filePath});      
+            reference.updateData(<String, dynamic>{'fileExists': param, 'fileType': type, 'filePath': filePath});
+            // transaction.update(reference, <String, dynamic>{'fileExists': param, 'fileType': type, 'filePath': filePath});      
             break;
           }          
           default: {
-            transaction.update(reference, <String, dynamic>{column: param});       
+            reference.updateData(<String, dynamic>{column: param});
+            // transaction.update(reference, <String, dynamic>{column: param});       
             break;
           }
         }           
-      // }
-    });     
+    // });     
   }
 
   static Future<void> updateCourse(String code, var param, String column) async{
     DocumentReference reference = Firestore.instance.document('courses/' + code);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      // DocumentSnapshot snapshot = await transaction.get(reference);
-      // if (snapshot.exists) {
+    // Firestore.instance.runTransaction((Transaction transaction) async {
         switch(column){
           case "participants": {
-            transaction.update(reference, <String, dynamic>{'participants': FieldValue.increment(int.parse(param))});      
+            reference.updateData(<String, dynamic>{'participants': FieldValue.increment(int.parse(param))});
+            // transaction.update(reference, <String, dynamic>{'participants': FieldValue.increment(int.parse(param))});      
             break;
           }
           case "accessCode": {
-            transaction.update(reference, <String, dynamic>{'accessCode': param});       
+            reference.updateData(<String, dynamic>{'accessCode': param});
+            // transaction.update(reference, <String, dynamic>{'accessCode': param});       
             break;
           }
           case "name": {
-            transaction.update(reference, <String, dynamic>{'name': param});       
+            reference.updateData(<String, dynamic>{'name': param});
+            // transaction.update(reference, <String, dynamic>{'name': param});       
             break;
           }      
           case "lessons": {
-            transaction.update(reference, <String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});     
+            reference.updateData(<String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});
+            // transaction.update(reference, <String, dynamic>{'lessons': FieldValue.increment(int.parse(param))});     
             break;        
           }
         }           
-      // }
-    }); 
+    // }); 
   }
 
   static Future<Map> addCourseByAccessCode(String code, String uid) async{
@@ -680,13 +684,12 @@ class DatabaseManager{
     try{
       DocumentReference reference = Firestore.instance.collection('lessonsPerCourse').document(course);
       await reference.get().then((snapshot){
-        snapshot.data.forEach((key,value){
-          lessonsList.add(value);
-        });
+        lessonsList = List<String>.from(snapshot.data['lessons']);
       });
     }catch(e){
       print("error getLessonsPerUser: $e");
     } 
+    print("lessonList $lessonsList");
     return lessonsList;
   } 
 
