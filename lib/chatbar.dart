@@ -83,7 +83,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
       String authorId = Auth.uid;
       String author = Auth.getName();
       if(ChatBar.mode == 0){
-        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes,"").then((id){
           // Map text = {
           //   'text': val,
           //   'author': author,
@@ -123,7 +123,7 @@ class _ChatBarState extends State<ChatBar> with SingleTickerProviderStateMixin{
           ChatBar.mode = 0;          
         });        
       }else if(ChatBar.mode == 2){
-        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes).then((id){       
+        DatabaseManager.addQuestions(author, authorId, widget.lessonId, val, day, month, year, hours, minutes,"").then((id){       
         });
       }
         _chatBarTextfieldController.text = '';

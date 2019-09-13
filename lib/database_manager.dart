@@ -136,7 +136,7 @@ class DatabaseManager{
     return reference.documentID;
   }
 
-  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes) async{
+  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes, String attachPosition) async{
     DocumentReference reference = Firestore.instance.collection('lessons').document(lesson);
     reference.collection("questions").document().setData({
       'text': text,
@@ -148,6 +148,7 @@ class DatabaseManager{
       'hours': hours,
       'minutes': minutes,
       'votes': 0,
+      'attachPosition': attachPosition,
     }).then((_){
       updateLesson(lesson,"1","comments","","");
     });
@@ -180,12 +181,16 @@ class DatabaseManager{
   static Future<void> deleteFromArray(collection,document,field,val) async{
     List<dynamic> list = new List<dynamic>();
     DocumentReference reference = Firestore.instance.document(collection + '/' + document);
-    Firestore.instance.runTransaction((Transaction transaction) async {
-      DocumentSnapshot snapshot = await transaction.get(reference);
-      list = List<String>.from(snapshot.data[field]);
+    // Firestore.instance.runTransaction((Transaction transaction) async {
+      // DocumentSnapshot snapshot = await transaction.get(reference);
+      // list = List<String>.from(snapshot.data[field]);
+      await reference.get().then((snapshot){
+        list = List<String>.from(snapshot.data[field]);
+      });
       list.remove(val);
-      transaction.update(reference, <String, dynamic>{field: list});
-    });  
+      reference.updateData(<String, dynamic>{field: list});
+      // transaction.update(reference, <String, dynamic>{field: list});
+    // });  
   }
 
   static Future<bool> searchInArray(collection,document,field,compare) async{

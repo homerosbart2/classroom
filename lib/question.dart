@@ -45,7 +45,7 @@ class Question extends StatefulWidget {
     this.year: 1998,
     this.hours: 11,
     this.minutes: 55,
-    this.attachPosition: '2',
+    this.attachPosition: '',
   });
 
   
