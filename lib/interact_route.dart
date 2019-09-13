@@ -17,41 +17,41 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InteractRoute extends StatefulWidget{
   
-  final String lessonId, presentationPath, authorId, courseId;
+  final String lessonId, authorId, courseId, filePath;
   static AnimationController questionPositionController, questionOpacityController;
   static List<Question> questions;
   static StreamController<String> questionController;
   static WidgetPasser updateQuestions = WidgetPasser(); 
   static int index = 0;
   final bool owner, isVideo, fileExists;
+  final WidgetPasser addBarModePasser;
   
   InteractRoute({
     @required this.lessonId,
     @required this.authorId,
     @required this.courseId,
     @required this.isVideo,
-    this.presentationPath: '',
+    this.filePath,
     this.fileExists: false,
     this.owner: false,
+    this.addBarModePasser
   });
 
   _InteractRouteState createState() => _InteractRouteState();
 }
 
 class _InteractRouteState extends State<InteractRoute> with TickerProviderStateMixin{
-  StreamController<int> _votesController;
-  Stream<int> _votesStream;
   Stream<String> _questionStream;
   Animation<Offset> _offsetFloat;
   Animation<double> _opacityFloat;
   String _questionToAnswer;
   Widget _presentation, _uploadPresentation;
-  WidgetPasser _questionPasser, _updateQuestions, _pathPasser;
+  WidgetPasser _questionPasser, _pathPasser;
   ScrollController _scrollController;
   bool _presentationExist, _presentationLoaded, _lessonDisabled, _courseDisabled, _fileExists;
 
   Future<String> getFilePath() async {
-    String filePath = null;
+    String filePath = "";
     try {
       filePath = await FilePicker.getFilePath(type: FileType.PDF);
       if (filePath == '') {
@@ -81,7 +81,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
     _questionPasser = ChatBar.questionPasser;
     _pathPasser = WidgetPasser();
-    _updateQuestions = InteractRoute.updateQuestions;
 
     InteractRoute.questionOpacityController = AnimationController(
       vsync: this,
@@ -98,18 +97,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       ),
     );
 
-    // _presentation = Presentation(
-    //   file: 'lib/assets/pdf/sample.pdf',
-    // ); 
-
-    // try {
-    //   var result = await InternetAddress.lookup('google.com');
-    //   if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
-    //     print('connected');
-    //   }
-    // } on SocketException catch (_) {
-    //   print('not connected');
-    // }
+    InteractRoute.questionOpacityController.forward();
 
     DatabaseManager.getFieldInDocument("lessons",widget.lessonId,"fileType").then((fileType){
       print("fileType is: $fileType");
@@ -158,33 +146,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
     //   });
     // });
 
-    // FirebaseDatabase.instance.reference().child("lessons").child(widget.lessonId).onChildChanged.listen((data) {
-    //   var value = (data.snapshot.value);
-    //   String key = data.snapshot.key;
-    //   print("key: $key");
-    //   print("value: $value");
-    //   switch(key){
-    //     case "presentation":{
-    //       if(value == true){
-    //         if(this.mounted){
-    //           setState(() {
-    //             DatabaseManager.getFiles("pdf", widget.lessonId).then((path){
-    //             print("ARCHIVO:  $path");
-    //               if(this.mounted) setState(() {
-    //                 _presentation = Presentation(
-    //                   file: path,
-    //                   animationValue: _turnsFloat.value,
-    //                 );
-    //               });
-    //             });
-    //           });
-    //         }
-    //       }
-    //       break;
-    //     }
-    //   }
-    // });
-
     if(widget.owner){
       _uploadPresentation = Column(
         children: <Widget>[
@@ -199,7 +160,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               onTap: (){
                 getFilePath().then((filePath){
                   setState((){
-                    if(filePath != null){
+                    if(filePath.isNotEmpty){
                       DatabaseManager.uploadFiles("pdf", widget.lessonId, filePath).then((path){
                         setState(() {
                           _presentationExist = true; 
@@ -223,22 +184,11 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               borderColor: Colors.transparent,
               icon: FontAwesomeIcons.youtube,
               onTap: (){
-                // getFilePath().then((filePath){
-                  setState((){
-                    if(true != null){
-                      //TODO send URL to this method 
-                      DatabaseManager.uploadFiles("url", widget.lessonId, "https://youtu.be/Bydc-zhfdgM").then((path){
-                        setState(() {
-                          _presentationExist = true; 
-                          print('PATH VIDEO: $path');
-                          _presentation = Presentation(
-                            file: path,
-                          );
-                        });
-                      });
-                    }
-                  });
-                // });
+                print('TAP TAP');
+                if (widget.addBarModePasser != null) {
+                  print('Se envia');
+                  widget.addBarModePasser.sender.add('4');
+                }               
               },
             ),
           ),
@@ -253,12 +203,8 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       ); 
     }
 
-    _votesController = StreamController<int>();
-    _votesStream = _votesController.stream;
-
     InteractRoute.questionController = StreamController<String>();
     _questionStream = InteractRoute.questionController.stream;
-
     InteractRoute.questions = List<Question>();
 
     InteractRoute.questionPositionController = AnimationController(
@@ -295,6 +241,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
               hours: doc.document.data['hours'],
               minutes: doc.document.data['minutes'],                
               votes: doc.document.data['votes'],
+              attachPosition: doc.document.data['attachPosition'],
               isVideo: widget.isVideo,
               index: InteractRoute.index++,
             );
@@ -314,14 +261,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       }      
     });
 
-    _votesStream.listen((val) {
-      if(val != null){
-        setState(() {
-          
-        });
-      }
-    });
-
     _questionStream.listen((text) {
       if(text != null){
         setState(() {
@@ -330,7 +269,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       }
     });
 
-    InteractRoute.updateQuestions.recieveWidget.listen((code){
+    InteractRoute.updateQuestions.receiver.listen((code){
       if(code != null){
         if(this.mounted){
           setState(() {
@@ -340,7 +279,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       }
     });
 
-    _questionPasser.recieveWidget.listen((newQuestion){
+    _questionPasser.receiver.listen((newQuestion){
       if(newQuestion != null){
         Map jsonQuestion = json.decode(newQuestion);
         if(this.mounted){
@@ -361,7 +300,6 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
                 owner: jsonQuestion['owner'],
                 mine: jsonQuestion['mine'],
                 index: InteractRoute.index++,
-                votesController: _votesController,
                 isVideo: widget.isVideo,
               )
             );
@@ -377,7 +315,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
       }
     });
 
-    _pathPasser.recieveWidget.listen((path) {
+    _pathPasser.receiver.listen((path) {
       if (path != null) {
         setState(() {
           _presentation = Presentation(
@@ -390,26 +328,22 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
 
   @override
   void dispose() {
-    _questionPasser.sendWidget.add(null);
-    _pathPasser.sendWidget.add(null);
-    InteractRoute.updateQuestions.sendWidget.add(null);
+    _questionPasser.sender.add(null);
+    _pathPasser.sender.add(null);
+    widget.addBarModePasser.sender.add(null);
+    InteractRoute.updateQuestions.sender.add(null);
     InteractRoute.index = 0;
     super.dispose();
   }
 
   Widget _getPresentation(BuildContext context){
     if(widget.isVideo){
-      return YouTubeVideo();
-    }else if(!_presentationExist && _presentationLoaded){
+      return YouTubeVideo(
+        videoId: 'fq4N0hgOWzU',
+      );
+    }if(!_presentationExist && _presentationLoaded){
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 3),
-        decoration: BoxDecoration(
-          // borderRadius: BorderRadius.circular(3),
-          // border: Border.all(
-          //   color: Colors.grey,
-          //   width: 1,
-          // ),
-        ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
@@ -523,6 +457,7 @@ class _InteractRouteState extends State<InteractRoute> with TickerProviderStateM
           ChatBar(
             lessonId: widget.lessonId,
             owner: widget.owner,
+            questionToAnswer: _questionToAnswer,
           ),   
         ],
       ),

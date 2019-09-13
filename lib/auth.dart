@@ -9,11 +9,20 @@ class Auth{
   static String uid = "";
   // static boolean emailVerified;
 
-  static Future<String> signInWithEmailAndPassword(String email, String password) async{
+  static Future<dynamic> signInWithEmailAndPassword(String email, String password) async{
     FirebaseUser user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: email, password: password);
-    return user?.uid;
+    if(user != null){
+      print("verified ${user.isEmailVerified}");
+      if (user.isEmailVerified == true) return user.uid;
+      else return "0";
+    }
+    else return "-1";
   }
 
+  static Future<void> resetPassword(String email) async {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+  }
+  
   static Future<String> createUserWithEmailAndPassword(String email, String password, String name) async{
     FirebaseUser user;
     try{
@@ -22,9 +31,15 @@ class Auth{
         profileUpdate.displayName = name;
         user.updateProfile(profileUpdate);
         user.reload().then((_){
-          Auth.signInWithEmailAndPassword(email, password).then((_){
-            return user?.uid;
-          });
+          try{
+            user.sendEmailVerification();
+          }catch(e){
+            print("An error occured while trying to send email        verification");
+            print(e.message);      
+          }          
+            // Auth.signInWithEmailAndPassword(email, password).then((_){
+            //   return user?.uid;
+            // });
         });
       });
     }catch(e){

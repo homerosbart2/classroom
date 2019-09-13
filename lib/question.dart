@@ -1,4 +1,5 @@
 import 'package:classroom/presentation.dart';
+import 'package:classroom/youtube_video.dart';
 import 'package:flutter/material.dart';
 import 'package:classroom/vote.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -75,8 +76,6 @@ class _QuestionState extends State<Question>
   @override
   void initState() {
     super.initState();
-
-    widget.mine = false;
 
     _hasAnswers = false;
 
@@ -337,7 +336,7 @@ class _QuestionState extends State<Question>
     //   )
     // );
 
-    _answerPasser.recieveWidget.listen((newAnswer) {
+    _answerPasser.receiver.listen((newAnswer) {
       if (newAnswer != null) {
         Map jsonAnswer = json.decode(newAnswer);
         if (this.mounted) {
@@ -358,7 +357,7 @@ class _QuestionState extends State<Question>
       }
     });
 
-    _answeredPasser.recieveWidget.listen((newAction) {
+    _answeredPasser.receiver.listen((newAction) {
       if (newAction != null) {
         if (this.mounted) {
           _boxResizeOpacityController.forward();
@@ -374,7 +373,7 @@ class _QuestionState extends State<Question>
     //_boxColorController.dispose();
     _boxResizeOpacityController.dispose();
     _expandAnswersController.dispose();
-    _answerPasser.sendWidget.add(null);
+    _answerPasser.sender.add(null);
     super.dispose();
   }
 
@@ -470,17 +469,33 @@ class _QuestionState extends State<Question>
   }
 
   Widget _getAttachIcon(){
-    if(widget.isVideo) return Icon(
-      FontAwesomeIcons.solidCircle,
-      color: Theme.of(context).primaryColor,
-      size: 12,
+    if(widget.isVideo) return  Row(
+      children: <Widget>[
+        Container(
+          margin: EdgeInsets.only(right: 4),
+          child: Icon(
+            FontAwesomeIcons.solidCircle,
+            color: Theme.of(context).primaryColor,
+            size: 12,
+          ),
+        ),
+        Text(
+          ' minuto',
+          style: TextStyle(
+            color: Theme.of(context).primaryColor,
+          ),
+        ),
+      ],
     );
     else return Row(
       children: <Widget>[
-        Icon(
-          FontAwesomeIcons.solidSquare,
-          color: Theme.of(context).primaryColor,
-          size: 12,
+        Container(
+          margin: EdgeInsets.only(right: 4),
+          child: Icon(
+            FontAwesomeIcons.solidSquare,
+            color: Theme.of(context).primaryColor,
+            size: 12,
+          ),
         ),
         Text(
           ' diapositiva',
@@ -499,10 +514,9 @@ class _QuestionState extends State<Question>
       }
     });
 
-    if(widget.isVideo){
-      //TODO: seek to minute.
-    }else{
-      if(Presentation.slidePasser != null) Presentation.slidePasser.sendWidget.add(widget.attachPosition);
+    if(widget.isVideo && YouTubeVideo.videoSeekToPasser != null) YouTubeVideo.videoSeekToPasser.sender.add(widget.attachPosition);
+    else if(Presentation.slidePasser != null) {
+      Presentation.slidePasser.sender.add(widget.attachPosition);
     }
   }
 
@@ -776,13 +790,13 @@ class _QuestionState extends State<Question>
                                               Question.answerPasser = _answerPasser;
                                               Question.globalQuestionId = widget.questionId;
                                               Question.answeredPasser = _answeredPasser;
-                                              ChatBar.mode = 1;
+                                              ChatBar.mode = ChatBarMode.ANSWER;
                                               FocusScope.of(context).requestFocus(ChatBar.chatBarFocusNode);
-                                              ChatBar.labelPasser.sendWidget.add('Escriba una respuesta');
+                                              ChatBar.labelPasser.sender.add('Escriba una respuesta');
                                             }else{
                                               InteractRoute.questionPositionController.reverse();
-                                              ChatBar.mode = 0;
-                                              ChatBar.labelPasser.sendWidget.add('Escriba una pregunta');
+                                              ChatBar.mode = ChatBarMode.QUESTION;
+                                              ChatBar.labelPasser.sender.add('Escriba una pregunta');
                                             }
                                           }
                                         },

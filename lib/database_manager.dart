@@ -136,7 +136,7 @@ class DatabaseManager{
     return reference.documentID;
   }
 
-  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes, String attachPosition) async{
+  static Future<String> addQuestions(String author, String authorId, String lesson, String text, int day, int month, int year, int hours, int minutes, {String attachPosition = ''}) async{
     DocumentReference reference = Firestore.instance.collection('lessons').document(lesson);
     reference.collection("questions").document().setData({
       'text': text,
@@ -590,6 +590,7 @@ class DatabaseManager{
                 minutes: question['minutes'],                
                 votes: question['votes'],
                 isVideo: question['isVideo'],
+                attachPosition: question['attachPosition'],
               )
             );  
           }    

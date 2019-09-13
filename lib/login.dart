@@ -3,7 +3,6 @@ import 'package:classroom/stateful_textfield.dart';
 import 'package:classroom/stateful_button.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:classroom/courses_route.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:classroom/nav.dart';
 import 'package:classroom/auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -84,7 +83,7 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
 
   void _navigateToCourses(BuildContext context) {
     Navigator.of(context).push(
-      CupertinoPageRoute(builder: (BuildContext context) {
+      MaterialPageRoute(builder: (BuildContext context) {
         return Nav(
           section: 'courses',
           title: 'CURSOS',
@@ -127,10 +126,11 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
               showNotification('La dirección de correo no se puede registrar, ya ha sido tomada.'); 
               _logging = false;
             }else{
+              showNotification('Se ha enviado un correo de confirmación para continuar con el proceso.'); 
               prefs.setInt('logged', 1);
               prefs.setString('email', email);
               prefs.setString('password', password);
-              _navigateToCourses(context);
+              // _navigateToCourses(context);
               _passwordController.text = '';
               _nameController.text = '';
               _passwordRepeatController.text = '';
@@ -142,9 +142,12 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
           String user = await Auth.signInWithEmailAndPassword(email, password);
           print("Login: $user");
           Auth.currentUser("").then((userId){
-            if(userId == null){
+            print("userId $userId");
+            if(user == "-1"){
               showNotification('La dirección de correo no se encuentra, verifique sus datos.');            
               _logging = false;
+            }else if(user == "0"){
+              showNotification('No se ha confirmado la dirección de correo, porfavor verifique su bandeja de entrada.');   
             }else{
               prefs.setInt('logged', 1);
               prefs.setString('email', email);
@@ -372,6 +375,16 @@ class _LoginState extends State<Login> with TickerProviderStateMixin{
                 onTap: (){
                   _slideController.forward();
                   _register = true;
+                },
+                type: 'a',
+                weight: FontWeight.bold,
+              ),
+              StatefulButton(
+                text: 'OLVIDE',
+                color: Theme.of(context).primaryColor,
+                onTap: (){
+                  Auth.resetPassword(_usernameController.text);
+                  showNotification('Se ha enviado un correo para reestablecer la contraseña.');
                 },
                 type: 'a',
                 weight: FontWeight.bold,

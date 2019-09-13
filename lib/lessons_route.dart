@@ -67,76 +67,76 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
     _scrollController = ScrollController();
 
     _lessons = List<Lesson>();
-    DatabaseManager.getLessonsPerCourse(widget.courseId).then(
-      (List<String> ls) => setState(() {
-        List<String> _lessonsListString = List<String>();
-        _lessonsListString = List<String>.from(ls);
-        DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid, widget.courseId).then(
-          (List<Lesson> lc) => setState(() {
-            for(var lesson in lc){
-              lesson.authorId = widget.authorId;
-              _lessons.add(lesson);
-            }
-          })
-        );         
-      })
-    );
-
-
-    // Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
-    //   var value = snapshot.data;
-    //   if(value == null) {
-    //     if(this.mounted) setState(() {
-    //       _disabled = true;
-    //     });
-    //   }else{
-    //     if(this.mounted){
-    //       setState(() {
-    //         _name = value['name'];
-    //         _participants = value['participants'].toString();
-    //       });
-    //     } 
-    //   }
-    // });
-     
-    // Firestore.instance.collection("lessonsPerCourse").document(widget.courseId).snapshots().listen((snapshot){
-    //   if(snapshot.data != null){
-    //     if(this.mounted) setState(() {
-    //       List<String> lista = new List<String>();
-    //       if(_lessons.isEmpty) lista = List<String>.from(snapshot.data['lessons']);
-    //       else{
-    //         lista.add((snapshot.data['lessons']).last);
-    //       }
-    //       DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid, widget.courseId).then((List<Lesson> lc){
-    //         if(this.mounted){
-    //           setState(() {
-    //             for(var lesson in lc){
-    //               lesson.authorId = widget.authorId;
-    //               Map text = {
-    //                 'lessonId': lesson.lessonId,
-    //                 'name' : lesson.name,
-    //                 'date' : lesson.date,
-    //                 'comments': lesson.comments,
-    //                 'owner': widget.owner,
-    //                 'authorId': widget.authorId,
-    //                 'courseId': widget.courseId,
-    //                 'fileType': lesson.fileType,
-    //                 'fileExists': lesson.fileExists,
-    //                 'filePath': lesson.filePath,                    
-    //                 'description': lesson.description,
-    //               };
-    //               String textLesson = json.encode(text); 
-    //               Nav.lessonPasser.sendWidget.add(textLesson);
-    //             }
-    //           });
+    // DatabaseManager.getLessonsPerCourse(widget.courseId).then(
+    //   (List<String> ls) => setState(() {
+    //     List<String> _lessonsListString = List<String>();
+    //     _lessonsListString = List<String>.from(ls);
+    //     DatabaseManager.getLessonsPerCourseByList(_lessonsListString, Auth.uid, widget.courseId).then(
+    //       (List<Lesson> lc) => setState(() {
+    //         for(var lesson in lc){
+    //           lesson.authorId = widget.authorId;
+    //           _lessons.add(lesson);
     //         }
-    //       });    
-    //     }); 
-    //   }   
-    // });
+    //       })
+    //     );         
+    //   })
+    // );
 
 
-    _lessonPasser.recieveWidget.listen((newLesson){
+    Firestore.instance.collection("courses").document(widget.courseId).snapshots().listen((snapshot){
+      var value = snapshot.data;
+      if(value == null) {
+        if(this.mounted) setState(() {
+          _disabled = true;
+        });
+      }else{
+        if(this.mounted){
+          setState(() {
+            _name = value['name'];
+            _participants = value['participants'].toString();
+          });
+        } 
+      }
+    });
+     
+    Firestore.instance.collection("lessonsPerCourse").document(widget.courseId).snapshots().listen((snapshot){
+      if(snapshot.data != null){
+        if(this.mounted) setState(() {
+          List<String> lista = new List<String>();
+          if(_lessons.isEmpty) lista = List<String>.from(snapshot.data['lessons']);
+          else{
+            lista.add((snapshot.data['lessons']).last);
+          }
+          DatabaseManager.getLessonsPerCourseByList(lista, Auth.uid, widget.courseId).then((List<Lesson> lc){
+            if(this.mounted){
+              setState(() {
+                for(var lesson in lc){
+                  lesson.authorId = widget.authorId;
+                  Map text = {
+                    'lessonId': lesson.lessonId,
+                    'name' : lesson.name,
+                    'date' : lesson.date,
+                    'comments': lesson.comments,
+                    'owner': widget.owner,
+                    'authorId': widget.authorId,
+                    'courseId': widget.courseId,
+                    'fileType': lesson.fileType,
+                    'fileExists': lesson.fileExists,
+                    'filePath': lesson.filePath,                    
+                    'description': lesson.description,
+                  };
+                  String textLesson = json.encode(text); 
+                  _lessons.add(lesson);
+                }
+              });
+            }
+          });    
+        }); 
+      }   
+    });
+
+
+    _lessonPasser.receiver.listen((newLesson){
       if(newLesson != null){
         Map jsonLesson = json.decode(newLesson);
         if(this.mounted){
@@ -169,7 +169,7 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   void dispose() {
-    _lessonPasser.sendWidget.add(null);
+    _lessonPasser.sender.add(null);
     super.dispose();
   }
 
@@ -198,7 +198,6 @@ class _LessonsRouteState extends State<LessonsRoute> with SingleTickerProviderSt
 
   @override
   Widget build(BuildContext context) {
-    double height = MediaQuery.of(context).size.height;
     if(!_disabled) return Container(
       padding: EdgeInsets.only(top: 12),
       child: Column(
